@@ -706,26 +706,25 @@ const ScheduleSettings = ({ schedule, onUpdate }) => {
 };
 
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
-    const [noteText, setNoteText] = useState('');
+    // Inicializamos el cuadro de texto con las notas existentes (si las hay)
+    const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
+    const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
-    const notesEndRef = useRef(null);
     
-    const handleSaveNote = () => { 
-        const timestamp = new Date().toLocaleString(); 
-        const newNote = `[${timestamp}] ${noteText}\n`; 
-        onUpdate(lead.id, { notes: (lead.notes || '') + newNote }); 
-        setNoteText(''); 
+    // Función para guardar todo el cuadro de texto en Firebase
+    const handleSaveNotes = async () => { 
+        setIsSaving(true);
+        await onUpdate(lead.id, { notes: currentNotes }); 
+        // Mostramos el estado de éxito por 2 segundos
+        setTimeout(() => setIsSaving(false), 2000);
     };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
     const handleDelete = () => { if(window.confirm('⚠️ ¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.')) { onDelete(lead.id); onClose(); }};
 
-    useEffect(() => {
-        notesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [lead.notes]);
-
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
+            {/* Header Glass */}
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -741,8 +740,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto">
+                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
                     
+                    {/* Columna Izquierda: Info & Intereses */}
                     <div className="md:col-span-5 space-y-6">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
@@ -786,8 +786,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                         </div>
                     </div>
                     
+                    {/* Columna Derecha: Gestión y Notas */}
                     <div className="md:col-span-7 space-y-6 flex flex-col">
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Estado y Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
@@ -808,28 +809,23 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[400px]">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Notas de Seguimiento</h3>
-                            <div className="flex-1 bg-amber-50/30 rounded-2xl p-4 mb-4 overflow-y-auto text-sm text-gray-700 border border-amber-100/50 shadow-inner relative">
-                                {lead.notes ? (
-                                    <div className="space-y-3 font-medium whitespace-pre-wrap">
-                                        {lead.notes.split('\n').filter(n=>n.trim()).map((note, i) => {
-                                            const match = note.match(/^\[(.*?)\] (.*)$/);
-                                            if(match) {
-                                                return <div key={i} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm"><span className="block text-[10px] font-bold text-gray-400 mb-1">{match[1]}</span><span className="text-gray-800">{match[2]}</span></div>
-                                            }
-                                            return <div key={i} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">{note}</div>
-                                        })}
-                                        <div ref={notesEndRef} />
-                                    </div>
-                                ) : (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 opacity-50"><PenTool size={32} className="mb-2"/><span className="italic font-medium">Bandeja de notas vacía</span></div>
-                                )}
+                        {/* NUEVA SECCIÓN DE NOTAS TIPO BLOC DE NOTAS */}
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px]">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Bloc de Notas</h3>
+                                <button 
+                                    onClick={handleSaveNotes} 
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 ${isSaving ? 'bg-green-500 text-white' : 'bg-black text-white hover:scale-105'}`}
+                                >
+                                    {isSaving ? <><Check size={14}/> Guardado</> : <><Save size={14}/> Guardar</>}
+                                </button>
                             </div>
-                            <div className="flex gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200 focus-within:bg-white focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-500/10 transition-all">
-                                <input type="text" className="flex-1 bg-transparent px-3 text-sm outline-none font-medium placeholder-gray-400" placeholder="Escribe un avance aquí..." value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveNote()}/>
-                                <button onClick={handleSaveNote} disabled={!noteText} className="bg-black text-white p-3 rounded-xl disabled:opacity-30 disabled:scale-100 hover:scale-105 transition-all shadow-md"><ArrowRight size={18}/></button>
-                            </div>
+                            <textarea 
+                                className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 shadow-inner resize-none outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all leading-relaxed" 
+                                placeholder="Escribe aquí los detalles de la llamada, acuerdos o recordatorios del prospecto..."
+                                value={currentNotes}
+                                onChange={(e) => setCurrentNotes(e.target.value)}
+                            />
                         </div>
                     </div>
                 </div>
