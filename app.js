@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 // Importación limpia de iconos para evitar fallos
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw } from 'https://esm.sh/lucide-react@0.344.0';
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -720,14 +720,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
     const handleDelete = () => { if(window.confirm('⚠️ ¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.')) { onDelete(lead.id); onClose(); }};
 
-    // Auto-scroll to bottom of notes
     useEffect(() => {
         notesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [lead.notes]);
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
-            {/* Header Glass */}
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -745,7 +743,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
             <div className="flex-1 overflow-y-auto p-4 md:p-8">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto">
                     
-                    {/* Columna Izquierda: Info & Intereses (Toma 5 columnas en PC) */}
                     <div className="md:col-span-5 space-y-6">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
@@ -789,7 +786,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                         </div>
                     </div>
                     
-                    {/* Columna Derecha: Gestión y Notas (Toma 7 columnas en PC) */}
                     <div className="md:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Estado y Asignación</h3>
@@ -804,7 +800,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                     </button>
                                 </div>
                                 <div className="flex gap-3 md:flex-col md:w-32 shrink-0 pt-6 md:pt-0">
-                                    <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-gray-800 text-white hover:bg-black' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}><Archive size={14}/> {lead.status === 'archived' ? 'Activar' : 'Archivar'}</button>
+                                    <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}>
+                                        {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
+                                    </button>
                                     <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
                                 </div>
                             </div>
@@ -815,7 +813,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                             <div className="flex-1 bg-amber-50/30 rounded-2xl p-4 mb-4 overflow-y-auto text-sm text-gray-700 border border-amber-100/50 shadow-inner relative">
                                 {lead.notes ? (
                                     <div className="space-y-3 font-medium whitespace-pre-wrap">
-                                        {/* Super simple note formatting assuming the format [Date] Text\n */}
                                         {lead.notes.split('\n').filter(n=>n.trim()).map((note, i) => {
                                             const match = note.match(/^\[(.*?)\] (.*)$/);
                                             if(match) {
@@ -959,6 +956,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
         if(!window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Deseas aplicar esta acción a ${selectedLeads.length} prospectos?`)) return;
         if(action === 'delete') await bulkDeleteLeads(selectedLeads);
         else if(action === 'archive') await bulkUpdateLeads(selectedLeads, { status: 'archived' });
+        else if(action === 'restore') await bulkUpdateLeads(selectedLeads, { status: 'new' });
         else if(action === 'assign') await bulkUpdateLeads(selectedLeads, { assignedTo: value });
         setSelectedLeads([]);
     };
@@ -974,7 +972,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-50 flex flex-col animate-fade-in font-sans">
-            {/* Header Glass */}
             <div className="glass-panel px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row justify-between items-center z-20 gap-3 shadow-sm">
                 <div className="flex items-center justify-between w-full md:w-auto">
                     <div className="flex items-center gap-3">
@@ -990,7 +987,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                     </div>
                 </div>
                 
-                {/* Search Bar */}
                 {activeTab !== 'schedule' && (
                     <div className="relative w-full md:w-[400px] group">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
@@ -1010,7 +1006,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                 </div>
             </div>
 
-            {/* Tabs (Scrollable on Mobile) */}
             <div className="flex px-2 md:px-8 gap-2 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['active', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
@@ -1033,8 +1028,14 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                     <span className="text-xs md:text-sm font-bold flex items-center gap-2 shrink-0 pt-1 md:pt-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
                     <div className="hidden md:block h-5 w-px bg-gray-700"></div>
                     <div className="flex gap-2 w-full md:w-auto justify-center pb-1 md:pb-0">
-                        <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><UserPlus size={14}/> Asignar</button>
-                        <button onClick={() => handleBulkAction('archive')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><Archive size={14}/> Archivar</button>
+                        {activeTab !== 'archived' ? (
+                            <>
+                                <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><UserPlus size={14}/> Asignar</button>
+                                <button onClick={() => handleBulkAction('archive')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><Archive size={14}/> Archivar</button>
+                            </>
+                        ) : (
+                            <button onClick={() => handleBulkAction('restore')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><RotateCcw size={14}/> Restaurar</button>
+                        )}
                         <button onClick={() => handleBulkAction('delete')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><Trash2 size={14}/> Eliminar</button>
                     </div>
                 </div>
@@ -1074,7 +1075,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                     </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
-                        {/* Desktop Header (Hidden on Mobile) */}
                         <div className="hidden md:grid grid-cols-[50px_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                             <div className="flex items-center justify-center"><input type="checkbox" className="custom-checkbox" checked={selectedLeads.length === sortedLeads.length && sortedLeads.length > 0} onChange={toggleSelectAll}/></div>
                             <div>Prospecto</div>
@@ -1096,7 +1096,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                 
                                 return (
                                 <React.Fragment key={lead.id}>
-                                    {/* Desktop Row */}
                                     <div onClick={() => setViewingLead(lead)} className={`hidden md:grid grid-cols-[50px_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 border-b border-gray-50 items-center hover:bg-gray-50/80 cursor-pointer transition-colors text-sm group ${isSelected ? 'bg-rose-50/50' : ''}`}>
                                         <div className="flex items-center justify-center" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
@@ -1133,8 +1132,10 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                              </button>
                                         </div>
                                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-colors shadow-sm"><Archive size={14}/></button>
-                                            <button onClick={(e) => handleDeleteLead(e, lead.id)} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-colors shadow-sm"><Trash2 size={14}/></button>
+                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-colors shadow-sm" title={lead.status === 'archived' ? 'Restaurar' : 'Archivar'}>
+                                                {lead.status === 'archived' ? <RotateCcw size={14}/> : <Archive size={14}/>}
+                                            </button>
+                                            <button onClick={(e) => handleDeleteLead(e, lead.id)} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-colors shadow-sm" title="Eliminar"><Trash2 size={14}/></button>
                                         </div>
                                     </div>
 
@@ -1169,7 +1170,9 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                         </div>
                                         
                                         <div className="flex justify-end gap-2 border-t border-gray-50 pt-3 mt-1" onClick={e => e.stopPropagation()}>
-                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-xl text-xs font-bold flex items-center gap-1.5"><Archive size={12}/> Archivar</button>
+                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                                                {lead.status === 'archived' ? <><RotateCcw size={12}/> Restaurar</> : <><Archive size={12}/> Archivar</>}
+                                            </button>
                                         </div>
                                     </div>
                                 </React.Fragment>
