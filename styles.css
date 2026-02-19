@@ -1,1 +1,102 @@
+body { 
+    background-color: #FFF1F2; 
+    margin: 0; 
+    overflow-y: auto;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
 
+.btn-option { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.btn-option:active { transform: scale(0.98); }
+
+.bg-immediate-red {
+    background-color: #be123c; 
+    background-image: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+}
+
+.letter-paper {
+    background-color: #FFFCF5;
+    background-image: radial-gradient(#E5E7EB 1px, transparent 0);
+    background-size: 20px 20px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+}
+
+.signature-input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px dashed #9CA3AF;
+    width: 100%;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5rem;
+    color: #1F2937;
+    padding: 4px 0;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.signature-input:focus { border-color: #E11D48; }
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.custom-checkbox {
+    appearance: none;
+    background-color: transparent;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #D1D5DB;
+    border-radius: 6px;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.custom-checkbox::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em white;
+    background-color: white;
+    transform-origin: center;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.custom-checkbox:checked {
+    background-color: #E11D48;
+    border-color: #E11D48;
+}
+.custom-checkbox:checked::before {
+    transform: scale(1);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+input[type="date"], input[type="time"] {
+    -webkit-appearance: none;
+    display: block;
+    font-family: inherit;
+}
