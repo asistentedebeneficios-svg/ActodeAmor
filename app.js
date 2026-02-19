@@ -1274,10 +1274,13 @@ const App = () => {
                         <p className="mt-4 text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-1.5"><Shield size={14}/> 100% Gratuito y sin compromiso</p>
                     </div>
                     
-                    {/* Image Collage */}
+                    {/* Image Collage - ACTUALIZADO CON LA NUEVA IMAGEN VERTICAL */}
                     <div className="flex-1 w-full relative z-10 mt-8 lg:mt-0">
                         <div className="grid grid-cols-2 gap-4 md:gap-6">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_3txi543txi543txi-scaled.png" alt="Familia feliz y protegida" className="rounded-3xl object-cover h-48 md:h-[400px] lg:h-[480px] w-full shadow-soft col-span-2 md:col-span-1 hover:shadow-xl transition-shadow duration-500" />
+                            {/* Imagen Principal Nueva (Vertical) */}
+                            <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_4uslky4uslky4usl.png" alt="Familia feliz y protegida" className="rounded-3xl object-cover h-48 md:h-[400px] lg:h-[480px] w-full shadow-soft col-span-2 md:col-span-1 hover:shadow-xl transition-shadow duration-500" />
+                            
+                            {/* Imágenes pequeñas laterales */}
                             <div className="grid grid-cols-2 md:grid-cols-1 gap-4 md:gap-6 col-span-2 md:col-span-1">
                                 <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_7n92w57n92w57n92-scaled.png" alt="Tranquilidad familiar" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
                                 <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_j5ui6tj5ui6tj5ui-scaled.png" alt="Pareja disfrutando su retiro" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
