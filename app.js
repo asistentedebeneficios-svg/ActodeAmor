@@ -185,10 +185,16 @@ const useFirebaseDatabase = () => {
         return () => { unsubLeads(); unsubAgents(); unsubSchedule(); };
     }, [user]);
 
-    const addLead = async (lead) => {
-        if (!user) return;
-        const newLead = { ...lead, timestamp: Date.now(), status: 'new', notes: '' };
-        await addDoc(collection(db, 'leads'), newLead);
+   const addLead = async (lead) => {
+        try {
+            console.log("Intentando guardar lead:", lead);
+            const newLead = { ...lead, timestamp: Date.now(), status: 'new', notes: '' };
+            await addDoc(collection(db, 'leads'), newLead);
+            console.log("¡Lead guardado con éxito en Firebase!");
+        } catch (error) {
+            console.error("🚨 ERROR CRÍTICO AL GUARDAR EL LEAD:", error);
+            alert("Hubo un error de conexión al guardar. Revisa la consola (F12).");
+        }
     };
 
     const updateLead = async (id, data) => {
