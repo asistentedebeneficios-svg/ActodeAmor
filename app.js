@@ -1277,15 +1277,16 @@ const App = () => {
                     {/* Image Collage */}
                     <div className="flex-1 w-full relative z-10 mt-8 lg:mt-0">
                         <div className="grid grid-cols-2 gap-4 md:gap-6">
-                            <img src="https://images.unsplash.com/photo-1581579186913-461ca169766c?auto=format&fit=crop&q=80&w=800" alt="Abuelos felices con su nieta" className="rounded-3xl object-cover h-48 md:h-[400px] lg:h-[480px] w-full shadow-soft col-span-2 md:col-span-1 hover:shadow-xl transition-shadow duration-500" />
+                            {/* Imagen Principal Grande (Izquierda) */}
+                            <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_3txi543txi543txi-scaled.png" alt="Familia feliz y protegida" className="rounded-3xl object-cover h-48 md:h-[400px] lg:h-[480px] w-full shadow-soft col-span-2 md:col-span-1 hover:shadow-xl transition-shadow duration-500" />
+                            
+                            {/* Columna de 2 imágenes pequeñas (Derecha) */}
                             <div className="grid grid-cols-2 md:grid-cols-1 gap-4 md:gap-6 col-span-2 md:col-span-1">
-                                <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=600" alt="Familia caminando junta" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
-                                <img src="https://images.unsplash.com/photo-1517046429532-613d987d6056?auto=format&fit=crop&q=80&w=600" alt="Pareja mayor tranquila" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
+                                <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_7n92w57n92w57n92-scaled.png" alt="Tranquilidad familiar" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
+                                <img src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_j5ui6tj5ui6tj5ui-scaled.png" alt="Pareja disfrutando su retiro" className="rounded-3xl object-cover h-32 md:h-[188px] lg:h-[228px] w-full shadow-soft hover:shadow-xl transition-shadow duration-500" />
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
             {/* Trust Grid */}
             <div className="py-12 md:py-24 px-6 max-w-7xl mx-auto w-full">
