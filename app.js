@@ -1271,7 +1271,7 @@ const App = () => {
                         <button onClick={() => setStepIndex(1)} className="w-full max-w-sm lg:mx-0 bg-[#E11D48] text-white py-4 md:py-5 rounded-full text-xl font-bold shadow-xl shadow-rose-200 hover:shadow-rose-300 hover:scale-105 transition-all flex items-center justify-center gap-2">
                             Comenzar Ahora <ChevronRight size={24}/>
                         </button>
-                        <p className="mt-4 text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-1.5"><Shield size={14}/> 100% Gratuito y sin compromiso</p>
+                        <p className="mt-4 text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center justify-center lg:justify-start gap-1.5"><Shield size={14}/> Asesoria 100% Gratuita y en su idioma</p>
                     </div>
                     
                     {/* Image Collage - ACTUALIZADO CON LA NUEVA IMAGEN VERTICAL */}
