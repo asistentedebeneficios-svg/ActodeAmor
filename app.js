@@ -1634,8 +1634,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     
-    const { leads, agents, schedule, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, adminLogin, adminLogout } = useFirebaseDatabase();
-
+    const { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
     useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
@@ -1678,6 +1677,7 @@ const App = () => {
                 leads={leads} 
                 agents={agents} 
                 schedule={schedule}
+                webhooks={webhooks}
                 onUpdateLead={updateLead}
                 bulkUpdateLeads={bulkUpdateLeads}
                 bulkDeleteLeads={bulkDeleteLeads}
@@ -1685,6 +1685,7 @@ const App = () => {
                 onSaveAgent={saveAgent} 
                 onDeleteAgent={deleteAgent}
                 onUpdateSchedule={updateSchedule}
+                onUpdateWebhooks={updateWebhooks}
                 onClose={() => setShowAdmin(false)}
                 onLogout={handleLogout}
             />
