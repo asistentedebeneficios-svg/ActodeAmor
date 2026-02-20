@@ -955,6 +955,266 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
     );
 };
 
+const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [view, setView] = useState('month'); // Vistas disponibles: 'day', 'week', 'month', 'year'
+
+    // Funciones de navegación de tiempo
+    const prev = () => {
+        const newDate = new Date(currentDate);
+        if(view === 'month') newDate.setMonth(newDate.getMonth() - 1);
+        if(view === 'week') newDate.setDate(newDate.getDate() - 7);
+        if(view === 'day') newDate.setDate(newDate.getDate() - 1);
+        if(view === 'year') newDate.setFullYear(newDate.getFullYear() - 1);
+        setCurrentDate(newDate);
+    };
+    const next = () => {
+        const newDate = new Date(currentDate);
+        if(view === 'month') newDate.setMonth(newDate.getMonth() + 1);
+        if(view === 'week') newDate.setDate(newDate.getDate() + 7);
+        if(view === 'day') newDate.setDate(newDate.getDate() + 1);
+        if(view === 'year') newDate.setFullYear(newDate.getFullYear() + 1);
+        setCurrentDate(newDate);
+    };
+    const today = () => setCurrentDate(new Date());
+
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+    // Filtra las citas seguras para una fecha "YYYY-MM-DD"
+    const getLeadsForDate = (dateStr) => leads.filter(l => l.date === dateStr && l.status !== 'archived').sort((a, b) => a.time.localeCompare(b.time));
+
+    const formatDate = (date) => {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    };
+
+    // --- VISTA 1: MES (Almanaque Grid) ---
+    const renderMonth = () => {
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+        const days = [];
+        for (let i = 0; i < firstDayOfMonth; i++) days.push(null);
+        for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+
+        return (
+            <div className="flex-1 flex flex-col h-full bg-gray-50/30">
+                <div className="grid grid-cols-7 border-b border-gray-200 bg-white shrink-0">
+                    {dayNames.map(day => <div key={day} className="py-2 md:py-3 text-center text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{day}</div>)}
+                </div>
+                <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-y-auto">
+                    {days.map((dateObj, index) => {
+                        if (!dateObj) return <div key={`empty-${index}`} className="border-b border-r border-gray-100 bg-gray-50/50 min-h-[80px] md:min-h-[100px]"></div>;
+                        const dateString = formatDate(dateObj);
+                        const dayLeads = getLeadsForDate(dateString);
+                        const isToday = formatDate(new Date()) === dateString;
+
+                        return (
+                            <div key={index} onClick={() => { setView('day'); setCurrentDate(dateObj); }} className={`border-b border-r border-gray-100 min-h-[80px] md:min-h-[100px] p-1 md:p-2 flex flex-col transition-colors hover:bg-gray-100 cursor-pointer ${isToday ? 'bg-rose-50/30' : 'bg-white'}`}>
+                                <div className="flex justify-between items-start mb-1">
+                                    <span className={`text-xs font-bold w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-rose-500 text-white shadow-sm' : 'text-gray-500'}`}>{dateObj.getDate()}</span>
+                                    {dayLeads.length > 0 && <span className="hidden md:inline-flex items-center justify-center w-5 h-5 text-[9px] font-bold text-white bg-blue-500 rounded-full shadow-sm">{dayLeads.length}</span>}
+                                    {dayLeads.length > 0 && <span className="md:hidden w-2 h-2 rounded-full bg-blue-500 mt-1.5"></span>}
+                                </div>
+                                <div className="flex-1 flex flex-col gap-1 overflow-y-auto scrollbar-hide">
+                                    {dayLeads.slice(0, 3).map(lead => (
+                                        <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className="bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:block">
+                                            <div className="font-bold text-[9px] truncate">{lead.time} - {lead.name.split(' ')[0]}</div>
+                                        </div>
+                                    ))}
+                                    {dayLeads.length > 3 && <div className="text-[9px] text-gray-400 font-bold text-center hidden md:block">+{dayLeads.length - 3} más</div>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    // --- VISTA 2: SEMANA (Columnas) ---
+    const renderWeek = () => {
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+        const weekDays = [];
+        for(let i=0; i<7; i++) {
+            const d = new Date(startOfWeek);
+            d.setDate(startOfWeek.getDate() + i);
+            weekDays.push(d);
+        }
+
+        return (
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50/30">
+                <div className="grid grid-cols-7 border-b border-gray-200 bg-white shrink-0">
+                    {weekDays.map((dateObj, i) => {
+                        const isToday = formatDate(new Date()) === formatDate(dateObj);
+                        return (
+                            <div key={i} className={`py-2 text-center border-r border-gray-100 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 ${isToday ? 'bg-rose-50/30' : ''}`} onClick={() => { setView('day'); setCurrentDate(dateObj); }}>
+                                <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">{dayNames[dateObj.getDay()]}</span>
+                                <span className={`text-sm md:text-lg font-bold mt-0.5 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full ${isToday ? 'bg-rose-500 text-white shadow-sm' : 'text-gray-800'}`}>{dateObj.getDate()}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="flex-1 grid grid-cols-7 overflow-y-auto">
+                    {weekDays.map((dateObj, i) => {
+                        const dateString = formatDate(dateObj);
+                        const dayLeads = getLeadsForDate(dateString);
+                        return (
+                            <div key={i} className="border-r border-gray-100 p-1.5 md:p-2 flex flex-col gap-2 min-h-[300px] bg-white">
+                                {dayLeads.map(lead => (
+                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
+                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 mb-1 flex items-center gap-1"><Clock size={10}/> {lead.time}</div>
+                                        <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate">{lead.name.split(' ')[0]}</div>
+                                    </div>
+                                ))}
+                                {dayLeads.length === 0 && <div className="text-center text-gray-300 text-[9px] uppercase font-bold tracking-widest mt-4 rotate-90 md:rotate-0 origin-left ml-2 md:ml-0">Libre</div>}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    // --- VISTA 3: DÍA (Agenda Detallada) ---
+    const renderDay = () => {
+        const dateString = formatDate(currentDate);
+        const dayLeads = getLeadsForDate(dateString);
+        const isToday = formatDate(new Date()) === dateString;
+
+        return (
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/50">
+                <div className="max-w-3xl mx-auto">
+                    <div className={`mb-6 p-6 rounded-3xl border flex items-center justify-between ${isToday ? 'bg-rose-500 text-white shadow-lg border-rose-600' : 'bg-white text-gray-900 shadow-sm border-gray-200'}`}>
+                        <div>
+                            <h3 className="text-2xl md:text-3xl font-bold">{dayNames[currentDate.getDay()]}, {currentDate.getDate()} de {monthNames[currentDate.getMonth()]}</h3>
+                            <p className={`text-sm font-medium mt-1 ${isToday ? 'text-rose-100' : 'text-gray-500'}`}>{dayLeads.length} citas programadas para este día</p>
+                        </div>
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${isToday ? 'border-rose-400 bg-rose-600' : 'border-gray-50 bg-gray-100'}`}>
+                            <CalendarDays size={28} className={isToday ? 'text-white' : 'text-gray-400'}/>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-3 md:space-y-4">
+                        {dayLeads.length === 0 ? (
+                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300">
+                                <CalendarDays size={32} className="mx-auto text-gray-300 mb-3"/>
+                                <p className="text-gray-400 font-bold text-sm md:text-base">No hay citas agendadas.</p>
+                                <p className="text-gray-400 text-xs mt-1">Día libre para prospección u otras tareas.</p>
+                            </div>
+                        ) : (
+                            dayLeads.map(lead => (
+                                <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex items-center gap-4 group">
+                                    <div className="w-16 md:w-20 text-center shrink-0 border-r border-gray-100 pr-4">
+                                        <span className="block font-bold text-sm md:text-base text-blue-600">{lead.time}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
+                                            <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
+                                            {lead.state && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded uppercase text-[10px] tracking-wider">{lead.state}</span>}
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shrink-0 border border-gray-100">
+                                        <ChevronRight size={18}/>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- VISTA 4: AÑO (Resumen Mensual) ---
+    const renderYear = () => {
+        return (
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50/50">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    {monthNames.map((month, index) => {
+                        const monthLeads = leads.filter(l => {
+                            if(l.status === 'archived' || !l.date) return false;
+                            const d = new Date(l.date + 'T00:00:00');
+                            return d.getMonth() === index && d.getFullYear() === currentDate.getFullYear();
+                        });
+                        const isCurrentMonth = new Date().getMonth() === index && new Date().getFullYear() === currentDate.getFullYear();
+
+                        return (
+                            <div key={month} onClick={() => { setCurrentDate(new Date(currentDate.getFullYear(), index, 1)); setView('month'); }} className={`bg-white p-4 rounded-3xl border shadow-sm hover:shadow-md hover:border-rose-300 transition-all cursor-pointer flex flex-col items-center justify-center gap-2 aspect-square ${isCurrentMonth ? 'border-rose-300 ring-4 ring-rose-50/50' : 'border-gray-200'}`}>
+                                <h3 className={`font-bold text-lg md:text-xl capitalize ${isCurrentMonth ? 'text-rose-600' : 'text-gray-800'}`}>{month}</h3>
+                                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 text-lg font-bold text-gray-900 shadow-inner">
+                                    {monthLeads.length}
+                                </div>
+                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Citas</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto bg-white rounded-none md:rounded-3xl shadow-none md:shadow-soft border-0 md:border border-gray-100 flex flex-col h-[calc(100vh-140px)] md:h-[800px] animate-fade-in overflow-hidden relative z-10">
+            {/* Cabecera Principal y Controles */}
+            <div className="px-4 md:px-6 py-4 md:py-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between bg-white z-20 gap-4 md:gap-0 shrink-0">
+                <div className="flex items-center justify-between w-full md:w-auto">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-black text-white p-2.5 rounded-xl shadow-md"><CalendarDays size={20}/></div>
+                        <div>
+                            <h2 className="text-lg md:text-2xl font-bold text-gray-900 capitalize leading-tight">
+                                {view === 'year' ? currentDate.getFullYear() : 
+                                 view === 'month' || view === 'week' ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}` : 
+                                 `${dayNames[currentDate.getDay()]} ${currentDate.getDate()} ${monthNames[currentDate.getMonth()]}`}
+                            </h2>
+                            <p className="text-[10px] md:text-xs text-gray-500 font-bold tracking-widest uppercase">CRM Agenda</p>
+                        </div>
+                    </div>
+                    
+                    {/* Botones Prev/Next Móvil */}
+                    <div className="flex md:hidden bg-gray-100 border border-gray-200 rounded-xl shadow-inner overflow-hidden">
+                        <button onClick={prev} className="p-2 text-gray-600 hover:bg-gray-200 transition-colors border-r border-gray-200"><ArrowLeft size={16}/></button>
+                        <button onClick={today} className="p-2 px-3 text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-200 transition-colors border-r border-gray-200">Hoy</button>
+                        <button onClick={next} className="p-2 text-gray-600 hover:bg-gray-200 transition-colors"><ArrowRight size={16}/></button>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto scrollbar-hide pb-1 md:pb-0">
+                    {/* Selector de Vistas (Día, Semana, Mes, Año) */}
+                    <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner shrink-0">
+                        {['day', 'week', 'month', 'year'].map(v => (
+                            <button key={v} onClick={() => setView(v)} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs font-bold capitalize transition-all ${view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                {v === 'day' ? 'Día' : v === 'week' ? 'Semana' : v === 'month' ? 'Mes' : 'Año'}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {/* Botones Prev/Next PC */}
+                    <div className="hidden md:flex bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden shrink-0">
+                        <button onClick={prev} className="p-2 px-3 hover:bg-gray-50 text-gray-600 transition-colors border-r border-gray-200"><ArrowLeft size={16}/></button>
+                        <button onClick={today} className="p-2 px-4 text-xs font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors border-r border-gray-200">Hoy</button>
+                        <button onClick={next} className="p-2 px-3 hover:bg-gray-50 text-gray-600 transition-colors"><ArrowRight size={16}/></button>
+                    </div>
+                    
+                    <button onClick={onOpenSettings} className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-rose-600 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm shrink-0"><Settings size={14}/> Horarios</button>
+                </div>
+            </div>
+
+            {/* Renderizado Condicional del Contenido */}
+            {view === 'month' && renderMonth()}
+            {view === 'week' && renderWeek()}
+            {view === 'day' && renderDay()}
+            {view === 'year' && renderYear()}
+
+            {/* Botón de configuración móvil */}
+            <div className="lg:hidden p-3 border-t border-gray-200 bg-white shrink-0">
+                <button onClick={onOpenSettings} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"><Settings size={14}/> Configurar Horas Disponibles</button>
+            </div>
+        </div>
+    );
+};
+
 const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onClose, onLogout }) => {
     const [activeTab, setActiveTab] = useState('active'); 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
@@ -965,6 +1225,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
     const [isBulkAgentSelectOpen, setIsBulkAgentSelectOpen] = useState(false);
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showScheduleSettings, setShowScheduleSettings] = useState(false);
 
     const getFilteredLeads = () => {
         let list = [];
@@ -1050,7 +1311,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                 {['active', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
-                        onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm('');}} 
+                        onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
                         className={`py-3 px-3 md:px-1 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-rose-600 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}
                     >
                         {tab === 'active' && 'Bandeja'}
@@ -1083,7 +1344,18 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
 
             <div className="flex-1 overflow-auto bg-apple-gray relative p-4 md:p-8">
                 {
-                 activeTab === 'schedule' ? <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} /> :
+                 activeTab === 'schedule' ? (
+                     showScheduleSettings ? (
+                         <div className="max-w-4xl mx-auto">
+                             <div className="mb-6">
+                                 <button onClick={() => setShowScheduleSettings(false)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200 transition-colors"><ArrowLeft size={16}/> Volver al Calendario</button>
+                             </div>
+                             <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
+                         </div>
+                     ) : (
+                         <AdminCalendar leads={leads} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
+                     )
+                 ) :
                  activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto">
                         <div className="flex justify-between items-center mb-6">
@@ -1224,7 +1496,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             
             {/* Modals */}
             {isAgentModalOpen && <AgentModal agent={editingAgent} onClose={() => setIsAgentModalOpen(false)} onSave={handleSaveAgent} />}
-            {viewingLead && <LeadDetail lead={leads.find(l => l.id === viewingLead.id) || viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
+            {viewingLead && <LeadDetail lead={viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={leads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
             {individualAgentSelectLeadId && (<AgentSelectionModal agents={agents} onClose={() => setIndividualAgentSelectLeadId(null)} onSelect={(agentId) => { onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); setIndividualAgentSelectLeadId(null); }} />)}
