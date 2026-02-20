@@ -1263,10 +1263,7 @@ const App = () => {
             <div className="relative pt-24 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
                     {/* Text Content */}
-                    <div className="flex-1 w-full flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-                        <div className="mb-6 lg:mb-8">
-                            <HeartProgress percentage={10} isBeating={true} />
-                        </div>
+                    <div className="flex-1 w-full flex flex-col items-center lg:items-start text-center lg:text-left relative z-10 pt-4">
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight text-balance leading-[1.1]">
                             Protege el futuro de <span className="text-rose-600">quienes más amas</span>
                         </h1>
