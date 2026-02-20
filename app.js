@@ -754,7 +754,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                 <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100/50">
                                     <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400"/> {lead.state || 'N/A'}</p></div>
                                     <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span><p className="font-semibold text-gray-800 text-sm flex flex-col leading-tight">
-                                        <span className="capitalize">
+                                        <span>
                                             {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}
                                         </span>
                                         <span className="text-gray-500 mt-0.5">{lead.time}</span>
