@@ -1613,7 +1613,30 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             {viewingLead && <LeadDetail lead={viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
-            {individualAgentSelectLeadId && (<AgentSelectionModal agents={agents} onClose={() => setIndividualAgentSelectLeadId(null)} onSelect={(agentId) => { onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); setIndividualAgentSelectLeadId(null); }} />)}
+            {individualAgentSelectLeadId && (
+                <AgentSelectionModal 
+                    agents={agents} 
+                    onClose={() => setIndividualAgentSelectLeadId(null)} 
+                    onSelect={(agentId) => { 
+                        onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
+                        
+                        // Ahora lee la URL secreta desde tu engranaje
+                        if (agentId && webhooks && webhooks.assignment) {
+                            const assignedLead = processedLeads.find(l => l.id === individualAgentSelectLeadId);
+                            const assignedAgent = agents.find(a => a.id === agentId);
+                            if (assignedLead && assignedAgent) {
+                                fetch(webhooks.assignment, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ lead: assignedLead, agent: assignedAgent })
+                                }).catch(e => console.error("Error Webhook Correo:", e));
+                            }
+                        }
+                        
+                        setIndividualAgentSelectLeadId(null); 
+                    }} 
+                />
+            )}
             {showWebhookSettings && <WebhookSettingsModal webhooks={webhooks} onSave={onUpdateWebhooks} onClose={() => setShowWebhookSettings(false)} />}
         </div>
     );
@@ -1654,7 +1677,21 @@ const App = () => {
     const next = () => { setReinforcement(null); if (stepIndex < STEPS.length - 1) setStepIndex(p => p + 1); };
     const handleOptClick = (id) => currentStep.multiSelect ? setTempSelections(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]) : proceed([id]);
     const handleContinue = () => tempSelections.length > 0 && proceed(tempSelections);
-    const saveData = async (form) => { const finalData = { ...leadData, ...form }; await addLead(finalData); };
+    const saveData = async (form) => { 
+        const finalData = { ...leadData, ...form }; 
+        await addLead(finalData); 
+        
+        // Ahora lee la URL secreta desde tu engranaje
+        if (webhooks && webhooks.telegram) {
+            try {
+                fetch(webhooks.telegram, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(finalData)
+                });
+            } catch (err) { console.error("Error Webhook Telegram:", err); }
+        }
+    };
     const completeSuccess = () => { setIsSuccess(true); };
 
     // --- CAMBIO 2: Guardar el pase VIP al entrar ---
