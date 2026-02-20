@@ -943,8 +943,9 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                                         <div className="flex items-center gap-3 md:gap-4">
                                             <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
                                             <div>
-                                                <div>
                                                 <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
+                                                
+                                                {/* Aquí está el bloque de la fecha humanizada ya integrado de forma segura */}
                                                 <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
                                                     <span className="capitalize">
                                                         {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
@@ -954,6 +955,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                                                         {lead.localTime || lead.time}
                                                     </span>
                                                 </div>
+                                                
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 md:gap-4 shrink-0">
