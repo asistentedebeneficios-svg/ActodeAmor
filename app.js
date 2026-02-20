@@ -38,6 +38,12 @@ const STEPS = [
         { id: '15k', label: '$15,000 - $25,000', icon: DollarSign },
         { id: '25k', label: '$25,000 o más', icon: DollarSign }
     ]},
+    { id: 'budget', question: "¿Qué presupuesto mensual podría destinar?", subtext: "Una pequeña inversión hoy es un gran alivio mañana.", multiSelect: false, options: [
+        { id: '30-50', label: 'De $30 a $50', icon: Heart },
+        { id: '50-80', label: 'De $50 a $80', icon: Heart },
+        { id: '80-100', label: 'De $80 a $100', icon: Heart },
+        { id: '100-150', label: 'De $100 a $150', icon: Heart }
+    ]},
     { id: 'faq_consult', isFAQ: true, question: "Dudas Frecuentes", subtext: "Seleccione las preguntas para ver la respuesta.", faqOptions: [ 
         { id: 'cost', label: '¿Será muy costoso?', icon: DollarSign, answer: "Para nada. Nuestros planes están diseñados para ajustarse a presupuestos fijos y lo mejor: la cuota nunca sube con el tiempo." },
         { id: 'health', label: '¿Piden examen médico?', icon: Stethoscope, answer: "¡Buenas noticias! La mayoría de nuestros planes NO requieren examen médico, solo responder unas sencillas preguntas de salud." },
@@ -88,6 +94,7 @@ const getReinforcementMessage = (stepId, selections) => {
     }
     if (stepId === 'motivation') return { title: "Paz Mental", text: "Transformas una futura preocupación en un recuerdo de amor.", icon: Star };
     if (stepId === 'coverage_amount') return { title: "Vas por buen camino", text: "El costo promedio de un funeral supera los $9,000. Tu elección ayudará a cubrir esa diferencia.", icon: DollarSign };
+    if (stepId === 'budget') return { title: "Una inversión de amor", text: "Cuidar a su familia no requiere una fortuna. Con este esfuerzo mensual, les garantizará paz mental y tranquilidad para siempre.", icon: Heart };
     return null;
 };
 
@@ -797,6 +804,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                     <span className="text-sm text-gray-500 font-medium">Monto estimado</span>
                                     <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
                                 </div>
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                    <span className="text-sm text-gray-500 font-medium">Presupuesto mensual</span>
+                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
+                                </div>         
                                 <div className="px-1 pt-1">
                                     <span className="text-sm text-gray-500 font-medium block mb-2">Principales Motivaciones</span>
                                     <div className="flex flex-wrap gap-2">
