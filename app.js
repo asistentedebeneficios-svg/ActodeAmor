@@ -782,7 +782,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-                <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
                         <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">{lead.name}</h2>
@@ -872,7 +872,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                         <ChevronRight size={18} className="text-gray-300 group-hover:text-rose-500 transition-colors shrink-0 ml-2"/>
                                     </button>
                                 </div>
-                                <div className="flex gap-3 md:flex-col md:w-32 shrink-0 pt-6 md:pt-0">
+                                <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0">
                                     <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}>
                                         {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                     </button>
@@ -1291,9 +1291,9 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
                         </div>
                     </div>
-                    <div className="flex gap-2 md:hidden">
-                        <button onClick={onLogout} className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white rounded-full shadow-sm" title="Cerrar Sesión"><LogOut size={16}/></button>
-                        <button onClick={onClose} className="p-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><X size={16} /></button>
+                    {/* Botón Salir Móvil */}
+                    <div className="flex md:hidden">
+                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cerrar Sesión"><LogOut size={16}/></button>
                     </div>
                 </div>
                 
@@ -1310,9 +1310,9 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                     </div>
                 )}
                 
-                <div className="hidden md:flex gap-2">
-                     <button onClick={onLogout} className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm"><LogOut size={14}/> Salir</button>
-                     <button onClick={onClose} className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:text-rose-600 transition-colors shadow-sm"><X size={18} className="text-gray-600" /></button>
+                {/* Botón Salir Desktop */}
+                <div className="hidden md:flex">
+                     <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Cerrar Sesión</button>
                 </div>
             </div>
 
@@ -1333,19 +1333,19 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             </div>
 
             {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
-                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white p-2 md:px-6 md:py-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up z-30 w-[90%] md:w-auto border border-gray-700">
-                    <span className="text-xs md:text-sm font-bold flex items-center gap-2 shrink-0 pt-1 md:pt-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
+                <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up z-40 w-[92%] max-w-sm md:max-w-none border border-gray-700">
+                    <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
                     <div className="hidden md:block h-5 w-px bg-gray-700"></div>
-                    <div className="flex gap-2 w-full md:w-auto justify-center pb-1 md:pb-0">
+                    <div className="grid grid-cols-3 md:flex gap-1.5 md:gap-2 w-full md:w-auto">
                         {activeTab !== 'archived' ? (
                             <>
-                                <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><UserPlus size={14}/> Asignar</button>
-                                <button onClick={() => handleBulkAction('archive')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><Archive size={14}/> Archivar</button>
+                                <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><UserPlus size={16} className="md:w-4 md:h-4"/> <span className="truncate">Asignar</span></button>
+                                <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Archive size={16} className="md:w-4 md:h-4"/> <span className="truncate">Archivar</span></button>
                             </>
                         ) : (
-                            <button onClick={() => handleBulkAction('restore')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><RotateCcw size={14}/> Restaurar</button>
+                            <button onClick={() => handleBulkAction('restore')} className="col-span-3 md:col-span-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><RotateCcw size={16} className="md:w-4 md:h-4"/> <span className="truncate">Restaurar</span></button>
                         )}
-                        <button onClick={() => handleBulkAction('delete')} className="flex-1 md:flex-none px-3 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-xs md:text-sm font-medium transition-colors flex items-center justify-center gap-1.5"><Trash2 size={14}/> Eliminar</button>
+                        <button onClick={() => handleBulkAction('delete')} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Trash2 size={16} className="md:w-4 md:h-4"/> <span className="truncate">Eliminar</span></button>
                     </div>
                 </div>
             )}
@@ -1671,7 +1671,7 @@ const App = () => {
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
                     {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
-                        <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 h-40 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
+                        <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
                 {!currentStep.isForm && !currentStep.isFAQ && !currentStep.isLetter && (<div className="p-4 md:p-6 mt-auto"><div className="flex justify-between items-center"><button onClick={() => setStepIndex(p => Math.max(0, p - 1))} className="p-4 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><ArrowLeft size={24} /></button>{currentStep.multiSelect && (<button onClick={handleContinue} disabled={tempSelections.length === 0} className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg shadow-lg transition-all ${tempSelections.length > 0 ? 'bg-[#E11D48] text-white' : 'bg-gray-200 text-gray-400 opacity-0'}`}>Continuar <ChevronRight size={20} /></button>)}</div></div>)}
