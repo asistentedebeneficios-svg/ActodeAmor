@@ -1333,19 +1333,19 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             </div>
 
             {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
-                <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up z-40 w-[92%] max-w-sm md:max-w-none border border-gray-700">
+                <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up z-[70] w-[95%] max-w-[360px] md:max-w-none border border-gray-700">
                     <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
                     <div className="hidden md:block h-5 w-px bg-gray-700"></div>
-                    <div className="grid grid-cols-3 md:flex gap-1.5 md:gap-2 w-full md:w-auto">
+                    <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
                         {activeTab !== 'archived' ? (
                             <>
-                                <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><UserPlus size={16} className="md:w-4 md:h-4"/> <span className="truncate">Asignar</span></button>
-                                <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Archive size={16} className="md:w-4 md:h-4"/> <span className="truncate">Archivar</span></button>
+                                <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><UserPlus size={18} className="md:w-4 md:h-4"/> <span className="truncate">Asignar</span></button>
+                                <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Archive size={18} className="md:w-4 md:h-4"/> <span className="truncate">Archivar</span></button>
                             </>
                         ) : (
-                            <button onClick={() => handleBulkAction('restore')} className="col-span-3 md:col-span-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><RotateCcw size={16} className="md:w-4 md:h-4"/> <span className="truncate">Restaurar</span></button>
+                            <button onClick={() => handleBulkAction('restore')} className="col-span-3 md:col-span-1 flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><RotateCcw size={18} className="md:w-4 md:h-4"/> <span className="truncate">Restaurar</span></button>
                         )}
-                        <button onClick={() => handleBulkAction('delete')} className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 px-1 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Trash2 size={16} className="md:w-4 md:h-4"/> <span className="truncate">Eliminar</span></button>
+                        <button onClick={() => handleBulkAction('delete')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Trash2 size={18} className="md:w-4 md:h-4"/> <span className="truncate">Eliminar</span></button>
                     </div>
                 </div>
             )}
