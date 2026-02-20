@@ -1333,7 +1333,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             </div>
 
             {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
-                /* Contenedor invisible para centrar */
+                
                 <div className="fixed bottom-4 md:bottom-8 left-0 w-full flex justify-center px-4 z-[100] pointer-events-none">
                     <div className="bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-3xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up border border-gray-700 w-full max-w-[400px] md:max-w-none pointer-events-auto">
                         <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0">
