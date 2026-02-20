@@ -144,6 +144,7 @@ const useFirebaseDatabase = () => {
     const [leads, setLeads] = useState([]);
     const [agents, setAgents] = useState([]);
     const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
+    const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -170,6 +171,17 @@ const useFirebaseDatabase = () => {
             if(err.code !== 'permission-denied') console.error("Schedule error:", err);
         });
 
+        const webhooksDoc = doc(db, 'settings', 'webhooks');
+        const unsubWebhooks = onSnapshot(webhooksDoc, (snapshot) => {
+            if (snapshot.exists()) {
+                setWebhooks(snapshot.data());
+            } else if (!user.isAnonymous) {
+                setDoc(webhooksDoc, { telegram: '', assignment: '' }).catch(e => console.log("Webhooks auto-creation skipped"));
+            }
+        }, (err) => {
+            if(err.code !== 'permission-denied') console.error("Webhooks error:", err);
+        });
+
         let unsubLeads = () => {};
         let unsubAgents = () => {};
 
@@ -189,51 +201,33 @@ const useFirebaseDatabase = () => {
             });
         }
 
-        return () => { unsubLeads(); unsubAgents(); unsubSchedule(); };
+        return () => { unsubLeads(); unsubAgents(); unsubSchedule(); unsubWebhooks(); };
     }, [user]);
 
-   const addLead = async (lead) => {
+    const addLead = async (lead) => {
         try {
-            console.log("Intentando guardar lead:", lead);
             const newLead = { ...lead, timestamp: Date.now(), status: 'new', notes: '' };
             await addDoc(collection(db, 'leads'), newLead);
-            console.log("¡Lead guardado con éxito en Firebase!");
         } catch (error) {
-            console.error("🚨 ERROR CRÍTICO AL GUARDAR EL LEAD:", error);
-            alert("Hubo un error de conexión al guardar. Revisa la consola (F12).");
+            alert("Hubo un error de conexión al guardar.");
         }
     };
 
-    const updateLead = async (id, data) => {
-        if (!user) return;
-        await updateDoc(doc(db, 'leads', id), data);
-    };
-
+    const updateLead = async (id, data) => { if (user) await updateDoc(doc(db, 'leads', id), data); };
     const bulkUpdateLeads = async (ids, data) => {
         if (!user) return;
         const batch = writeBatch(db);
-        ids.forEach(id => {
-            const ref = doc(db, 'leads', id);
-            batch.update(ref, data);
-        });
+        ids.forEach(id => batch.update(doc(db, 'leads', id), data));
         await batch.commit();
     };
-
     const bulkDeleteLeads = async (ids) => {
         if (!user) return;
         const batch = writeBatch(db);
-        ids.forEach(id => {
-            const ref = doc(db, 'leads', id);
-            batch.delete(ref);
-        });
+        ids.forEach(id => batch.delete(doc(db, 'leads', id)));
         await batch.commit();
     };
-
-    const deleteLead = async (id) => {
-        if (!user) return;
-        await deleteDoc(doc(db, 'leads', id));
-    };
-
+    const deleteLead = async (id) => { if (user) await deleteDoc(doc(db, 'leads', id)); };
+    
     const saveAgent = async (agent) => {
         if (!user) return;
         const col = collection(db, 'agents');
@@ -244,26 +238,14 @@ const useFirebaseDatabase = () => {
             await addDoc(col, { ...agent, timestamp: Date.now() });
         }
     };
+    const deleteAgent = async (id) => { if (user) await deleteDoc(doc(db, 'agents', id)); };
+    const updateSchedule = async (newSchedule) => { if (user) await setDoc(doc(db, 'settings', 'schedule'), newSchedule); };
+    const updateWebhooks = async (newWebhooks) => { if (user) await setDoc(doc(db, 'settings', 'webhooks'), newWebhooks); };
 
-    const deleteAgent = async (id) => {
-        if (!user) return;
-        await deleteDoc(doc(db, 'agents', id));
-    };
+    const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
+    const adminLogout = async () => { await signOut(auth); };
 
-    const updateSchedule = async (newSchedule) => {
-        if (!user) return;
-        await setDoc(doc(db, 'settings', 'schedule'), newSchedule);
-    };
-
-    const adminLogin = async (email, password) => {
-        await signInWithEmailAndPassword(auth, email, password);
-    };
-
-    const adminLogout = async () => {
-        await signOut(auth);
-    };
-
-    return { leads, agents, schedule, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, adminLogin, adminLogout };
+    return { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout };
 };
 
 // --- COMPONENTS ---
@@ -1236,8 +1218,99 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
     );
 };
 
-const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onClose, onLogout }) => {
-    const [activeTab, setActiveTab] = useState('active'); 
+const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
+    const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
+    const [isEditing, setIsEditing] = useState(false);
+    const [showAuth, setShowAuth] = useState(false);
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+
+    const verifyPassword = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            await signInWithEmailAndPassword(auth, auth.currentUser.email, password);
+            setShowAuth(false);
+            setIsEditing(true);
+            setPassword('');
+        } catch (err) {
+            setError('Contraseña incorrecta. Intente de nuevo.');
+        }
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await onSave(localHooks);
+        setIsSaving(false);
+        setIsEditing(false);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[80] p-4 animate-fade-in">
+            <div className="glass-card bg-white/95 rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
+                
+                <div className="mb-6 pr-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-black text-white p-2 rounded-xl"><Settings size={20}/></div>
+                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Webhooks Make</h3>
+                    </div>
+                    <p className="text-sm text-gray-500">Configura las URLs de conexión externa.</p>
+                </div>
+
+                {showAuth ? (
+                    <form onSubmit={verifyPassword} className="space-y-4 animate-slide-up">
+                        <div className="p-5 bg-rose-50 border border-rose-100 rounded-2xl">
+                            <p className="text-xs font-bold text-rose-700 uppercase tracking-widest mb-3 flex items-center gap-2"><Lock size={14}/> Autenticación Requerida</p>
+                            <input type="password" placeholder="Ingresa tu contraseña de Admin..." className="w-full p-3.5 bg-white border border-rose-200 rounded-xl outline-none focus:border-rose-500 text-sm font-medium shadow-inner" value={password} onChange={e=>setPassword(e.target.value)} required autoFocus/>
+                            {error && <p className="text-xs text-red-500 mt-2 font-bold">{error}</p>}
+                            <div className="flex gap-2 mt-4">
+                                <button type="button" onClick={()=>setShowAuth(false)} className="flex-1 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 font-bold text-xs hover:bg-gray-50 transition-colors">Cancelar</button>
+                                <button type="submit" className="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-md transition-colors">Desbloquear</button>
+                            </div>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="space-y-5 animate-slide-up">
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Webhook: Telegram (Nuevo Lead)</label>
+                            <input 
+                                type={isEditing ? "text" : "password"} 
+                                value={localHooks.telegram} 
+                                onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
+                                readOnly={!isEditing}
+                                placeholder="https://hook..."
+                                className={`w-full p-3.5 border rounded-xl outline-none transition-all text-sm font-medium ${isEditing ? 'bg-white border-blue-300 focus:ring-4 focus:ring-blue-500/10 text-gray-900' : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed tracking-[0.2em]'}`}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Webhook: Correo (Asignar Agente)</label>
+                            <input 
+                                type={isEditing ? "text" : "password"} 
+                                value={localHooks.assignment} 
+                                onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
+                                readOnly={!isEditing}
+                                placeholder="https://hook..."
+                                className={`w-full p-3.5 border rounded-xl outline-none transition-all text-sm font-medium ${isEditing ? 'bg-white border-blue-300 focus:ring-4 focus:ring-blue-500/10 text-gray-900' : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed tracking-[0.2em]'}`}
+                            />
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-100">
+                            {!isEditing ? (
+                                <button onClick={() => setShowAuth(true)} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 rounded-xl font-bold text-sm transition-colors shadow-sm"><Edit2 size={16}/> Habilitar Edición</button>
+                            ) : (
+                                <button onClick={handleSave} disabled={isSaving} className="w-full flex items-center justify-center gap-2 py-3.5 bg-black text-white rounded-xl font-bold text-sm hover:scale-[1.02] shadow-xl transition-transform">{isSaving ? 'Guardando...' : 'Guardar y Proteger'}</button>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onClose, onLogout }) => {    const [activeTab, setActiveTab] = useState('active'); 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
     const [selectedLeads, setSelectedLeads] = useState([]);
@@ -1247,6 +1320,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
+    const [showWebhookSettings, setShowWebhookSettings] = useState(false);
 
     // MÁGIA: Agregamos la hora convertida a cada lead procesado
     const processedLeads = leads.map(l => ({
@@ -1309,8 +1383,9 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
                         </div>
                     </div>
-                    {/* Botón Salir Móvil */}
-                    <div className="flex md:hidden">
+                    {/* Botones Móvil */}
+                    <div className="flex gap-2 md:hidden">
+                        <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
                         <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cerrar Sesión"><LogOut size={16}/></button>
                     </div>
                 </div>
@@ -1318,18 +1393,13 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                 {activeTab !== 'schedule' && (
                     <div className="relative w-full md:w-[400px] group">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
-                        <input 
-                            type="text" 
-                            placeholder={`Buscar ${activeTab === 'agents' ? 'agente' : 'prospecto'}...`} 
-                            className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                        />
+                        <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente' : 'prospecto'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
                 )}
                 
-                {/* Botón Salir Desktop */}
-                <div className="hidden md:flex">
+                {/* Botones Desktop */}
+                <div className="hidden md:flex gap-2">
+                     <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Cerrar Sesión</button>
                 </div>
             </div>
@@ -1544,6 +1614,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
             {individualAgentSelectLeadId && (<AgentSelectionModal agents={agents} onClose={() => setIndividualAgentSelectLeadId(null)} onSelect={(agentId) => { onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); setIndividualAgentSelectLeadId(null); }} />)}
+            {showWebhookSettings && <WebhookSettingsModal webhooks={webhooks} onSave={onUpdateWebhooks} onClose={() => setShowWebhookSettings(false)} />}
         </div>
     );
 };
