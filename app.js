@@ -734,8 +734,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                     </div>
                 </div>
                 <div className="flex gap-2 shrink-0 ml-2">
-                     <a href={`mailto:${lead.email}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow rounded-xl transition-all border border-gray-100 flex items-center justify-center"><Mail size={18}/></a>
-                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-green-600 bg-white shadow-sm hover:shadow rounded-xl transition-all border border-gray-100 flex items-center justify-center"><Phone size={18}/></a>
+                     {/* Botón de WhatsApp con el logo oficial renderizado y código +1 para EE.UU. */}
+                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] hover:border-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Abrir WhatsApp">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                     </a>
+                     <a href={`mailto:${lead.email}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 hover:border-blue-300 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Enviar Correo"><Mail size={18}/></a>
+                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-green-600 hover:border-green-300 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Llamar"><Phone size={18}/></a>
                 </div>
             </div>
             
@@ -1180,7 +1184,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
             
             {/* Modals */}
             {isAgentModalOpen && <AgentModal agent={editingAgent} onClose={() => setIsAgentModalOpen(false)} onSave={handleSaveAgent} />}
-            {viewingLead && <LeadDetail lead={viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
+            {viewingLead && <LeadDetail lead={leads.find(l => l.id === viewingLead.id) || viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={leads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
             {individualAgentSelectLeadId && (<AgentSelectionModal agents={agents} onClose={() => setIndividualAgentSelectLeadId(null)} onSelect={(agentId) => { onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); setIndividualAgentSelectLeadId(null); }} />)}
