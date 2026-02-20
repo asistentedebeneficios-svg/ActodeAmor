@@ -805,9 +805,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
                             <div className="space-y-5">
-                                <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100/50">
-                                    <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400"/> {lead.state || 'N/A'}</p></div>
-                                    <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50">
+                                    <div className="border-b border-gray-200/60 md:border-0 pb-2 md:pb-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400"/> {lead.state || 'N/A'}</p></div>
+                                    <div className="pt-1 md:pt-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span>
                                         <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
                                             <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
                                             <span className="text-gray-500 mt-1">{lead.time} <span className="text-[10px] font-normal uppercase">(Hora de {lead.state})</span></span>
@@ -1448,33 +1448,56 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                         </div>
                                     </div>
 
-                                    <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-5 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative gap-3 ${isSelected ? 'border-rose-300 ring-4 ring-rose-50/50' : 'border-gray-100'}`}>
-                                        <div className="absolute top-5 right-5 z-10" onClick={e => e.stopPropagation()}>
+                                    <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-4 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative ${isSelected ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-gray-100'}`}>
+                                        <div className="absolute top-4 right-4 z-10" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
                                         </div>
-                                        <div className="pr-8">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-2 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{lead.status === 'new' ? 'Nuevo' : 'Archivado'}</span>
-                                            <p className="font-bold text-gray-900 text-lg leading-tight mb-1">{lead.name}</p>
-                                            <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-gray-500">
-                                                <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md"><Phone size={10}/> {lead.phone}</span>
-                                                {lead.state && <span className="bg-gray-50 px-2 py-1 rounded-md">{lead.state}</span>}
+                                        
+                                        <div className="pr-8 mb-3">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                {lead.status === 'new' ? 'Nuevo' : 'Archivado'}
+                                            </span>
+                                            <p className="font-bold text-gray-900 text-base leading-tight mb-1.5 truncate">{lead.name}</p>
+                                            
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="flex items-center gap-1 bg-gray-50 text-gray-600 text-[10px] font-medium px-2 py-1 rounded-md"><Phone size={10}/> {lead.phone}</span>
+                                                {lead.state && <span className="bg-gray-50 text-gray-600 text-[10px] font-medium px-2 py-1 rounded-md">{lead.state}</span>}
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 border-t border-gray-50 pt-3 mt-1">
+                                        
+                                        {/* NUEVO: Botón de Agente alargado al 100% de ancho */}
+                                        <div className="mb-3" onClick={e => e.stopPropagation()}>
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Agente Asignado</span>
+                                            <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${assignedAgent ? 'bg-white border-gray-200 text-gray-800 shadow-sm' : 'bg-gray-50 border-dashed border-gray-300 text-gray-500 hover:bg-white hover:border-gray-400'}`}>
+                                                <div className="flex items-center gap-2">
+                                                    {assignedAgent ? (
+                                                        <>
+                                                            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-gray-100">
+                                                                {assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-rose-100 text-rose-600 flex items-center justify-center text-[10px]">{assignedAgent.name.charAt(0)}</div>}
+                                                            </div>
+                                                            <span className="truncate text-sm">{assignedAgent.name}</span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1.5 text-sm"><UserPlus size={16}/> Asignar Agente</span>
+                                                    )}
+                                                </div>
+                                                <ChevronRight size={16} className="text-gray-300"/>
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-end justify-between border-t border-gray-50 pt-3">
                                             <div>
                                                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Fecha y Hora</span>
-                                                <span className="text-xs font-semibold text-gray-700 block">{new Date(lead.timestamp).toLocaleDateString()}</span>
-                                                <span className="text-xs font-bold text-blue-600 block">{lead.localTime || lead.time}</span>
+                                                <div className="flex flex-col text-xs">
+                                                    <span className="font-semibold text-gray-700">{new Date(lead.timestamp).toLocaleDateString()}</span>
+                                                    <span className="font-bold text-blue-600">{lead.localTime || lead.time}</span>
+                                                </div>
                                             </div>
                                             <div onClick={e => e.stopPropagation()}>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Agente</span>
-                                                <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold w-fit ${assignedAgent ? 'bg-white border-gray-200 text-gray-800 shadow-sm' : 'bg-gray-50 border-dashed border-gray-300 text-gray-400'}`}>
-                                                    {assignedAgent ? (<><div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-rose-100 text-rose-600 flex items-center justify-center text-[6px]">{assignedAgent.name.charAt(0)}</div>}</div><span className="truncate max-w-[80px]">{assignedAgent.name.split(' ')[0]}</span></>) : (<span>+ Asignar</span>)}
+                                                <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-4 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                                                    {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                                 </button>
                                             </div>
-                                        </div>
-                                        <div className="flex justify-end gap-2 border-t border-gray-50 pt-3 mt-1" onClick={e => e.stopPropagation()}>
-                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>{lead.status === 'archived' ? <><RotateCcw size={12}/> Restaurar</> : <><Archive size={12}/> Archivar</>}</button>
                                         </div>
                                     </div>
                                 </React.Fragment>
