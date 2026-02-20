@@ -900,6 +900,50 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
 
 const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
     const assignedLeads = leads.filter(l => l.assignedTo === agent.id);
+
+    // Separamos la lógica para evitar el error de sintaxis en el diseño
+    let contentBlock;
+    if (assignedLeads.length > 0) {
+        contentBlock = (
+            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                {assignedLeads.map(lead => (
+                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
+                        <div className="flex items-center gap-3 md:gap-4">
+                            <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
+                            <div>
+                                <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
+                                
+                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
+                                    <span className="capitalize">
+                                        {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
+                                    </span>
+                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                        {lead.localTime || lead.time}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
+                            <span className={`hidden md:inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                                {lead.status === 'new' ? 'Activo' : 'Archivado'}
+                            </span>
+                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    } else {
+        contentBlock = (
+            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 shadow-sm">
+                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Briefcase size={24} className="opacity-30"/></div>
+                <p className="font-medium text-gray-600">Bandeja Vacía</p>
+                <p className="text-xs mt-1">Este agente no tiene prospectos en este momento.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
             <div className="glass-panel px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-10 gap-4 md:gap-0 shadow-sm">
@@ -936,44 +980,9 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                             <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-xs font-bold shadow-md">{assignedLeads.length}</span>
                         </div>
                         
-                        {assignedLeads.length > 0 ? (
-                            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                                {assignedLeads.map(lead => (
-                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
-                                            <div>
-                                                <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
-                                                
-                                                {/* Aquí está el bloque de la fecha humanizada ya integrado de forma segura */}
-                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
-                                                    <span className="capitalize">
-                                                        {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
-                                                    </span>
-                                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
-                                                    <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                                        {lead.localTime || lead.time}
-                                                    </span>
-                                                </div>
-                                                
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
-                                            <span className={`hidden md:inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
-                                                {lead.status === 'new' ? 'Activo' : 'Archivado'}
-                                            </span>
-                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 shadow-sm">
-                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Briefcase size={24} className="opacity-30"/></div>
-                                <p className="font-medium text-gray-600">Bandeja Vacía</p>
-                                <p className="text-xs mt-1">Este agente no tiene prospectos en este momento.</p>
-                            </div>
-                        )}
+                        {/* Imprimimos el bloque que precalculamos arriba */}
+                        {contentBlock}
+                        
                     </div>
                 </div>
             </div>
