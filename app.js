@@ -798,7 +798,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                 </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 md:p-8">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
                     
                     <div className="md:col-span-5 space-y-6">
@@ -943,9 +943,16 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                                         <div className="flex items-center gap-3 md:gap-4">
                                             <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
                                             <div>
+                                                <div>
                                                 <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
-                                                <div className="flex items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
-                                                    <span>{lead.date}</span><span className="w-1 h-1 rounded-full bg-gray-300"></span><span>{lead.localTime || lead.time}</span>
+                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
+                                                    <span className="capitalize">
+                                                        {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
+                                                    </span>
+                                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
+                                                    <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                                        {lead.localTime || lead.time}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
