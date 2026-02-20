@@ -725,6 +725,45 @@ const ScheduleSettings = ({ schedule, onUpdate }) => {
     );
 };
 
+// --- TIMEZONE HELPERS (MOTOR DE ZONA HORARIA) ---
+const STATE_TIMEZONES = {
+    "Arizona": "America/Phoenix", "California": "America/Los_Angeles", "Colorado": "America/Denver",
+    "Florida": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise",
+    "Illinois": "America/Chicago", "Montana": "America/Denver", "Nevada": "America/Los_Angeles",
+    "New Mexico": "America/Denver", "Oregon": "America/Los_Angeles", "Texas": "America/Chicago",
+    "Utah": "America/Denver", "Virginia": "America/New_York", "Wisconsin": "America/Chicago"
+};
+
+const getLocalTimeInfo = (dateString, timeString, stateName) => {
+    if (!dateString || !timeString || !stateName || !STATE_TIMEZONES[stateName]) return timeString;
+    try {
+        const tz = STATE_TIMEZONES[stateName];
+        let match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
+        if (!match) return timeString;
+        let h = parseInt(match[1]);
+        const m = match[2];
+        const mod = match[3].toLowerCase();
+        if (mod.includes('p') && h < 12) h += 12;
+        if (mod.includes('a') && h === 12) h = 0;
+        
+        // Calculamos la diferencia entre el navegador de Jorge y el Estado del Prospecto
+        const d = new Date(`${dateString}T${String(h).padStart(2, '0')}:${m}:00`);
+        const targetHour = parseInt(d.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
+        const localHour = parseInt(d.toLocaleString('en-US', { hour: 'numeric', hour12: false }));
+        
+        let diff = localHour - targetHour;
+        if (diff > 12) diff -= 24;
+        if (diff < -12) diff += 24;
+        
+        if (diff === 0) return timeString; // Es la misma zona horaria
+        
+        const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
+        return localDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
+    } catch (e) {
+        return timeString;
+    }
+};
+
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
@@ -742,7 +781,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
-            {/* Header Glass */}
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -763,19 +801,23 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
             <div className="flex-1 overflow-y-auto p-4 md:p-8">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
                     
-                    {/* Columna Izquierda: Info & Intereses */}
                     <div className="md:col-span-5 space-y-6">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
                             <div className="space-y-5">
                                 <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100/50">
                                     <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400"/> {lead.state || 'N/A'}</p></div>
-                                    <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span><p className="font-semibold text-gray-800 text-sm flex flex-col leading-tight">
-                                        <span>
-                                            {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}
-                                        </span>
-                                        <span className="text-gray-500 mt-0.5">{lead.time}</span>
-                                    </p></div>
+                                    <div><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span>
+                                        <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
+                                            <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
+                                            <span className="text-gray-500 mt-1">{lead.time} <span className="text-[10px] font-normal uppercase">(Hora de {lead.state})</span></span>
+                                            {lead.localTime && lead.localTime !== lead.time && (
+                                                <span className="text-rose-600 font-bold mt-1.5 flex items-center gap-1 bg-rose-50 w-fit px-2 py-1 rounded-md text-[11px] shadow-sm">
+                                                    <Clock size={12}/> Tu hora local: {lead.localTime}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="px-1">
                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Correo Electrónico</span>
@@ -784,23 +826,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                 <div className="px-1">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-2">Método Preferido</span>
                                      {lead.callType === 'video' ? (
-                                         <a 
-                                            href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
-                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all text-xs font-bold border border-green-100/50 shadow-sm cursor-pointer"
-                                            title="Iniciar Videollamada por WhatsApp"
-                                         >
-                                            <Video size={14}/> Videollamada (WhatsApp)
-                                         </a>
+                                         <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all text-xs font-bold border border-green-100/50 shadow-sm cursor-pointer" title="Iniciar Videollamada por WhatsApp"><Video size={14}/> Videollamada (WhatsApp)</a>
                                      ) : (
-                                         <a 
-                                            href={`tel:${lead.phone}`} 
-                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-all text-xs font-bold border border-blue-100/50 shadow-sm cursor-pointer"
-                                            title="Llamar ahora"
-                                         >
-                                            <Phone size={14}/> Llamada Telefónica
-                                         </a>
+                                         <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-all text-xs font-bold border border-blue-100/50 shadow-sm cursor-pointer" title="Llamar ahora"><Phone size={14}/> Llamada Telefónica</a>
                                      )}
                                 </div>
                             </div>
@@ -820,7 +848,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Presupuesto mensual</span>
                                     <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
-                                </div>         
+                                </div>
                                 <div className="px-1 pt-1">
                                     <span className="text-sm text-gray-500 font-medium block mb-2">Principales Motivaciones</span>
                                     <div className="flex flex-wrap gap-2">
@@ -831,7 +859,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                         </div>
                     </div>
                     
-                    {/* Columna Derecha: Gestión y Notas */}
                     <div className="md:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Estado y Asignación</h3>
@@ -857,19 +884,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px]">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Bloc de Notas</h3>
-                                <button 
-                                    onClick={handleSaveNotes} 
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 ${isSaving ? 'bg-green-500 text-white' : 'bg-black text-white hover:scale-105'}`}
-                                >
+                                <button onClick={handleSaveNotes} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 ${isSaving ? 'bg-green-500 text-white' : 'bg-black text-white hover:scale-105'}`}>
                                     {isSaving ? <><Check size={14}/> Guardado</> : <><Save size={14}/> Guardar</>}
                                 </button>
                             </div>
-                            <textarea 
-                                className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 shadow-inner resize-none outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all leading-relaxed" 
-                                placeholder="Escribe aquí los detalles de la llamada, acuerdos o recordatorios del prospecto..."
-                                value={currentNotes}
-                                onChange={(e) => setCurrentNotes(e.target.value)}
-                            />
+                            <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 shadow-inner resize-none outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all leading-relaxed" placeholder="Escribe aquí los detalles de la llamada, acuerdos o recordatorios del prospecto..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
                         </div>
                     </div>
                 </div>
@@ -926,7 +945,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                                             <div>
                                                 <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
                                                 <div className="flex items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
-                                                    <span>{lead.date}</span><span className="w-1 h-1 rounded-full bg-gray-300"></span><span>{lead.time}</span>
+                                                    <span>{lead.date}</span><span className="w-1 h-1 rounded-full bg-gray-300"></span><span>{lead.localTime || lead.time}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -934,9 +953,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
                                             <span className={`hidden md:inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
                                                 {lead.status === 'new' ? 'Activo' : 'Archivado'}
                                             </span>
-                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm">
-                                                <ChevronRight size={16} />
-                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
                                         </div>
                                     </div>
                                 ))}
@@ -957,9 +974,8 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
 
 const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [view, setView] = useState('month'); // Vistas disponibles: 'day', 'week', 'month', 'year'
+    const [view, setView] = useState('month'); 
 
-    // Funciones de navegación de tiempo
     const prev = () => {
         const newDate = new Date(currentDate);
         if(view === 'month') newDate.setMonth(newDate.getMonth() - 1);
@@ -981,14 +997,9 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-    // Filtra las citas seguras para una fecha "YYYY-MM-DD"
-    const getLeadsForDate = (dateStr) => leads.filter(l => l.date === dateStr && l.status !== 'archived').sort((a, b) => a.time.localeCompare(b.time));
+    const getLeadsForDate = (dateStr) => leads.filter(l => l.date === dateStr && l.status !== 'archived').sort((a, b) => (a.localTime || a.time).localeCompare(b.localTime || b.time));
+    const formatDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
-    const formatDate = (date) => {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    };
-
-    // --- VISTA 1: MES (Almanaque Grid) ---
     const renderMonth = () => {
         const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
         const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -1011,14 +1022,15 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         return (
                             <div key={index} onClick={() => { setView('day'); setCurrentDate(dateObj); }} className={`border-b border-r border-gray-100 min-h-[80px] md:min-h-[100px] p-1 md:p-2 flex flex-col transition-colors hover:bg-gray-100 cursor-pointer ${isToday ? 'bg-rose-50/30' : 'bg-white'}`}>
                                 <div className="flex justify-between items-start mb-1">
-                                    <span className={`text-xs font-bold w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-rose-500 text-white shadow-sm' : 'text-gray-500'}`}>{dateObj.getDate()}</span>
+                                    <span className={`text-xs font-bold w-5 h-5 md:w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-rose-500 text-white shadow-sm' : 'text-gray-500'}`}>{dateObj.getDate()}</span>
                                     {dayLeads.length > 0 && <span className="hidden md:inline-flex items-center justify-center w-5 h-5 text-[9px] font-bold text-white bg-blue-500 rounded-full shadow-sm">{dayLeads.length}</span>}
                                     {dayLeads.length > 0 && <span className="md:hidden w-2 h-2 rounded-full bg-blue-500 mt-1.5"></span>}
                                 </div>
                                 <div className="flex-1 flex flex-col gap-1 overflow-y-auto scrollbar-hide">
                                     {dayLeads.slice(0, 3).map(lead => (
                                         <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className="bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:block">
-                                            <div className="font-bold text-[9px] truncate">{lead.time} - {lead.name.split(' ')[0]}</div>
+                                            <div className="font-bold text-[9px] truncate">{lead.localTime || lead.time}</div>
+                                            <div className="text-[9px] truncate opacity-80">{lead.name.split(' ')[0]}</div>
                                         </div>
                                     ))}
                                     {dayLeads.length > 3 && <div className="text-[9px] text-gray-400 font-bold text-center hidden md:block">+{dayLeads.length - 3} más</div>}
@@ -1031,7 +1043,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
         );
     };
 
-    // --- VISTA 2: SEMANA (Columnas) ---
     const renderWeek = () => {
         const startOfWeek = new Date(currentDate);
         startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
@@ -1063,7 +1074,7 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                             <div key={i} className="border-r border-gray-100 p-1.5 md:p-2 flex flex-col gap-2 min-h-[300px] bg-white">
                                 {dayLeads.map(lead => (
                                     <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
-                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 mb-1 flex items-center gap-1"><Clock size={10}/> {lead.time}</div>
+                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 mb-1 flex items-center gap-1"><Clock size={10}/> {lead.localTime || lead.time}</div>
                                         <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate">{lead.name.split(' ')[0]}</div>
                                     </div>
                                 ))}
@@ -1076,7 +1087,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
         );
     };
 
-    // --- VISTA 3: DÍA (Agenda Detallada) ---
     const renderDay = () => {
         const dateString = formatDate(currentDate);
         const dayLeads = getLeadsForDate(dateString);
@@ -1105,10 +1115,10 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         ) : (
                             dayLeads.map(lead => (
                                 <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex items-center gap-4 group">
-                                    <div className="w-16 md:w-20 text-center shrink-0 border-r border-gray-100 pr-4">
-                                        <span className="block font-bold text-sm md:text-base text-blue-600">{lead.time}</span>
+                                    <div className="w-20 md:w-24 text-center shrink-0 border-r border-gray-100 pr-4">
+                                        <span className="block font-bold text-sm md:text-base text-blue-600">{lead.localTime || lead.time}</span>
                                     </div>
-                                    <div className="flex-1 min-w-0">
+                                    <div className="flex-1 min-w-0 pl-2">
                                         <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
                                         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
                                             <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
@@ -1127,7 +1137,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
         );
     };
 
-    // --- VISTA 4: AÑO (Resumen Mensual) ---
     const renderYear = () => {
         return (
             <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50/50">
@@ -1157,7 +1166,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
 
     return (
         <div className="max-w-7xl mx-auto bg-white rounded-none md:rounded-3xl shadow-none md:shadow-soft border-0 md:border border-gray-100 flex flex-col h-[calc(100vh-140px)] md:h-[800px] animate-fade-in overflow-hidden relative z-10">
-            {/* Cabecera Principal y Controles */}
             <div className="px-4 md:px-6 py-4 md:py-5 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between bg-white z-20 gap-4 md:gap-0 shrink-0">
                 <div className="flex items-center justify-between w-full md:w-auto">
                     <div className="flex items-center gap-3">
@@ -1172,7 +1180,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         </div>
                     </div>
                     
-                    {/* Botones Prev/Next Móvil */}
                     <div className="flex md:hidden bg-gray-100 border border-gray-200 rounded-xl shadow-inner overflow-hidden">
                         <button onClick={prev} className="p-2 text-gray-600 hover:bg-gray-200 transition-colors border-r border-gray-200"><ArrowLeft size={16}/></button>
                         <button onClick={today} className="p-2 px-3 text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-200 transition-colors border-r border-gray-200">Hoy</button>
@@ -1181,7 +1188,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                 </div>
                 
                 <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto scrollbar-hide pb-1 md:pb-0">
-                    {/* Selector de Vistas (Día, Semana, Mes, Año) */}
                     <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner shrink-0">
                         {['day', 'week', 'month', 'year'].map(v => (
                             <button key={v} onClick={() => setView(v)} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs font-bold capitalize transition-all ${view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -1190,7 +1196,6 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         ))}
                     </div>
                     
-                    {/* Botones Prev/Next PC */}
                     <div className="hidden md:flex bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden shrink-0">
                         <button onClick={prev} className="p-2 px-3 hover:bg-gray-50 text-gray-600 transition-colors border-r border-gray-200"><ArrowLeft size={16}/></button>
                         <button onClick={today} className="p-2 px-4 text-xs font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors border-r border-gray-200">Hoy</button>
@@ -1201,13 +1206,11 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                 </div>
             </div>
 
-            {/* Renderizado Condicional del Contenido */}
             {view === 'month' && renderMonth()}
             {view === 'week' && renderWeek()}
             {view === 'day' && renderDay()}
             {view === 'year' && renderYear()}
 
-            {/* Botón de configuración móvil */}
             <div className="lg:hidden p-3 border-t border-gray-200 bg-white shrink-0">
                 <button onClick={onOpenSettings} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"><Settings size={14}/> Configurar Horas Disponibles</button>
             </div>
@@ -1227,11 +1230,17 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
 
+    // MÁGIA: Agregamos la hora convertida a cada lead procesado
+    const processedLeads = leads.map(l => ({
+        ...l,
+        localTime: getLocalTimeInfo(l.date, l.time, l.state)
+    }));
+
     const getFilteredLeads = () => {
         let list = [];
-        if(activeTab === 'active') list = leads.filter(l => l.status !== 'archived' && !l.assignedTo);
-        else if(activeTab === 'assigned') list = leads.filter(l => l.status !== 'archived' && l.assignedTo);
-        else if(activeTab === 'archived') list = leads.filter(l => l.status === 'archived');
+        if(activeTab === 'active') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo);
+        else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
+        else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
         if(searchTerm) {
             const lower = searchTerm.toLowerCase();
@@ -1323,7 +1332,6 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                 ))}
             </div>
 
-            {/* Bulk Actions Floating Bar */}
             {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
                 <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white p-2 md:px-6 md:py-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up z-30 w-[90%] md:w-auto border border-gray-700">
                     <span className="text-xs md:text-sm font-bold flex items-center gap-2 shrink-0 pt-1 md:pt-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
@@ -1353,7 +1361,7 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                              <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
                          </div>
                      ) : (
-                         <AdminCalendar leads={leads} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
+                         <AdminCalendar leads={processedLeads} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
                      )
                  ) :
                  activeTab === 'agents' ? (
@@ -1421,7 +1429,8 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                         </div>
                                         <div className="text-gray-500 text-xs font-medium">
                                             <span className="block text-gray-900">{new Date(lead.timestamp).toLocaleDateString()}</span>
-                                            <span className="text-gray-400">{new Date(lead.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                            <span className="flex items-center gap-1 mt-0.5"><Clock size={10}/> {lead.localTime || lead.time}</span>
+                                            {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
                                         <div>
                                             <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -1429,49 +1438,33 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                             </span>
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
-                                             <button 
-                                                onClick={() => setIndividualAgentSelectLeadId(lead.id)}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-left w-full text-xs font-bold ${assignedAgent ? 'bg-white border-gray-200 hover:border-rose-300' : 'bg-gray-50 border-dashed border-gray-300 hover:bg-white hover:border-gray-400 text-gray-400'}`}
-                                             >
-                                                {assignedAgent ? (
-                                                    <>
-                                                        <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div>
-                                                        <span className="truncate text-gray-800">{assignedAgent.name}</span>
-                                                    </>
-                                                ) : (
-                                                    <span>+ Asignar</span>
-                                                )}
+                                             <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-left w-full text-xs font-bold ${assignedAgent ? 'bg-white border-gray-200 hover:border-rose-300' : 'bg-gray-50 border-dashed border-gray-300 hover:bg-white hover:border-gray-400 text-gray-400'}`}>
+                                                {assignedAgent ? (<><div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div><span className="truncate text-gray-800">{assignedAgent.name}</span></>) : (<span>+ Asignar</span>)}
                                              </button>
                                         </div>
                                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-colors shadow-sm" title={lead.status === 'archived' ? 'Restaurar' : 'Archivar'}>
-                                                {lead.status === 'archived' ? <RotateCcw size={14}/> : <Archive size={14}/>}
-                                            </button>
+                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-colors shadow-sm" title={lead.status === 'archived' ? 'Restaurar' : 'Archivar'}>{lead.status === 'archived' ? <RotateCcw size={14}/> : <Archive size={14}/>}</button>
                                             <button onClick={(e) => handleDeleteLead(e, lead.id)} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-colors shadow-sm" title="Eliminar"><Trash2 size={14}/></button>
                                         </div>
                                     </div>
 
-                                    {/* Mobile Card Form */}
                                     <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-5 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative gap-3 ${isSelected ? 'border-rose-300 ring-4 ring-rose-50/50' : 'border-gray-100'}`}>
                                         <div className="absolute top-5 right-5 z-10" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
                                         </div>
-                                        
                                         <div className="pr-8">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-2 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                {lead.status === 'new' ? 'Nuevo' : 'Archivado'}
-                                            </span>
+                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-2 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{lead.status === 'new' ? 'Nuevo' : 'Archivado'}</span>
                                             <p className="font-bold text-gray-900 text-lg leading-tight mb-1">{lead.name}</p>
                                             <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-gray-500">
                                                 <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md"><Phone size={10}/> {lead.phone}</span>
                                                 {lead.state && <span className="bg-gray-50 px-2 py-1 rounded-md">{lead.state}</span>}
                                             </div>
                                         </div>
-                                        
                                         <div className="grid grid-cols-2 gap-2 border-t border-gray-50 pt-3 mt-1">
                                             <div>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Fecha</span>
-                                                <span className="text-xs font-semibold text-gray-700">{new Date(lead.timestamp).toLocaleDateString()}</span>
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Fecha y Hora</span>
+                                                <span className="text-xs font-semibold text-gray-700 block">{new Date(lead.timestamp).toLocaleDateString()}</span>
+                                                <span className="text-xs font-bold text-blue-600 block">{lead.localTime || lead.time}</span>
                                             </div>
                                             <div onClick={e => e.stopPropagation()}>
                                                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Agente</span>
@@ -1480,11 +1473,8 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                                                 </button>
                                             </div>
                                         </div>
-                                        
                                         <div className="flex justify-end gap-2 border-t border-gray-50 pt-3 mt-1" onClick={e => e.stopPropagation()}>
-                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
-                                                {lead.status === 'archived' ? <><RotateCcw size={12}/> Restaurar</> : <><Archive size={12}/> Archivar</>}
-                                            </button>
+                                            <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>{lead.status === 'archived' ? <><RotateCcw size={12}/> Restaurar</> : <><Archive size={12}/> Archivar</>}</button>
                                         </div>
                                     </div>
                                 </React.Fragment>
@@ -1493,11 +1483,9 @@ const AdminDashboard = ({ leads, agents, schedule, onUpdateLead, bulkUpdateLeads
                     </div>
                 )}
             </div>
-            
-            {/* Modals */}
             {isAgentModalOpen && <AgentModal agent={editingAgent} onClose={() => setIsAgentModalOpen(false)} onSave={handleSaveAgent} />}
             {viewingLead && <LeadDetail lead={viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
-            {viewingAgent && <AgentDetailView agent={viewingAgent} leads={leads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
+            {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
             {individualAgentSelectLeadId && (<AgentSelectionModal agents={agents} onClose={() => setIndividualAgentSelectLeadId(null)} onSelect={(agentId) => { onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); setIndividualAgentSelectLeadId(null); }} />)}
         </div>
