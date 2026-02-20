@@ -765,11 +765,27 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                     <p className="font-medium text-gray-800 break-all text-sm">{lead.email}</p>
                                 </div>
                                 <div className="px-1">
+                                     <div className="px-1">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-2">Método Preferido</span>
-                                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100/50">
-                                        {lead.callType === 'video' ? <Video size={14}/> : <Phone size={14}/>}
-                                        {lead.callType === 'video' ? 'Videollamada' : 'Llamada Telefónica'}
-                                     </span>
+                                     {lead.callType === 'video' ? (
+                                         <a 
+                                            href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all text-xs font-bold border border-green-100/50 shadow-sm cursor-pointer"
+                                            title="Iniciar Videollamada por WhatsApp"
+                                         >
+                                            <Video size={14}/> Videollamada (WhatsApp)
+                                         </a>
+                                     ) : (
+                                         <a 
+                                            href={`tel:${lead.phone}`} 
+                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-all text-xs font-bold border border-blue-100/50 shadow-sm cursor-pointer"
+                                            title="Llamar ahora"
+                                         >
+                                            <Phone size={14}/> Llamada Telefónica
+                                         </a>
+                                     )}
                                 </div>
                             </div>
                         </div>
