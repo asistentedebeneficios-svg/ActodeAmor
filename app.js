@@ -706,16 +706,14 @@ const ScheduleSettings = ({ schedule, onUpdate }) => {
 };
 
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
-    // Inicializamos el cuadro de texto con las notas existentes (si las hay)
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
+    const notesEndRef = useRef(null);
     
-    // Función para guardar todo el cuadro de texto en Firebase
     const handleSaveNotes = async () => { 
         setIsSaving(true);
         await onUpdate(lead.id, { notes: currentNotes }); 
-        // Mostramos el estado de éxito por 2 segundos
         setTimeout(() => setIsSaving(false), 2000);
     };
     
@@ -734,7 +732,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                     </div>
                 </div>
                 <div className="flex gap-2 shrink-0 ml-2">
-                     {/* Botón de WhatsApp con el logo oficial renderizado y código +1 para EE.UU. */}
                      <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] hover:border-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Abrir WhatsApp">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                      </a>
@@ -765,7 +762,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                                     <p className="font-medium text-gray-800 break-all text-sm">{lead.email}</p>
                                 </div>
                                 <div className="px-1">
-                                     <div className="px-1">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-2">Método Preferido</span>
                                      {lead.callType === 'video' ? (
                                          <a 
@@ -834,7 +830,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                             </div>
                         </div>
 
-                        {/* NUEVA SECCIÓN DE NOTAS TIPO BLOC DE NOTAS */}
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px]">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Bloc de Notas</h3>
