@@ -1555,7 +1555,12 @@ const App = () => {
     const [reinforcement, setReinforcement] = useState(null);
     const [fillPercent, setFillPercent] = useState(10);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [showAdmin, setShowAdmin] = useState(false);
+    
+    // --- CAMBIO 1: Leer la memoria al cargar la página ---
+    const [showAdmin, setShowAdmin] = useState(() => {
+        return localStorage.getItem('isAdminLoggedIn') === 'true';
+    });
+    
     const [showLogin, setShowLogin] = useState(false);
     
     const { leads, agents, schedule, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, adminLogin, adminLogout } = useFirebaseDatabase();
@@ -1582,14 +1587,18 @@ const App = () => {
     const saveData = async (form) => { const finalData = { ...leadData, ...form }; await addLead(finalData); };
     const completeSuccess = () => { setIsSuccess(true); };
 
+    // --- CAMBIO 2: Guardar el pase VIP al entrar ---
     const handleLogin = async (email, password) => {
         await adminLogin(email, password);
         setShowAdmin(true);
+        localStorage.setItem('isAdminLoggedIn', 'true');
     };
 
+    // --- CAMBIO 3: Borrar el pase VIP al salir ---
     const handleLogout = async () => {
         await adminLogout();
         setShowAdmin(false);
+        localStorage.removeItem('isAdminLoggedIn');
     };
 
     if (showAdmin && user && !user.isAnonymous) {
