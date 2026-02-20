@@ -452,8 +452,12 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
     useEffect(() => {
         if(!date) { setAvailableSlots([]); return; }
-        const selectedDate = new Date(date + 'T00:00:00');
+        
+        // Convertimos la fecha de forma segura para evitar saltos de zona horaria
+        const selectedParts = date.split('-');
+        const selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
         const dayIndex = selectedDate.getDay(); 
+        
         let dayConfig = scheduleConfig.exceptions[date] || scheduleConfig.weekly[dayIndex];
 
         if(!dayConfig || !dayConfig.active || !dayConfig.blocks) { setAvailableSlots([]); return; }
@@ -466,6 +470,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             const end = new Date(`${date}T${block.end}`);
             while(current < end) {
                 const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
+                // Mantenemos la regla por seguridad, aunque ya no pueden agendar el mismo día
                 if(date === now.toISOString().split('T')[0] && current < now) { current.setMinutes(current.getMinutes() + 60); continue; }
                 slots.push(timeStr);
                 current.setMinutes(current.getMinutes() + 60); 
@@ -487,6 +492,11 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         onSuccess();
     };
 
+    // Calculamos la fecha de MAÑANA para restringir el calendario
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+
     return (
         <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
              {status !== 'success' && (
@@ -498,12 +508,14 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             
             <div className="space-y-4 md:space-y-6">
                 {status === 'success' ? (
-                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-green-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-12 relative">
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-12 relative">
                         <button onClick={onAdminTrigger} className="absolute top-4 right-4 text-gray-200 hover:text-gray-400 transition-colors p-2"><Lock size={16}/></button>
                         
-                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-sm animate-[slide-up_0.5s_ease-out_0.2s_both]">
-                            <Check size={40} strokeWidth={4} />
+                        {/* AQUÍ ESTÁ EL CAMBIO: El corazón latiendo al 100% en lugar del check */}
+                        <div className="mb-4 animate-[slide-up_0.5s_ease-out_0.2s_both]">
+                            <HeartProgress percentage={100} isBeating={true} />
                         </div>
+                        
                         <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">¡Misión Cumplida!</h2>
                         <p className="text-gray-500 mb-6 text-sm md:text-base">Has dado un paso gigante de amor.</p>
                         <div className="bg-rose-50 p-5 md:p-6 rounded-2xl text-rose-800 italic text-sm md:text-base shadow-inner">
@@ -547,7 +559,8 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Calendar size={16} className="text-rose-500"/> Fecha y Hora</h3>
                         <div className="flex flex-col gap-4">
-                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 mb-1.5 block tracking-wider">Seleccione el Día</label><input type="date" min={new Date().toISOString().split('T')[0]} className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500" value={date} onChange={e => setDate(e.target.value)} disabled={status !== 'idle'} /></div>
+                            {/* AQUÍ ESTÁ EL CAMBIO: min={minDate} restringe para que solo se pueda desde mañana */}
+                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 mb-1.5 block tracking-wider">Seleccione el Día</label><input type="date" min={minDate} className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500" value={date} onChange={e => setDate(e.target.value)} disabled={status !== 'idle'} /></div>
                             {date && (
                                 <div className="animate-fade-in"><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 mb-1.5 block tracking-wider">Horarios Disponibles</label>{availableSlots.length > 0 ? (<div className="grid grid-cols-2 md:grid-cols-3 gap-2">{availableSlots.map(slot => (<button key={slot} onClick={() => setTime(slot)} disabled={status !== 'idle'} className={`py-2.5 md:py-3 px-2 text-xs md:text-sm rounded-lg border transition-colors ${time === slot ? 'bg-rose-500 text-white border-rose-500 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:border-rose-300'}`}>{slot}</button>))}</div>) : (<div className="text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs md:text-sm text-gray-500">Lo sentimos, no hay cupos disponibles o está cerrado este día.</p></div>)}</div>
                             )}
