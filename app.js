@@ -746,7 +746,7 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
     }
 };
 
-const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
+const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent }) => {
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
@@ -875,7 +875,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete }) => {
                     </div>
                 </div>
             </div>
-            {showAgentSelector && (<AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { onUpdate(lead.id, { assignedTo: agentId }); setShowAgentSelector(false); }}/>)}
+            {showAgentSelector && (<AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); }}/>)}
         </div>
     );
 };
@@ -1354,12 +1354,55 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const toggleSelectAll = () => { if (selectedLeads.length === sortedLeads.length && sortedLeads.length > 0) setSelectedLeads([]); else setSelectedLeads(sortedLeads.map(l => l.id)); };
     const toggleSelect = (id) => { setSelectedLeads(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
 
+    // --- 🛠️ FUNCIÓN MAESTRA PARA ENVIAR CORREOS ---
+    const triggerAssignmentWebhook = (leadObj, agentObj) => {
+        if (!webhooks || !webhooks.assignment) return;
+        
+        const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
+        const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
+        const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
+        const coverageMap = { '5k': '$5,000', '10k': '$10,000 - $15,000', '15k': '$15,000 - $20,000', '20k': '$20,000 - $25,000', '25k': '$25,000 o más' };
+        
+        let formattedDate = leadObj.date;
+        if (leadObj.date) {
+            const dateObj = new Date(leadObj.date + 'T12:00:00');
+            formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        const safeCoverage = String(leadObj.coverage_amount || '').toLowerCase();
+        const translatedLead = {
+            ...leadObj,
+            date: formattedDate,
+            callType: callTypeMap[leadObj.callType] || leadObj.callType,
+            policy_for: leadObj.policy_for ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : '',
+            motivation: leadObj.motivation ? leadObj.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') : '',
+            coverage_amount: coverageMap[safeCoverage] || leadObj.coverage_amount,
+            time: leadObj.localTime || leadObj.time
+        };
+
+        fetch(webhooks.assignment, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead: translatedLead, agent: agentObj })
+        }).catch(e => console.error("Error Webhook Correo:", e));
+    };
+
     const handleBulkAction = async (action, value) => {
         if(!window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Deseas aplicar esta acción a ${selectedLeads.length} prospectos?`)) return;
         if(action === 'delete') await bulkDeleteLeads(selectedLeads);
         else if(action === 'archive') await bulkUpdateLeads(selectedLeads, { status: 'archived' });
         else if(action === 'restore') await bulkUpdateLeads(selectedLeads, { status: 'new' });
-        else if(action === 'assign') await bulkUpdateLeads(selectedLeads, { assignedTo: value });
+        else if(action === 'assign') {
+            await bulkUpdateLeads(selectedLeads, { assignedTo: value });
+            // Disparamos Make para TODOS los seleccionados
+            const assignedAgent = agents.find(a => a.id === value);
+            if (assignedAgent) {
+                selectedLeads.forEach(leadId => {
+                    const assignedLead = processedLeads.find(l => l.id === leadId);
+                    if (assignedLead) triggerAssignmentWebhook(assignedLead, assignedAgent);
+                });
+            }
+        }
         setSelectedLeads([]);
     };
 
