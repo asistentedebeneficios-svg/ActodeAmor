@@ -1653,7 +1653,21 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                 )}
             </div>
             {isAgentModalOpen && <AgentModal agent={editingAgent} onClose={() => setIsAgentModalOpen(false)} onSave={handleSaveAgent} />}
-            {viewingLead && <LeadDetail lead={viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} onDelete={onDeleteLead} agents={agents} />}
+            {viewingLead && (
+                <LeadDetail 
+                    lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} 
+                    onClose={() => setViewingLead(null)} 
+                    onUpdate={onUpdateLead} 
+                    onDelete={onDeleteLead} 
+                    agents={agents} 
+                    onAssignAgent={(leadId, agentId) => { 
+                        onUpdateLead(leadId, { assignedTo: agentId }); 
+                        const assignedLead = processedLeads.find(l => l.id === leadId);
+                        const assignedAgent = agents.find(a => a.id === agentId);
+                        if (assignedLead && assignedAgent) triggerAssignmentWebhook(assignedLead, assignedAgent);
+                    }}
+                />
+            )}
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             {isBulkAgentSelectOpen && (<AgentSelectionModal agents={agents} onClose={() => setIsBulkAgentSelectOpen(false)} onSelect={(agentId) => { handleBulkAction('assign', agentId); setIsBulkAgentSelectOpen(false); }} />)}
             {individualAgentSelectLeadId && (
@@ -1662,48 +1676,9 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                     onClose={() => setIndividualAgentSelectLeadId(null)} 
                     onSelect={(agentId) => { 
                         onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
-                        
-                        // Validamos que exista el agente y la URL secreta
-                        if (agentId && webhooks && webhooks.assignment) {
-                            const assignedLead = processedLeads.find(l => l.id === individualAgentSelectLeadId);
-                            const assignedAgent = agents.find(a => a.id === agentId);
-                            
-                            if (assignedLead && assignedAgent) {
-                                // --- 🛠️ TRADUCTOR PARA LOS CORREOS ---
-                                const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
-                                const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
-                                const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
-                                const coverageMap = { '5k': '$5,000', '10k': '$10,000 - $15,000', '15k': '$15,000 - $20,000', '20k': '$20,000 - $25,000', '25k': '$25,000 o más' };
-                                
-                                // Fecha elegante
-                                let formattedDate = assignedLead.date;
-                                if (assignedLead.date) {
-                                    const dateObj = new Date(assignedLead.date + 'T12:00:00');
-                                    formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                                }
-                                
-                                const safeCoverage = String(assignedLead.coverage_amount || '').toLowerCase();
-                                
-                                // Armamos el maletín del Lead traducido
-                                const translatedLead = {
-                                    ...assignedLead,
-                                    date: formattedDate,
-                                    callType: callTypeMap[assignedLead.callType] || assignedLead.callType,
-                                    policy_for: assignedLead.policy_for ? assignedLead.policy_for.map(val => policyMap[val] || val).join(', ') : '',
-                                    motivation: assignedLead.motivation ? assignedLead.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') : '',
-                                    coverage_amount: coverageMap[safeCoverage] || assignedLead.coverage_amount,
-                                    time: assignedLead.localTime || assignedLead.time // Aseguramos que viaje la hora correcta
-                                };
-
-                                // Disparamos a Make
-                                fetch(webhooks.assignment, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ lead: translatedLead, agent: assignedAgent })
-                                }).catch(e => console.error("Error Webhook Correo:", e));
-                            }
-                        }
-                        
+                        const assignedLead = processedLeads.find(l => l.id === individualAgentSelectLeadId);
+                        const assignedAgent = agents.find(a => a.id === agentId);
+                        if (assignedLead && assignedAgent) triggerAssignmentWebhook(assignedLead, assignedAgent);
                         setIndividualAgentSelectLeadId(null); 
                     }} 
                 />
