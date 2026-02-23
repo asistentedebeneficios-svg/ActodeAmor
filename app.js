@@ -1409,9 +1409,9 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         if(action === 'delete') await bulkDeleteLeads(selectedLeads);
         else if(action === 'archive') await bulkUpdateLeads(selectedLeads, { status: 'archived' });
         else if(action === 'restore') await bulkUpdateLeads(selectedLeads, { status: 'new' });
+        else if(action === 'marketplace') await bulkUpdateLeads(selectedLeads, { status: 'marketplace' });
         else if(action === 'assign') {
             await bulkUpdateLeads(selectedLeads, { assignedTo: value });
-            // Disparamos Make para TODOS los seleccionados
             const assignedAgent = agents.find(a => a.id === value);
             if (assignedAgent) {
                 selectedLeads.forEach(leadId => {
@@ -1495,7 +1495,10 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                             {activeTab !== 'archived' ? (
                                 <>
                                     <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span>
+                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Asignar</span>
+                                    </button>
+                                    <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
+                                        <Briefcase size={18} className="md:w-4 md:h-4"/> <span>Vender</span>
                                     </button>
                                     <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
                                         <Archive size={18} className="md:w-4 md:h-4"/> <span>Archivar</span>
@@ -1597,16 +1600,22 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
                                         <div>
-                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                {lead.status === 'new' ? 'Nuevo' : 'Archivado'}
+                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                {lead.status === 'new' ? 'Nuevo' : lead.status === 'marketplace' ? 'En Tienda' : 'Archivado'}
                                             </span>
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
                                              <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-left w-full text-xs font-bold ${assignedAgent ? 'bg-white border-gray-200 hover:border-rose-300' : 'bg-gray-50 border-dashed border-gray-300 hover:bg-white hover:border-gray-400 text-gray-400'}`}>
-                                                {assignedAgent ? (<><div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div><span className="truncate text-gray-800">{assignedAgent.name}</span></>) : (<span>+ Agente</span>)}
+                                                {assignedAgent ? (<><div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div><span className="truncate text-gray-800">{assignedAgent.name}</span></>) : (<span>+ Asignar</span>)}
                                              </button>
                                         </div>
                                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                            {lead.status === 'new' && (
+                                                <button onClick={(e) => onUpdateLead(lead.id, { status: 'marketplace' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-200 rounded-lg transition-colors shadow-sm" title="Enviar a la Tienda"><Briefcase size={14}/></button>
+                                            )}
+                                            {lead.status === 'marketplace' && (
+                                                <button onClick={(e) => onUpdateLead(lead.id, { status: 'new' })} className="p-2 bg-amber-50 border border-amber-200 text-amber-600 hover:bg-white rounded-lg transition-colors shadow-sm" title="Quitar de la Tienda"><RotateCcw size={14}/></button>
+                                            )}
                                             <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-lg transition-colors shadow-sm" title={lead.status === 'archived' ? 'Restaurar' : 'Archivar'}>{lead.status === 'archived' ? <RotateCcw size={14}/> : <Archive size={14}/>}</button>
                                             <button onClick={(e) => handleDeleteLead(e, lead.id)} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-colors shadow-sm" title="Eliminar"><Trash2 size={14}/></button>
                                         </div>
@@ -1618,8 +1627,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                {lead.status === 'new' ? 'Nuevo' : 'Archivado'}
+                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                {lead.status === 'new' ? 'Nuevo' : lead.status === 'marketplace' ? 'En Tienda' : 'Archivado'}
                                             </span>
                                             <p className="font-bold text-gray-900 text-base leading-tight mb-1.5 truncate">{lead.name}</p>
                                             
@@ -1629,7 +1638,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             </div>
                                         </div>
                                         
-                                        {/* NUEVO: Botón de Agente alargado al 100% de ancho */}
                                         <div className="mb-3" onClick={e => e.stopPropagation()}>
                                             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Agente Asignado</span>
                                             <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${assignedAgent ? 'bg-white border-gray-200 text-gray-800 shadow-sm' : 'bg-gray-50 border-dashed border-gray-300 text-gray-500 hover:bg-white hover:border-gray-400'}`}>
@@ -1649,7 +1657,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             </button>
                                         </div>
 
-                                        <div className="flex items-end justify-between border-t border-gray-50 pt-3">
+                                        <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
                                             <div>
                                                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Fecha y Hora</span>
                                                 <div className="flex flex-col text-xs">
@@ -1657,8 +1665,18 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                                     <span className="font-bold text-blue-600">{lead.localTime || lead.time}</span>
                                                 </div>
                                             </div>
-                                            <div onClick={e => e.stopPropagation()}>
-                                                <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-4 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                                            <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                                                {lead.status === 'new' && (
+                                                    <button onClick={(e) => onUpdateLead(lead.id, { status: 'marketplace' })} className="px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold flex items-center justify-center flex-1 gap-1.5 transition-colors shadow-sm bg-white text-gray-600 hover:text-amber-600">
+                                                        <Briefcase size={14}/> Vender
+                                                    </button>
+                                                )}
+                                                {lead.status === 'marketplace' && (
+                                                    <button onClick={(e) => onUpdateLead(lead.id, { status: 'new' })} className="px-3 py-2 border border-amber-200 rounded-xl text-xs font-bold flex items-center justify-center flex-1 gap-1.5 transition-colors shadow-sm bg-amber-50 text-amber-600">
+                                                        <RotateCcw size={14}/> Quitar
+                                                    </button>
+                                                )}
+                                                <button onClick={(e) => onUpdateLead(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`px-3 py-2 border rounded-xl text-xs font-bold flex items-center justify-center flex-1 gap-1.5 transition-colors shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                                     {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                                 </button>
                                             </div>
