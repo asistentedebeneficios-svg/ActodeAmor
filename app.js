@@ -875,7 +875,23 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent }
                     </div>
                 </div>
             </div>
-            {showAgentSelector && (<AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); }}/>)}
+            {showAgentSelector && (
+                <AgentSelectionModal 
+                    agents={agents} 
+                    onClose={() => setShowAgentSelector(false)} 
+                    onSelect={(agentId) => { 
+                        const selectedAgent = agents.find(a => a.id === agentId);
+                        const confirmMsg = selectedAgent 
+                            ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` 
+                            : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
+                        
+                        if (window.confirm(confirmMsg)) {
+                            onAssignAgent(lead.id, agentId); 
+                            setShowAgentSelector(false); 
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 };
@@ -1675,11 +1691,17 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                     agents={agents} 
                     onClose={() => setIndividualAgentSelectLeadId(null)} 
                     onSelect={(agentId) => { 
-                        onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
-                        const assignedLead = processedLeads.find(l => l.id === individualAgentSelectLeadId);
-                        const assignedAgent = agents.find(a => a.id === agentId);
-                        if (assignedLead && assignedAgent) triggerAssignmentWebhook(assignedLead, assignedAgent);
-                        setIndividualAgentSelectLeadId(null); 
+                        const selectedAgent = agents.find(a => a.id === agentId);
+                        const confirmMsg = selectedAgent 
+                            ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` 
+                            : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
+                        
+                        if (window.confirm(confirmMsg)) {
+                            onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
+                            const assignedLead = processedLeads.find(l => l.id === individualAgentSelectLeadId);
+                            if (assignedLead && selectedAgent) triggerAssignmentWebhook(assignedLead, selectedAgent);
+                            setIndividualAgentSelectLeadId(null); 
+                        }
                     }} 
                 />
             )}
