@@ -1748,107 +1748,108 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
 
 // --- PORTAL DEL AGENTE (SaaS) ---
+// --- DICCIONARIO DE ESTADOS ---
+const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
+
+// --- PORTAL DEL AGENTE (SaaS Premium) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const [activeTab, setActiveTab] = useState('marketplace');
     const [viewingLead, setViewingLead] = useState(null);
     const [cart, setCart] = useState([]);
     
-    // Filtros inteligentes para el Agente
+    // Filtros inteligentes
     const processedLeads = leads.map(l => ({ ...l, localTime: getLocalTimeInfo(l.date, l.time, l.state) }));
-    
-    // Mis Clientes (Solo los asignados a él y no archivados)
     const myClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
-    // Tienda (Nuevos en marketplace sin dueño)
     const availableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
-    // Recibos (Todos los asignados a él, incluyendo archivados, para reportes de compra)
     const myHistory = processedLeads.filter(l => l.assignedTo === agent.id).sort((a,b) => b.timestamp - a.timestamp);
 
     const toggleCart = (leadId) => { setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); };
+    const selectAll = () => { if(cart.length === availableLeads.length) { setCart([]); } else { setCart(availableLeads.map(l => l.id)); } };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans animate-fade-in relative">
-            {/* Header del Agente */}
-            <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-3 flex justify-between items-center z-20 shadow-sm shrink-0">
+        <div className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24">
+            {/* Header Minimalista */}
+            <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-3 flex justify-between items-center z-20 sticky top-0">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold border border-gray-200 shadow-sm text-gray-500 overflow-hidden shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600 text-xs border border-gray-200 overflow-hidden">
                         {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
                     </div>
-                    <div className="leading-tight">
-                        <h2 className="font-bold text-gray-900 text-sm md:text-base tracking-tight">{agent.name}</h2>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Portal de Agente</p>
+                    <div>
+                        <h2 className="font-semibold text-gray-900 text-sm tracking-tight">{agent.name}</h2>
+                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Portal Corporativo</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4">
-                    {activeTab === 'marketplace' && cart.length > 0 && (
-                        <button className="bg-black text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold shadow-md hover:scale-105 transition-transform flex items-center gap-2">
-                            🛒 <span className="hidden md:inline">Pagar</span> (${cart.length * 40})
-                        </button>
-                    )}
-                    <button onClick={onLogout} className="p-2 md:px-4 md:py-2 text-gray-500 hover:text-red-600 bg-white border border-gray-200 rounded-xl shadow-sm transition-all text-xs font-bold flex items-center gap-2">
-                        <LogOut size={16}/> <span className="hidden md:inline">Salir</span>
-                    </button>
-                </div>
+                <button onClick={onLogout} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
+                    <LogOut size={14}/> Salir
+                </button>
             </div>
 
-            {/* Pestañas de Navegación del Agente */}
-            <div className="flex px-4 md:px-8 gap-4 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-1 pb-0">
+            {/* Pestañas de Navegación Clean */}
+            <div className="flex px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
-                    <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}>
-                        {tab === 'marketplace' && '🛒 Marketplace'}
-                        {tab === 'clientes' && `📁 Mis Clientes (${myClients.length})`}
-                        {tab === 'agenda' && '🗓️ Mi Agenda'}
+                    <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                        {tab === 'marketplace' && 'Marketplace'}
+                        {tab === 'clientes' && `Mis Clientes (${myClients.length})`}
+                        {tab === 'agenda' && 'Agenda'}
                     </button>
                 ))}
             </div>
 
-            {/* VISTA 1: MARKETPLACE */}
+            {/* VISTA 1: MARKETPLACE (Alta Densidad) */}
             {activeTab === 'marketplace' && (
-                <div className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full overflow-y-auto">
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full overflow-y-auto">
+                    <div className="flex justify-between items-end mb-6">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-gray-900">Shark Tank</h1>
-                            <p className="text-gray-500 text-sm mt-1">Nuevos prospectos. Valor: <span className="font-bold text-green-600">$40 c/u</span></p>
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Marketplace</h1>
+                            <p className="text-gray-500 text-sm mt-1">Selecciona los prospectos que deseas adquirir.</p>
                         </div>
-                        <button onClick={() => setActiveTab('historial')} className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-sm hover:text-black transition-colors flex items-center gap-2">
-                            🧾 Compras Anteriores (Reporte)
+                        <button onClick={() => setActiveTab('historial')} className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors border-b border-transparent hover:border-gray-900 pb-0.5">
+                            Ver recibos
                         </button>
                     </div>
 
                     {availableLeads.length === 0 ? (
-                        <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300">
-                            <Briefcase size={32} className="mx-auto text-gray-300 mb-2"/>
-                            <p className="text-gray-400 font-bold">No hay prospectos en venta ahora mismo.</p>
+                        <div className="text-center p-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <p className="text-gray-400 font-medium">No hay prospectos disponibles en este momento.</p>
                         </div>
                     ) : (
-                        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                            {availableLeads.map(lead => {
-                                const abbr = STATE_ABBR[lead.state] || "US";
-                                const isSelected = cart.includes(lead.id);
-                                let fDate = "Sin fecha";
-                                if (lead.date) fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            {/* Cabecera de la lista */}
+                            <div className="grid grid-cols-[50px_1fr_1.5fr] gap-4 px-6 py-3 border-b border-gray-50 bg-gray-50/50 items-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                <div className="flex items-center justify-center">
+                                    <input type="checkbox" className="custom-checkbox" checked={cart.length === availableLeads.length && availableLeads.length > 0} onChange={selectAll}/>
+                                </div>
+                                <div>Origen</div>
+                                <div>Cita Solicitada</div>
+                            </div>
+                            
+                            {/* Filas de Prospectos */}
+                            <div className="divide-y divide-gray-50">
+                                {availableLeads.map(lead => {
+                                    const abbr = STATE_ABBR[lead.state] || "US";
+                                    const isSelected = cart.includes(lead.id);
+                                    let fDate = "Sin fecha";
+                                    if (lead.date) fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-                                return (
-                                    <div key={lead.id} onClick={() => toggleCart(lead.id)} className={`bg-white rounded-3xl p-5 border-2 transition-all cursor-pointer relative overflow-hidden ${isSelected ? 'border-blue-500 shadow-lg scale-[1.02]' : 'border-gray-100 hover:border-gray-300 shadow-sm'}`}>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 border-2 ${isSelected ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                                                {abbr}
+                                    return (
+                                        <div key={lead.id} onClick={() => toggleCart(lead.id)} className={`grid grid-cols-[50px_1fr_1.5fr] gap-4 px-6 py-4 items-center transition-colors cursor-pointer group ${isSelected ? 'bg-blue-50/30' : 'hover:bg-gray-50/80'}`}>
+                                            <div className="flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                                                <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleCart(lead.id)}/>
                                             </div>
-                                            <div>
-                                                <h3 className="font-extrabold text-gray-900 text-lg uppercase leading-none">{lead.state || 'ESTADO'}</h3>
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border ${isSelected ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 group-hover:border-gray-300'}`}>
+                                                    {abbr}
+                                                </div>
+                                                <span className="font-semibold text-gray-900 uppercase text-sm">{lead.state || 'Estado'}</span>
+                                            </div>
+                                            <div className="text-sm">
+                                                <span className="text-gray-600 capitalize">{fDate}</span>
+                                                <span className="ml-2 font-semibold text-gray-900">{lead.localTime || lead.time}</span>
                                             </div>
                                         </div>
-                                        <div className="mb-5 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cita Solicitada:</p>
-                                            <p className="text-sm font-medium text-gray-800 capitalize leading-tight">
-                                                {fDate} <br/><span className="font-bold text-blue-600 mt-0.5 block">{lead.localTime || lead.time}</span>
-                                            </p>
-                                        </div>
-                                        <button className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                                            {isSelected ? <><Check size={16}/> En Carrito</> : <><Plus size={16}/> Comprar ($40)</>}
-                                        </button>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1858,26 +1859,25 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {activeTab === 'clientes' && (
                 <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto">
                     {myClients.length === 0 ? (
-                        <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300">
-                            <p className="text-gray-400 font-bold">Aún no tienes clientes asignados.</p>
-                            <button onClick={() => setActiveTab('marketplace')} className="mt-4 text-blue-600 font-bold text-sm hover:underline">Ir a la Tienda</button>
+                        <div className="text-center p-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <p className="text-gray-400 font-medium">Aún no tienes clientes en tu portafolio.</p>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
                             {myClients.map(lead => (
-                                <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 md:p-5 hover:bg-blue-50/50 cursor-pointer transition-colors flex items-center justify-between group">
+                                <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">{lead.name.charAt(0)}</div>
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200">{lead.name.charAt(0)}</div>
                                         <div>
-                                            <h4 className="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">{lead.name}</h4>
-                                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 font-medium">
-                                                <span className="flex items-center gap-1"><Phone size={10}/> {lead.phone}</span>
+                                            <h4 className="font-semibold text-gray-900 text-sm md:text-base">{lead.name}</h4>
+                                            <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                                                <span>{lead.phone}</span>
                                                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                                <span className="text-blue-600">{lead.localTime || lead.time}</span>
+                                                <span className="font-medium text-gray-700">{lead.localTime || lead.time}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500"/>
+                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 transition-colors"/>
                                 </div>
                             ))}
                         </div>
@@ -1895,39 +1895,36 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* VISTA 4: HISTORIAL / REPORTES */}
             {activeTab === 'historial' && (
                 <div className="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full overflow-y-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => setActiveTab('marketplace')} className="p-2 bg-white rounded-full shadow-sm border border-gray-200"><ArrowLeft size={16}/></button>
-                        <h2 className="font-bold text-xl">Recibos de Compra</h2>
-                        <button onClick={() => window.print()} className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2"><span className="text-sm">🖨️</span> Imprimir Reporte</button>
+                    <div className="flex justify-between items-center mb-8">
+                        <button onClick={() => setActiveTab('marketplace')} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-2"><ArrowLeft size={16}/> Volver</button>
+                        <button onClick={() => window.print()} className="bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-black transition-colors">Imprimir Reporte</button>
                     </div>
-                    <div className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-0">
-                        <div className="hidden print:block mb-6 text-center border-b pb-4">
-                            <h1 className="text-2xl font-bold">Reporte de Adquisición de Leads</h1>
-                            <p className="text-gray-500">Agente: {agent.name} | Fecha: {new Date().toLocaleDateString()}</p>
+                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm print:shadow-none print:border-0 print:p-0">
+                        <div className="hidden print:block mb-8 text-center border-b border-gray-200 pb-6">
+                            <h1 className="text-2xl font-bold text-black uppercase tracking-widest">Asistente de Beneficios</h1>
+                            <p className="text-gray-500 mt-1">Reporte de Adquisición de Prospectos</p>
+                            <p className="text-gray-500 text-sm">Agente: {agent.name} | Generado: {new Date().toLocaleDateString()}</p>
                         </div>
                         <table className="w-full text-left text-sm">
                             <thead>
-                                <tr className="text-gray-400 uppercase tracking-widest text-[10px] border-b border-gray-100">
-                                    <th className="pb-3 font-bold">Fecha de Compra</th>
-                                    <th className="pb-3 font-bold">Cliente</th>
-                                    <th className="pb-3 font-bold text-right">Monto Invertido</th>
+                                <tr className="text-gray-400 uppercase tracking-wider text-[10px] border-b border-gray-100">
+                                    <th className="pb-3 font-semibold">Fecha de Asignación</th>
+                                    <th className="pb-3 font-semibold">Cliente</th>
+                                    <th className="pb-3 font-semibold text-right">Referencia</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {myHistory.map(lead => (
                                     <tr key={lead.id}>
-                                        <td className="py-4 text-gray-600 font-medium">{new Date(lead.timestamp).toLocaleDateString()}</td>
-                                        <td className="py-4 font-bold text-gray-900">{lead.name} ({lead.state})</td>
-                                        <td className="py-4 font-bold text-green-600 text-right">$40.00</td>
+                                        <td className="py-4 text-gray-500">{new Date(lead.timestamp).toLocaleDateString()}</td>
+                                        <td className="py-4 font-semibold text-gray-900">{lead.name} <span className="text-gray-400 font-normal ml-1">({lead.state})</span></td>
+                                        <td className="py-4 text-gray-400 text-right font-mono text-xs">ID-{lead.id.slice(-6).toUpperCase()}</td>
                                     </tr>
                                 ))}
+                                {myHistory.length === 0 && (
+                                    <tr><td colSpan="3" className="py-8 text-center text-gray-400">No hay transacciones registradas.</td></tr>
+                                )}
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colSpan="2" className="pt-4 text-right font-bold text-gray-500 uppercase text-xs">Total Invertido:</td>
-                                    <td className="pt-4 text-right font-extrabold text-lg text-black">${myHistory.length * 40}.00</td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -1942,6 +1939,17 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                     isAgentView={true} 
                     agents={[agent]} 
                 />
+            )}
+
+            {/* BARRA FLOTANTE DE PAGO (Estilo Apple Store) */}
+            {activeTab === 'marketplace' && cart.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-black/90 backdrop-blur-md text-white px-2 py-2 rounded-full shadow-2xl flex items-center gap-4 z-50 animate-slide-up border border-white/10">
+                    <span className="text-sm font-medium pl-4 text-gray-200">{cart.length} prospectos seleccionados</span>
+                    <div className="w-px h-4 bg-white/20"></div>
+                    <button className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2">
+                        Ir al pago <ChevronRight size={16}/>
+                    </button>
+                </div>
             )}
         </div>
     );
