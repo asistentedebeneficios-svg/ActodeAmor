@@ -1493,7 +1493,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                             {activeTab !== 'archived' ? (
                                 <>
                                     <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Asignar</span>
+                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span>
                                     </button>
                                     <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
                                         <Archive size={18} className="md:w-4 md:h-4"/> <span>Archivar</span>
@@ -1601,7 +1601,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
                                              <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-left w-full text-xs font-bold ${assignedAgent ? 'bg-white border-gray-200 hover:border-rose-300' : 'bg-gray-50 border-dashed border-gray-300 hover:bg-white hover:border-gray-400 text-gray-400'}`}>
-                                                {assignedAgent ? (<><div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div><span className="truncate text-gray-800">{assignedAgent.name}</span></>) : (<span>+ Asignar</span>)}
+                                                {assignedAgent ? (<><div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[8px] overflow-hidden shrink-0">{assignedAgent.photo ? <img src={assignedAgent.photo} className="w-full h-full object-cover"/> : assignedAgent.name.charAt(0)}</div><span className="truncate text-gray-800">{assignedAgent.name}</span></>) : (<span>+ Agente</span>)}
                                              </button>
                                         </div>
                                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
