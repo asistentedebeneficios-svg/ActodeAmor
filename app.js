@@ -1748,30 +1748,38 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 // --- DICCIONARIO DE ESTADOS ---
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
 
-// --- PORTAL DEL AGENTE (SaaS Premium V3 - Mobile Optimized) ---
+// --- PORTAL DEL AGENTE (SaaS Premium V5 - Filtro Archivados) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const [activeTab, setActiveTab] = useState('marketplace');
     const [viewingLead, setViewingLead] = useState(null);
     const [cart, setCart] = useState([]);
-    const [timeLeft, setTimeLeft] = useState(600); // 600 segundos = 10 minutos
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
+    const [showArchived, setShowArchived] = useState(false); // Nuevo estado para alternar vistas
     
     // Filtros inteligentes
     const processedLeads = leads.map(l => ({ ...l, localTime: getLocalTimeInfo(l.date, l.time, l.state) }));
-    const myClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
+    
+    // Filtramos los clientes activos y los archivados del agente
+    const activeClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
+    const archivedClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status === 'archived').sort((a,b) => b.timestamp - a.timestamp);
+    
+    // La lista que se mostrará en "Mis Clientes" dependiendo del interruptor
+    const currentClientsList = showArchived ? archivedClients : activeClients;
+    
     const availableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
     const myHistory = processedLeads.filter(l => l.assignedTo === agent.id).sort((a,b) => b.timestamp - a.timestamp);
 
-    // Lógica del Temporizador de 10 minutos
+    // Lógica del Temporizador
     useEffect(() => {
         let timer;
         if (cart.length > 0 && timeLeft > 0) {
             timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
         } else if (timeLeft === 0) {
-            setCart([]); // Vacía el carrito si se acaba el tiempo
-            setTimeLeft(600); // Reinicia el reloj
+            setCart([]); 
+            setTimeLeft(600); 
             alert("⏳ El tiempo para completar la compra ha expirado. Los prospectos han sido liberados.");
         } else if (cart.length === 0) {
-            setTimeLeft(600); // Reinicia el reloj si el usuario desmarca todo manualmente
+            setTimeLeft(600);
         }
         return () => clearInterval(timer);
     }, [cart.length, timeLeft]);
@@ -1807,7 +1815,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
                     <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                         {tab === 'marketplace' && 'Marketplace'}
-                        {tab === 'clientes' && `Mis Clientes (${myClients.length})`}
+                        {tab === 'clientes' && `Mis Clientes (${activeClients.length})`}
                         {tab === 'agenda' && 'Agenda'}
                     </button>
                 ))}
@@ -1848,11 +1856,24 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                             <span className="font-bold text-gray-900 uppercase text-sm tracking-wide truncate">{lead.state || 'ESTADO'}</span>
-                                            <span className="text-xs text-gray-500 truncate mt-0.5 leading-tight">
-                                                {fDate} <br className="md:hidden" />
+                                            
+                                            <span className="text-xs text-gray-500 mt-1 leading-tight block">
+                                                <span className="capitalize">{fDate}</span> <br className="md:hidden" />
                                                 <span className="md:hidden text-gray-300 mx-1">|</span>
                                                 <span className="md:inline hidden"> • </span>
-                                                <span className="font-semibold text-gray-800">{lead.localTime || lead.time}</span>
+                                                
+                                                <span className="font-bold text-gray-800">
+                                                    {lead.localTime || lead.time} <span className="text-[10px] font-medium text-gray-400">(Tu hora)</span>
+                                                </span>
+                                                
+                                                {lead.localTime && lead.localTime !== lead.time && (
+                                                    <span className="inline-flex items-center ml-1.5">
+                                                        <span className="text-gray-300 mr-1.5">•</span>
+                                                        <span className="font-medium text-gray-500">
+                                                            {lead.time} <span className="text-[10px] font-normal text-gray-400">({abbr})</span>
+                                                        </span>
+                                                    </span>
+                                                )}
                                             </span>
                                         </div>
                                     </div>
@@ -1863,31 +1884,56 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 </div>
             )}
 
-            {/* VISTA 2: MIS CLIENTES */}
+            {/* VISTA 2: MIS CLIENTES (Con filtro de Activos/Archivados) */}
             {activeTab === 'clientes' && (
                 <div className="flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto">
-                    {myClients.length === 0 ? (
+                    
+                    {/* Switch Toggle (Activos vs Archivados) */}
+                    <div className="flex justify-center mb-6">
+                        <div className="bg-gray-200/60 p-1 rounded-xl flex items-center">
+                            <button onClick={() => setShowArchived(false)} className={`px-5 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${!showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                Activos ({activeClients.length})
+                            </button>
+                            <button onClick={() => setShowArchived(true)} className={`px-5 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                Archivados ({archivedClients.length})
+                            </button>
+                        </div>
+                    </div>
+
+                    {currentClientsList.length === 0 ? (
                         <div className="text-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                            <p className="text-gray-400 font-medium text-sm">Aún no tienes clientes en tu portafolio.</p>
+                            <p className="text-gray-400 font-medium text-sm">
+                                {!showArchived ? 'Aún no tienes clientes activos.' : 'No tienes prospectos archivados.'}
+                            </p>
                         </div>
                     ) : (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-                            {myClients.map(lead => (
-                                <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
-                                    <div className="flex items-center gap-3 md:gap-4 min-w-0 pr-2">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0">{lead.name.charAt(0)}</div>
-                                        <div className="min-w-0">
-                                            <h4 className="font-semibold text-gray-900 text-sm truncate">{lead.name}</h4>
-                                            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] md:text-xs text-gray-500 truncate">
-                                                <span>{lead.phone}</span>
-                                                <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0"></span>
-                                                <span className="font-medium text-gray-700 truncate">{lead.localTime || lead.time}</span>
+                            {currentClientsList.map(lead => {
+                                const abbr = STATE_ABBR[lead.state] || "US";
+                                return (
+                                    <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
+                                        <div className="flex items-center gap-3 md:gap-4 min-w-0 pr-2">
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0">{lead.name.charAt(0)}</div>
+                                            <div className="min-w-0">
+                                                <h4 className={`font-semibold text-sm truncate ${showArchived ? 'text-gray-500 line-through' : 'text-gray-900'}`}>{lead.name}</h4>
+                                                
+                                                <div className="flex items-center gap-1.5 mt-1 text-[11px] md:text-xs text-gray-500 truncate">
+                                                    <span>{lead.phone}</span>
+                                                    <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0"></span>
+                                                    <span className="font-bold text-gray-700">{lead.localTime || lead.time} <span className="font-normal text-[10px]">(Tu hora)</span></span>
+                                                    {lead.localTime && lead.localTime !== lead.time && (
+                                                        <>
+                                                            <span className="text-gray-300">•</span>
+                                                            <span className="text-gray-400">{lead.time} ({abbr})</span>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
+                                        <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 transition-colors shrink-0"/>
                                     </div>
-                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 transition-colors shrink-0"/>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </div>
@@ -1896,7 +1942,8 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* VISTA 3: AGENDA */}
             {activeTab === 'agenda' && (
                 <div className="flex-1 p-3 md:p-6 h-full overflow-hidden">
-                    <AdminCalendar leads={myClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} />
+                    {/* Solo le pasamos los clientes activos al calendario */}
+                    <AdminCalendar leads={activeClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} />
                 </div>
             )}
 
