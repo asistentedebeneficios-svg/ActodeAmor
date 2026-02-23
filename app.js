@@ -1729,7 +1729,6 @@ const App = () => {
                 };
                 
                 const safeCoverage = String(finalData.coverage_amount || '').toLowerCase();
-                const formattedCoverage = coverageMap[safeCoverage] || finalData.coverage_amount;
                 const formattedCoverage = coverageMap[finalData.coverage_amount] || finalData.coverage_amount;
 
                 // Armamos el "Maletín VIP" solo para Make
