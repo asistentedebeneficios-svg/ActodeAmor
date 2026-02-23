@@ -1712,16 +1712,20 @@ const App = () => {
                     'funeral': 'Gastos Funerarios',
                     'debt': 'Pagar Deudas',
                     'income': 'Reemplazo de Ingresos',
-                    'legacy': 'Dejar Herencia'
+                    'legacy': 'Dejar Herencia',
+                    'burden': 'Evitar carga financiera'
                 };
                 const translatedMotivation = finalData.motivation ? finalData.motivation.map(val => motivationMap[val] || val).join(', ') : '';
 
-                // 5. Cobertura (Convierte 5k a $5,000)
-                let formattedCoverage = finalData.coverage_amount || '';
-                if (formattedCoverage.includes('k')) {
-                    // Si viene como "5k" lo hace "$5,000". Si viene "5k-10k" lo hace "$5,000 - $10,000"
-                    formattedCoverage = formattedCoverage.split('-').map(v => v.includes('k') ? '$' + v.trim().replace('k', ',000') : v).join(' - ');
-                }
+                // 5. Cobertura (Mapeo exacto a texto en español)
+                const coverageMap = {
+                    '5k': '$5,000',
+                    '10k': '$10,000 - $15,000',
+                    '15k': '$15,000 - $20,000',
+                    '20k': '$20,000 - $25,000',
+                    '25k': '$25,000 o más'
+                };
+                const formattedCoverage = coverageMap[finalData.coverage_amount] || finalData.coverage_amount;
 
                 // Armamos el "Maletín VIP" solo para Make
                 const webhookPayload = {
