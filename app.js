@@ -1681,13 +1681,63 @@ const App = () => {
         const finalData = { ...leadData, ...form }; 
         await addLead(finalData); 
         
-        // Ahora lee la URL secreta desde tu engranaje
         if (webhooks && webhooks.telegram) {
             try {
+                // --- 🛠️ TRADUCTOR PARA EL MENSAJE DE TELEGRAM ---
+                
+                // 1. Fecha elegante (ej. lunes, 23 de febrero de 2026)
+                let formattedDate = finalData.date;
+                if (finalData.date) {
+                    const dateObj = new Date(finalData.date + 'T12:00:00');
+                    formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                }
+
+                // 2. Tipo de llamada
+                const callTypeMap = {
+                    'video': 'Videollamada',
+                    'call': 'Llamada Regular'
+                };
+
+                // 3. A quién protege
+                const policyMap = {
+                    'me': 'A mí mismo',
+                    'spouse': 'A mi cónyuge',
+                    'children': 'A mis hijos',
+                    'parents': 'A mis padres'
+                };
+                const translatedPolicy = finalData.policy_for ? finalData.policy_for.map(val => policyMap[val] || val).join(', ') : '';
+
+                // 4. Motivación (Lo traduzco también por si te llega en inglés)
+                const motivationMap = {
+                    'funeral': 'Gastos Funerarios',
+                    'debt': 'Pagar Deudas',
+                    'income': 'Reemplazo de Ingresos',
+                    'legacy': 'Dejar Herencia'
+                };
+                const translatedMotivation = finalData.motivation ? finalData.motivation.map(val => motivationMap[val] || val).join(', ') : '';
+
+                // 5. Cobertura (Convierte 5k a $5,000)
+                let formattedCoverage = finalData.coverage_amount || '';
+                if (formattedCoverage.includes('k')) {
+                    // Si viene como "5k" lo hace "$5,000". Si viene "5k-10k" lo hace "$5,000 - $10,000"
+                    formattedCoverage = formattedCoverage.split('-').map(v => v.includes('k') ? '$' + v.trim().replace('k', ',000') : v).join(' - ');
+                }
+
+                // Armamos el "Maletín VIP" solo para Make
+                const webhookPayload = {
+                    ...finalData,
+                    date: formattedDate,
+                    callType: callTypeMap[finalData.callType] || finalData.callType,
+                    policy_for: translatedPolicy,
+                    motivation: translatedMotivation,
+                    coverage_amount: formattedCoverage
+                };
+
+                // Enviamos los datos embellecidos
                 fetch(webhooks.telegram, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(finalData)
+                    body: JSON.stringify(webhookPayload)
                 });
             } catch (err) { console.error("Error Webhook Telegram:", err); }
         }
