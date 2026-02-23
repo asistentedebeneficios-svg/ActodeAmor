@@ -1744,9 +1744,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     );
 };
 
-// --- DICCIONARIO DE ESTADOS ---
-const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
-
 // --- PORTAL DEL AGENTE (SaaS) ---
 // --- DICCIONARIO DE ESTADOS ---
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
