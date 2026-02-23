@@ -816,7 +816,15 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </div>
                                 <div className="px-1 print:p-0">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Método Preferido</span>
-                                     <p className="font-bold text-blue-700 text-sm bg-blue-50 px-2 py-1 rounded inline-block print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">{lead.callType === 'video' ? 'Videollamada (WhatsApp)' : 'Llamada Telefónica'}</p>
+                                     {lead.callType === 'video' ? (
+                                         <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="font-bold text-[#128C7E] text-sm bg-[#E7F6F4] hover:bg-[#D1EBE7] transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
+                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Videollamada (Abrir WhatsApp)
+                                         </a>
+                                     ) : (
+                                         <a href={`tel:${lead.phone}`} className="font-bold text-blue-700 text-sm bg-blue-50 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
+                                             <Phone size={14} strokeWidth={2.5}/> Llamada Telefónica
+                                         </a>
+                                     )}
                                 </div>
                             </div>
                         </div>
@@ -2000,15 +2008,17 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
 
             {/* BARRA FLOTANTE DE PAGO OPTIMIZADA (Mobile & Desktop) */}
             {activeTab === 'marketplace' && cart.length > 0 && (
-                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[92%] md:w-auto max-w-md bg-black/95 backdrop-blur-md text-white p-1.5 md:p-2 rounded-2xl md:rounded-full shadow-2xl flex items-center justify-between gap-2 z-50 animate-slide-up border border-white/10">
-                    <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4">
-                        <span className="text-[11px] md:text-sm font-medium text-gray-200 whitespace-nowrap"><span className="font-bold text-white">{cart.length}</span> leads</span>
-                        <div className="w-px h-4 bg-white/20"></div>
-                        <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
+                <div className="fixed bottom-6 left-0 right-0 px-4 md:px-0 flex justify-center z-50 animate-slide-up pointer-events-none">
+                    <div className="w-full md:w-auto max-w-[400px] bg-black/95 backdrop-blur-md text-white p-1.5 md:p-2 rounded-2xl md:rounded-full shadow-2xl flex items-center justify-between gap-2 border border-white/10 pointer-events-auto">
+                        <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4">
+                            <span className="text-[11px] md:text-sm font-medium text-gray-200 whitespace-nowrap"><span className="font-bold text-white">{cart.length}</span> leads</span>
+                            <div className="w-px h-4 bg-white/20"></div>
+                            <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
+                        </div>
+                        <button className="bg-white text-black px-4 md:px-6 py-2.5 md:py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                            Pagar ${cart.length * 40} <ChevronRight size={14}/>
+                        </button>
                     </div>
-                    <button className="bg-white text-black px-4 md:px-6 py-2.5 md:py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                        Pagar ${cart.length * 40} <ChevronRight size={14}/>
-                    </button>
                 </div>
             )}
         </div>
