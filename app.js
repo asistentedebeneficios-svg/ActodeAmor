@@ -1346,7 +1346,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 
     const getFilteredLeads = () => {
         let list = [];
-        if(activeTab === 'active') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo);
+        if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
+        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
@@ -1464,13 +1465,14 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             </div>
 
             <div className="flex px-2 md:px-8 gap-2 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
                         className={`py-3 px-3 md:px-1 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-rose-600 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}
                     >
                         {tab === 'active' && 'Bandeja'}
+                        {tab === 'marketplace' && 'Marketplace'}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
                         {tab === 'agents' && 'Equipo'}
