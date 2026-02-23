@@ -1495,7 +1495,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                             {activeTab !== 'archived' ? (
                                 <>
                                     <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Asignar</span>
+                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span>
                                     </button>
                                     <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
                                         <Briefcase size={18} className="md:w-4 md:h-4"/> <span>Vender</span>
