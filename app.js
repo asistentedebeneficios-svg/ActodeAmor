@@ -1707,7 +1707,7 @@ const App = () => {
                 };
                 const translatedPolicy = finalData.policy_for ? finalData.policy_for.map(val => policyMap[val] || val).join(', ') : '';
 
-                // 4. Motivación (Lo traduzco también por si te llega en inglés)
+                // 4. Motivación (A prueba de mayúsculas)
                 const motivationMap = {
                     'funeral': 'Gastos Funerarios',
                     'debt': 'Pagar Deudas',
@@ -1715,9 +1715,11 @@ const App = () => {
                     'legacy': 'Dejar Herencia',
                     'burden': 'Evitar carga financiera'
                 };
-                const translatedMotivation = finalData.motivation ? finalData.motivation.map(val => motivationMap[val] || val).join(', ') : '';
+                const translatedMotivation = finalData.motivation 
+                    ? finalData.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') 
+                    : '';
 
-                // 5. Cobertura (Mapeo exacto a texto en español)
+                // 5. Cobertura (A prueba de mayúsculas)
                 const coverageMap = {
                     '5k': '$5,000',
                     '10k': '$10,000 - $15,000',
@@ -1725,6 +1727,9 @@ const App = () => {
                     '20k': '$20,000 - $25,000',
                     '25k': '$25,000 o más'
                 };
+                
+                const safeCoverage = String(finalData.coverage_amount || '').toLowerCase();
+                const formattedCoverage = coverageMap[safeCoverage] || finalData.coverage_amount;
                 const formattedCoverage = coverageMap[finalData.coverage_amount] || finalData.coverage_amount;
 
                 // Armamos el "Maletín VIP" solo para Make
