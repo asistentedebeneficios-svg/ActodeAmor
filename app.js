@@ -746,11 +746,10 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
     }
 };
 
-const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent }) => {
+const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false }) => {
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
-    const notesEndRef = useRef(null);
     
     const handleSaveNotes = async () => { 
         setIsSaving(true);
@@ -762,8 +761,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent }
     const handleDelete = () => { if(window.confirm('⚠️ ¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.')) { onDelete(lead.id); onClose(); }};
 
     return (
-        <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
-            <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+        <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
+            {/* Header - Se oculta al imprimir */}
+            <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
@@ -771,126 +771,140 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent }
                         <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
                     </div>
                 </div>
-                <div className="flex gap-2 shrink-0 ml-2">
-                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] hover:border-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Abrir WhatsApp">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                     </a>
-                     <a href={`mailto:${lead.email}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 hover:border-blue-300 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Enviar Correo"><Mail size={18}/></a>
-                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-green-600 hover:border-green-300 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100 flex items-center justify-center" title="Llamar"><Phone size={18}/></a>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                     <button onClick={() => window.print()} className="p-2.5 md:px-4 md:py-2.5 text-gray-600 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2 font-bold text-xs" title="Imprimir Ficha"><span className="text-lg">🖨️</span> <span className="hidden md:inline">Imprimir Ficha</span></button>
+                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
                 </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
-                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
+            {/* Contenido de la Ficha (Esto SÍ se imprime) */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible">
+                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
                     
-                    <div className="md:col-span-5 space-y-6">
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
+                    {/* ENCABEZADO DE IMPRESIÓN (Solo visible al imprimir) */}
+                    <div className="hidden print:block text-center mb-8 border-b-2 border-gray-900 pb-4">
+                        <h1 className="text-3xl font-extrabold text-black uppercase tracking-widest">Asistentedebeneficios.com</h1>
+                        <p className="text-gray-500 text-sm mt-1">Ficha Oficial de Prospecto (Confidencial)</p>
+                    </div>
+
+                    <div className="md:col-span-5 space-y-6 print:mb-6">
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500 print:text-black"/> Ficha Técnica</h3>
+                            
+                            {/* Nombre del cliente en impresión */}
+                            <div className="hidden print:block mb-4">
+                                <span className="text-xs text-gray-500 uppercase font-bold tracking-widest block mb-1">Nombre del Prospecto</span>
+                                <p className="font-bold text-black text-2xl">{lead.name}</p>
+                            </div>
+
                             <div className="space-y-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50">
-                                    <div className="border-b border-gray-200/60 md:border-0 pb-2 md:pb-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400"/> {lead.state || 'N/A'}</p></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
+                                    <div className="border-b border-gray-200/60 md:border-0 pb-2 md:pb-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p></div>
                                     <div className="pt-1 md:pt-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span>
                                         <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
                                             <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
-                                            <span className="text-gray-500 mt-1">{lead.time} <span className="text-[10px] font-normal uppercase">(Hora de {lead.state})</span></span>
-                                            {lead.localTime && lead.localTime !== lead.time && (
-                                                <span className="text-rose-600 font-bold mt-1.5 flex items-center gap-1 bg-rose-50 w-fit px-2 py-1 rounded-md text-[11px] shadow-sm">
-                                                    <Clock size={12}/> Tu hora local: {lead.localTime}
-                                                </span>
-                                            )}
+                                            <span className="text-gray-500 mt-1">{lead.time}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="px-1">
-                                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Correo Electrónico</span>
-                                    <p className="font-medium text-gray-800 break-all text-sm">{lead.email}</p>
+                                <div className="px-1 print:p-0">
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Teléfono y Correo</span>
+                                    <p className="font-bold text-gray-900 text-lg">{lead.phone}</p>
+                                    <p className="font-medium text-gray-600 text-sm">{lead.email}</p>
                                 </div>
-                                <div className="px-1">
-                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-2">Método Preferido</span>
-                                     {lead.callType === 'video' ? (
-                                         <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all text-xs font-bold border border-green-100/50 shadow-sm cursor-pointer" title="Iniciar Videollamada por WhatsApp"><Video size={14}/> Videollamada (WhatsApp)</a>
-                                     ) : (
-                                         <a href={`tel:${lead.phone}`} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-all text-xs font-bold border border-blue-100/50 shadow-sm cursor-pointer" title="Llamar ahora"><Phone size={14}/> Llamada Telefónica</a>
-                                     )}
+                                <div className="px-1 print:p-0">
+                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Método Preferido</span>
+                                     <p className="font-bold text-blue-700 text-sm bg-blue-50 px-2 py-1 rounded inline-block print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">{lead.callType === 'video' ? 'Videollamada (WhatsApp)' : 'Llamada Telefónica'}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500 print:text-black"/> Perfil de Interés</h3>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
                                     <span className="text-sm text-gray-500 font-medium">Cobertura para</span>
                                     <span className="font-bold text-gray-900 text-sm text-right">{getLabelsForArray('policy_for', lead.policy_for)}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
                                     <span className="text-sm text-gray-500 font-medium">Monto estimado</span>
-                                    <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
+                                    <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
                                     <span className="text-sm text-gray-500 font-medium">Presupuesto mensual</span>
-                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
+                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
                                 </div>
                                 <div className="px-1 pt-1">
                                     <span className="text-sm text-gray-500 font-medium block mb-2">Principales Motivaciones</span>
-                                    <div className="flex flex-wrap gap-2">
-                                        {Array.isArray(lead.motivation) && lead.motivation.map(m => (<span key={m} className="px-2.5 py-1.5 bg-rose-50 border border-rose-100 text-rose-700 rounded-lg text-xs font-bold shadow-sm">{getLabelForValue('motivation', m)}</span>))}
-                                    </div>
+                                    <p className="font-bold text-sm text-gray-800">
+                                        {Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <div className="md:col-span-7 space-y-6 flex flex-col">
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Estado y Asignación</h3>
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500 print:text-black"/> Estado y Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
-                                    <button onClick={() => setShowAgentSelector(true)} className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-rose-300 hover:bg-white hover:shadow-md transition-all group">
-                                        <div className="flex items-center gap-3 overflow-hidden">
-                                            {currentAgent ? (<><div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-white text-rose-600 flex items-center justify-center text-sm font-bold overflow-hidden shadow-sm border border-rose-100 shrink-0">{currentAgent.photo ? <img src={currentAgent.photo} className="w-full h-full object-cover"/> : currentAgent.name.charAt(0)}</div><div className="text-left truncate"><span className="font-bold text-gray-900 block group-hover:text-rose-700 transition-colors truncate">{currentAgent.name}</span><span className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Reasignar</span></div></>) : (<div className="flex items-center gap-2 text-gray-400 font-medium"><div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-dashed border-gray-300 shrink-0"><UserPlus size={16}/></div><span className="italic text-sm">Seleccionar Agente...</span></div>)}
+                                    
+                                    {/* MODO JEFE: Puede cambiar agente */}
+                                    {!isAgentView ? (
+                                        <button onClick={() => setShowAgentSelector(true)} className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-rose-300 hover:bg-white transition-all print:border-0 print:p-0 print:bg-transparent">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                {currentAgent ? (<><span className="font-bold text-gray-900 block truncate">{currentAgent.name}</span></>) : (<span className="italic text-sm">Seleccionar Agente...</span>)}
+                                            </div>
+                                            <ChevronRight size={18} className="text-gray-300 shrink-0 ml-2 print:hidden"/>
+                                        </button>
+                                    ) : (
+                                    /* MODO AGENTE: Solo ve su nombre, no puede cambiarlo */
+                                        <div className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center print:border-0 print:p-0 print:bg-transparent">
+                                            <span className="font-bold text-gray-900">{currentAgent?.name || 'Asignado a ti'}</span>
                                         </div>
-                                        <ChevronRight size={18} className="text-gray-300 group-hover:text-rose-500 transition-colors shrink-0 ml-2"/>
-                                    </button>
+                                    )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0">
-                                    <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}>
+                                <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0 print:hidden">
+                                    <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                         {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                     </button>
-                                    <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
+                                    
+                                    {/* MODO JEFE: Solo el jefe puede eliminar */}
+                                    {!isAgentView && (
+                                        <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px]">
-                            <div className="flex justify-between items-center mb-4">
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px] print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
+                            <div className="flex justify-between items-center mb-4 print:hidden">
                                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Bloc de Notas</h3>
                                 <button onClick={handleSaveNotes} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 ${isSaving ? 'bg-green-500 text-white' : 'bg-black text-white hover:scale-105'}`}>
                                     {isSaving ? <><Check size={14}/> Guardado</> : <><Save size={14}/> Guardar</>}
                                 </button>
                             </div>
-                            <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 shadow-inner resize-none outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all leading-relaxed" placeholder="Escribe aquí los detalles de la llamada, acuerdos o recordatorios del prospecto..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
+                            <h3 className="hidden print:block font-bold text-black text-sm uppercase tracking-widest mb-4 border-b border-gray-300 pb-2">Notas del Agente</h3>
+                            
+                            <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 resize-none outline-none focus:bg-white focus:border-rose-300 transition-all print:bg-transparent print:border-0 print:p-0 print:text-black" placeholder="Escribe aquí los detalles de la llamada..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
                         </div>
                     </div>
                 </div>
             </div>
-            {showAgentSelector && (
-                <AgentSelectionModal 
-                    agents={agents} 
-                    onClose={() => setShowAgentSelector(false)} 
-                    onSelect={(agentId) => { 
-                        const selectedAgent = agents.find(a => a.id === agentId);
-                        const confirmMsg = selectedAgent 
-                            ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` 
-                            : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
-                        
-                        if (window.confirm(confirmMsg)) {
-                            onAssignAgent(lead.id, agentId); 
-                            setShowAgentSelector(false); 
-                        }
-                    }}
-                />
+            
+            {showAgentSelector && !isAgentView && (
+                <AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { 
+                    const selectedAgent = agents.find(a => a.id === agentId);
+                    const confirmMsg = selectedAgent ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
+                    if (window.confirm(confirmMsg)) {
+                        onAssignAgent(lead.id, agentId); 
+                        setShowAgentSelector(false); 
+                    }
+                }}/>
             )}
         </div>
     );
@@ -1730,6 +1744,209 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     );
 };
 
+// --- DICCIONARIO DE ESTADOS ---
+const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
+
+// --- PORTAL DEL AGENTE (SaaS) ---
+const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
+    const [activeTab, setActiveTab] = useState('marketplace');
+    const [viewingLead, setViewingLead] = useState(null);
+    const [cart, setCart] = useState([]);
+    
+    // Filtros inteligentes para el Agente
+    const processedLeads = leads.map(l => ({ ...l, localTime: getLocalTimeInfo(l.date, l.time, l.state) }));
+    
+    // Mis Clientes (Solo los asignados a él y no archivados)
+    const myClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
+    // Tienda (Nuevos en marketplace sin dueño)
+    const availableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
+    // Recibos (Todos los asignados a él, incluyendo archivados, para reportes de compra)
+    const myHistory = processedLeads.filter(l => l.assignedTo === agent.id).sort((a,b) => b.timestamp - a.timestamp);
+
+    const toggleCart = (leadId) => { setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); };
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans animate-fade-in relative">
+            {/* Header del Agente */}
+            <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-3 flex justify-between items-center z-20 shadow-sm shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold border border-gray-200 shadow-sm text-gray-500 overflow-hidden shrink-0">
+                        {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
+                    </div>
+                    <div className="leading-tight">
+                        <h2 className="font-bold text-gray-900 text-sm md:text-base tracking-tight">{agent.name}</h2>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Portal de Agente</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 md:gap-4">
+                    {activeTab === 'marketplace' && cart.length > 0 && (
+                        <button className="bg-black text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold shadow-md hover:scale-105 transition-transform flex items-center gap-2">
+                            🛒 <span className="hidden md:inline">Pagar</span> (${cart.length * 40})
+                        </button>
+                    )}
+                    <button onClick={onLogout} className="p-2 md:px-4 md:py-2 text-gray-500 hover:text-red-600 bg-white border border-gray-200 rounded-xl shadow-sm transition-all text-xs font-bold flex items-center gap-2">
+                        <LogOut size={16}/> <span className="hidden md:inline">Salir</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Pestañas de Navegación del Agente */}
+            <div className="flex px-4 md:px-8 gap-4 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-1 pb-0">
+                {['marketplace', 'clientes', 'agenda'].map(tab => (
+                    <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}>
+                        {tab === 'marketplace' && '🛒 Marketplace'}
+                        {tab === 'clientes' && `📁 Mis Clientes (${myClients.length})`}
+                        {tab === 'agenda' && '🗓️ Mi Agenda'}
+                    </button>
+                ))}
+            </div>
+
+            {/* VISTA 1: MARKETPLACE */}
+            {activeTab === 'marketplace' && (
+                <div className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full overflow-y-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div>
+                            <h1 className="text-2xl font-extrabold text-gray-900">Shark Tank</h1>
+                            <p className="text-gray-500 text-sm mt-1">Nuevos prospectos. Valor: <span className="font-bold text-green-600">$40 c/u</span></p>
+                        </div>
+                        <button onClick={() => setActiveTab('historial')} className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-sm hover:text-black transition-colors flex items-center gap-2">
+                            🧾 Compras Anteriores (Reporte)
+                        </button>
+                    </div>
+
+                    {availableLeads.length === 0 ? (
+                        <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300">
+                            <Briefcase size={32} className="mx-auto text-gray-300 mb-2"/>
+                            <p className="text-gray-400 font-bold">No hay prospectos en venta ahora mismo.</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                            {availableLeads.map(lead => {
+                                const abbr = STATE_ABBR[lead.state] || "US";
+                                const isSelected = cart.includes(lead.id);
+                                let fDate = "Sin fecha";
+                                if (lead.date) fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                                return (
+                                    <div key={lead.id} onClick={() => toggleCart(lead.id)} className={`bg-white rounded-3xl p-5 border-2 transition-all cursor-pointer relative overflow-hidden ${isSelected ? 'border-blue-500 shadow-lg scale-[1.02]' : 'border-gray-100 hover:border-gray-300 shadow-sm'}`}>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 border-2 ${isSelected ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                                                {abbr}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-extrabold text-gray-900 text-lg uppercase leading-none">{lead.state || 'ESTADO'}</h3>
+                                            </div>
+                                        </div>
+                                        <div className="mb-5 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cita Solicitada:</p>
+                                            <p className="text-sm font-medium text-gray-800 capitalize leading-tight">
+                                                {fDate} <br/><span className="font-bold text-blue-600 mt-0.5 block">{lead.localTime || lead.time}</span>
+                                            </p>
+                                        </div>
+                                        <button className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                                            {isSelected ? <><Check size={16}/> En Carrito</> : <><Plus size={16}/> Comprar ($40)</>}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* VISTA 2: MIS CLIENTES */}
+            {activeTab === 'clientes' && (
+                <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto">
+                    {myClients.length === 0 ? (
+                        <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300">
+                            <p className="text-gray-400 font-bold">Aún no tienes clientes asignados.</p>
+                            <button onClick={() => setActiveTab('marketplace')} className="mt-4 text-blue-600 font-bold text-sm hover:underline">Ir a la Tienda</button>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                            {myClients.map(lead => (
+                                <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 md:p-5 hover:bg-blue-50/50 cursor-pointer transition-colors flex items-center justify-between group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">{lead.name.charAt(0)}</div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">{lead.name}</h4>
+                                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 font-medium">
+                                                <span className="flex items-center gap-1"><Phone size={10}/> {lead.phone}</span>
+                                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                                <span className="text-blue-600">{lead.localTime || lead.time}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500"/>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* VISTA 3: AGENDA */}
+            {activeTab === 'agenda' && (
+                <div className="flex-1 p-4 md:p-6 h-full overflow-hidden">
+                    <AdminCalendar leads={myClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} />
+                </div>
+            )}
+
+            {/* VISTA 4: HISTORIAL / REPORTES */}
+            {activeTab === 'historial' && (
+                <div className="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full overflow-y-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <button onClick={() => setActiveTab('marketplace')} className="p-2 bg-white rounded-full shadow-sm border border-gray-200"><ArrowLeft size={16}/></button>
+                        <h2 className="font-bold text-xl">Recibos de Compra</h2>
+                        <button onClick={() => window.print()} className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2"><span className="text-sm">🖨️</span> Imprimir Reporte</button>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-0">
+                        <div className="hidden print:block mb-6 text-center border-b pb-4">
+                            <h1 className="text-2xl font-bold">Reporte de Adquisición de Leads</h1>
+                            <p className="text-gray-500">Agente: {agent.name} | Fecha: {new Date().toLocaleDateString()}</p>
+                        </div>
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr className="text-gray-400 uppercase tracking-widest text-[10px] border-b border-gray-100">
+                                    <th className="pb-3 font-bold">Fecha de Compra</th>
+                                    <th className="pb-3 font-bold">Cliente</th>
+                                    <th className="pb-3 font-bold text-right">Monto Invertido</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {myHistory.map(lead => (
+                                    <tr key={lead.id}>
+                                        <td className="py-4 text-gray-600 font-medium">{new Date(lead.timestamp).toLocaleDateString()}</td>
+                                        <td className="py-4 font-bold text-gray-900">{lead.name} ({lead.state})</td>
+                                        <td className="py-4 font-bold text-green-600 text-right">$40.00</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan="2" className="pt-4 text-right font-bold text-gray-500 uppercase text-xs">Total Invertido:</td>
+                                    <td className="pt-4 text-right font-extrabold text-lg text-black">${myHistory.length * 40}.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL FICHA DEL CLIENTE */}
+            {viewingLead && (
+                <LeadDetail 
+                    lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} 
+                    onClose={() => setViewingLead(null)} 
+                    onUpdate={onUpdateLead} 
+                    isAgentView={true} 
+                    agents={[agent]} 
+                />
+            )}
+        </div>
+    );
+};
+
 const App = () => {
     const [stepIndex, setStepIndex] = useState(0);
     const [leadData, setLeadData] = useState({});
@@ -1855,6 +2072,15 @@ const App = () => {
     };
 
     if (showAdmin && user && !user.isAnonymous) {
+        // El Guardia de Seguridad: Verifica si es un Agente de tu lista
+        const currentAgent = agents.find(a => a.email && a.email.toLowerCase() === user.email.toLowerCase());
+
+        // Si ES un agente, le mostramos el Portal SaaS
+        if (currentAgent) {
+            return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} />;
+        }
+
+        // Si NO es agente, asumimos que eres el Jefe y te mostramos TODO
         return (
             <AdminDashboard 
                 leads={leads} 
