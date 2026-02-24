@@ -1398,6 +1398,21 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const urgentLeadsCount = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).length;
 
     const getFilteredLeads = () => {
+        // --- MÁGIA GLOBAL: Si escribes algo, ignora las pestañas y busca en TODA la base de datos ---
+        if(searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            return processedLeads.filter(l => 
+                (l.name && l.name.toLowerCase().includes(lower)) || 
+                (l.phone && l.phone.includes(lower)) || 
+                (l.email && l.email.toLowerCase().includes(lower)) || 
+                (l.state && l.state.toLowerCase().includes(lower)) ||
+                (l.notes && l.notes.toLowerCase().includes(lower)) ||
+                (l.time && l.time.toLowerCase().includes(lower)) ||
+                (l.date && l.date.includes(lower))
+            ).sort((a,b) => b.timestamp - a.timestamp); // Muestra los más recientes primero
+        }
+
+        // --- SI EL BUSCADOR ESTÁ VACÍO: Funciona normal por pestañas ---
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
@@ -1405,18 +1420,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
-        if(searchTerm) {
-            const lower = searchTerm.toLowerCase();
-            list = list.filter(l => 
-                (l.name && l.name.toLowerCase().includes(lower)) || 
-                (l.phone && l.phone.includes(lower)) || 
-                (l.email && l.email.toLowerCase().includes(lower)) || 
-                (l.state && l.state.toLowerCase().includes(lower)) ||
-                (l.notes && l.notes.toLowerCase().includes(lower)) || // MÁGIA: Busca en las notas
-                (l.time && l.time.toLowerCase().includes(lower)) ||   // MÁGIA: Busca por hora
-                (l.date && l.date.includes(lower))                    // MÁGIA: Busca por fecha (YYYY-MM-DD)
-            );
-        }
         return list;
     };
 
@@ -1680,8 +1683,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
                                         <div>
-                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                {lead.status === 'new' ? 'Nuevo' : lead.status === 'marketplace' ? 'En Tienda' : 'Archivado'}
+                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
@@ -1707,8 +1710,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'new' ? 'bg-green-50 text-green-700' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                {lead.status === 'new' ? 'Nuevo' : lead.status === 'marketplace' ? 'En Tienda' : 'Archivado'}
+                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                             <p className="font-bold text-gray-900 text-base leading-tight mb-1.5 truncate">{lead.name}</p>
                                             
