@@ -562,8 +562,12 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
 const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
     const [search, setSearch] = useState('');
-    const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(search.toLowerCase()) || (a.email && a.email.toLowerCase().includes(search.toLowerCase())));
-
+    const filteredAgents = agents.filter(a => {
+        const term = search.toLowerCase();
+        return (a.name && a.name.toLowerCase().includes(term)) || 
+               (a.email && a.email.toLowerCase().includes(term)) ||
+               (a.license && a.license.toLowerCase().includes(term)); // MÁGIA: Busca estados en el modal también
+    });
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4 animate-fade-in">
             <div className="glass-card bg-white/95 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up relative">
@@ -1394,16 +1398,22 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const getFilteredLeads = () => {
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
-        // Marketplace ahora excluye a los urgentes (solo muestra > 2 horas)
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
-        // --- NUEVA BANDEJA: Solo los que están a punto de caducar o ya caducaron ---
         else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
         if(searchTerm) {
             const lower = searchTerm.toLowerCase();
-            list = list.filter(l => l.name.toLowerCase().includes(lower) || l.phone.includes(lower) || (l.email && l.email.toLowerCase().includes(lower)) || (l.state && l.state.toLowerCase().includes(lower)));
+            list = list.filter(l => 
+                (l.name && l.name.toLowerCase().includes(lower)) || 
+                (l.phone && l.phone.includes(lower)) || 
+                (l.email && l.email.toLowerCase().includes(lower)) || 
+                (l.state && l.state.toLowerCase().includes(lower)) ||
+                (l.notes && l.notes.toLowerCase().includes(lower)) || // MÁGIA: Busca en las notas
+                (l.time && l.time.toLowerCase().includes(lower)) ||   // MÁGIA: Busca por hora
+                (l.date && l.date.includes(lower))                    // MÁGIA: Busca por fecha (YYYY-MM-DD)
+            );
         }
         return list;
     };
