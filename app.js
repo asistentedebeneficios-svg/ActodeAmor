@@ -755,7 +755,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
     
-    // --- LÓGICA DE REAGENDAMIENTO ---
+    // --- LÓGICA DE REAGENDAMIENTO INTELIGENTE ---
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
@@ -766,6 +766,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         "06:00 p.m.", "07:00 p.m.", "08:00 p.m."
     ];
     
+    // Pre-calcula la hora local que tendría esa cita si se guarda
+    const previewLocalTime = editDate && editTime ? getLocalTimeInfo(editDate, editTime, lead.state) : '';
+
     const handleSaveNotes = async () => { 
         setIsSaving(true);
         await onUpdate(lead.id, { notes: currentNotes }); 
@@ -773,17 +776,22 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
+        // Solo verificamos choques si el prospecto ya tiene un agente asignado
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
-            const hasConflict = allLeads.some(l => 
-                l.id !== lead.id && 
-                l.assignedTo === lead.assignedTo && 
-                l.status !== 'archived' && 
-                l.date === editDate && 
-                (l.localTime === editTime || l.time === editTime) 
-            );
+            
+            const hasConflict = allLeads.some(l => {
+                // Ignorar el mismo prospecto, otros agentes, o archivados
+                if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
+                // Si no es el mismo día, no hay choque
+                if (l.date !== editDate) return false;
+                
+                // MÁGIA: Compara la Hora Local del agente vs la Hora Local que tendría la nueva cita
+                const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state);
+                return otherLocalTime === previewLocalTime; 
+            });
             
             if (hasConflict) {
-                alert("⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene otra cita activa programada para esta misma fecha y hora exacta. Por favor, selecciona un horario distinto para evitar cruces.");
+                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita programada a las ${previewLocalTime} (Su hora local).\n\nPor favor, selecciona un horario distinto para evitar cruces.`);
                 return; 
             }
         }
@@ -798,7 +806,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
-            {/* Header */}
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -815,7 +822,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                 </div>
             </div>
             
-            {/* Contenido de la Ficha */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
                     
@@ -840,7 +846,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
                                     </div>
                                     
-                                    {/* SECCIÓN FECHA Y HORA CON EDITOR CORREGIDO PARA IPAD/MÓVIL */}
                                     <div className={`pt-1 ${isEditingDateTime ? 'pt-2' : 'md:pt-0'}`}>
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
@@ -853,23 +858,51 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
-                                                {/* Obligamos a apilarse verticalmente (flex-col) */}
-                                                <div className="flex flex-col gap-2.5">
-                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
-                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
+                                                
+                                                {/* Previsualizador de Doble Zona Horaria */}
+                                                <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex flex-col gap-1">
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
+                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2 border border-gray-200 rounded-md outline-none focus:border-blue-500 bg-gray-50 font-medium">
                                                         <option value="">Seleccione hora...</option>
                                                         {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
                                                     </select>
+                                                    {previewLocalTime && previewLocalTime !== editTime && (
+                                                        <div className="mt-1 flex items-center gap-1.5 text-blue-700 font-bold text-xs bg-blue-50/50 p-1.5 rounded">
+                                                            <Clock size={12}/> Tu reloj marcará: {previewLocalTime}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex gap-2 mt-1">
+
+                                                <div className="flex flex-col gap-2.5">
+                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm font-medium text-gray-700" min={new Date().toISOString().split('T')[0]} />
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row gap-2 mt-1">
                                                     <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-3 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
                                                     <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
-                                                <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
-                                                <span className="text-gray-500 mt-1">{lead.localTime || lead.time}</span>
+                                            <div className="flex flex-col gap-1.5 mt-2">
+                                                <span className="font-bold text-gray-900 capitalize text-sm">
+                                                    {lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                </span>
+                                                
+                                                {/* BLOQUE VISUAL DE DOBLE HORARIO */}
+                                                <div className="flex flex-col gap-1 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 shadow-sm mt-1">
+                                                    <div className="flex items-center gap-2 text-blue-700 font-bold">
+                                                        <Clock size={14}/> 
+                                                        <span className="text-sm">{lead.localTime || lead.time}</span>
+                                                        <span className="text-[9px] uppercase tracking-widest bg-blue-100 px-1.5 py-0.5 rounded text-blue-600 shadow-sm">Tu Hora</span>
+                                                    </div>
+                                                    
+                                                    {lead.localTime && lead.localTime !== lead.time && (
+                                                        <div className="flex items-center gap-2 text-gray-500 font-medium pl-1 mt-0.5">
+                                                            <MapPin size={12}/> 
+                                                            <span className="text-xs">{lead.time}</span>
+                                                            <span className="text-[8px] uppercase tracking-widest text-gray-400">En {lead.state}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
