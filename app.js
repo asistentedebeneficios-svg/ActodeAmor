@@ -1899,7 +1899,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                             {/* MENSAJE DE BLOQUEO ESTRICTO */}
                                             {isBlocked && (
                                                 <div className="mt-2.5 text-[10px] md:text-xs font-semibold text-gray-500 flex items-start gap-1.5 bg-gray-100 p-2 rounded-lg border border-gray-200">
-                                                    <span className="shrink-0 text-gray-400"><Info size={14}/></span>
+                                                    <span className="shrink-0 text-gray-400"><Lock size={14}/></span>
                                                     <span className="leading-tight mt-0.5">Horario ocupado. Tienes cita con <span className="font-bold">{conflictClient.name}</span></span>
                                                 </div>
                                             )}
