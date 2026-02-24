@@ -2051,6 +2051,9 @@ const App = () => {
     const [fillPercent, setFillPercent] = useState(10);
     const [isSuccess, setIsSuccess] = useState(false);
     
+    // --- NUEVO: Estado de verificación para evitar el pestañeo ---
+    const [isVerifying, setIsVerifying] = useState(true); 
+    
     // --- CAMBIO 1: Leer la memoria al cargar la página ---
     const [showAdmin, setShowAdmin] = useState(() => {
         return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -2060,6 +2063,19 @@ const App = () => {
     
     const { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
+
+    // --- NUEVO: Temporizador inteligente que espera a Firebase ---
+    useEffect(() => {
+        if (showAdmin) {
+            // Le damos a Firebase hasta 1.5 segundos máximo para descargar todo
+            const timer = setTimeout(() => setIsVerifying(false), 1500);
+            // Si la lista de agentes carga más rápido, quitamos la pantalla de espera antes
+            if (agents && agents.length > 0) setIsVerifying(false);
+            return () => clearTimeout(timer);
+        }
+    }, [showAdmin, agents]);
+
+    useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
 
     useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
 
@@ -2168,10 +2184,21 @@ const App = () => {
     };
 
     if (showAdmin && user && !user.isAnonymous) {
+        
+        // PANTALLA DE CARGA PREMIUM (Bloquea el pestañeo)
+        if (isVerifying) {
+            return (
+                <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans animate-fade-in">
+                    <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mb-4 shadow-sm"></div>
+                    <p className="text-sm font-semibold text-gray-500 animate-pulse tracking-wide">Configurando entorno de trabajo...</p>
+                </div>
+            );
+        }
+
         // El Guardia de Seguridad: Verifica si es un Agente de tu lista
         const currentAgent = agents.find(a => a.email && a.email.toLowerCase() === user.email.toLowerCase());
 
-        // Si ES un agente, le mostramos el Portal SaaS
+        // Si ES un agente, lo encerramos en su Portal SaaS
         if (currentAgent) {
             return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} />;
         }
