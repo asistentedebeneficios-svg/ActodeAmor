@@ -711,43 +711,55 @@ const ScheduleSettings = ({ schedule, onUpdate }) => {
     );
 };
 
-// --- TIMEZONE HELPERS (MOTOR DE ZONA HORARIA) ---
+// --- TIMEZONE HELPERS (MOTOR DE ZONA HORARIA BLINDADO ANTI-IOS) ---
 const STATE_TIMEZONES = {
-    "Arizona": "America/Phoenix", "California": "America/Los_Angeles", "Colorado": "America/Denver",
-    "Florida": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise",
-    "Illinois": "America/Chicago", "Montana": "America/Denver", "Nevada": "America/Los_Angeles",
-    "New Mexico": "America/Denver", "Oregon": "America/Los_Angeles", "Texas": "America/Chicago",
-    "Utah": "America/Denver", "Virginia": "America/New_York", "Wisconsin": "America/Chicago"
+    "Arizona": "America/Phoenix", "California": "America/Los_Angeles", "Colorado": "America/Denver",
+    "Florida": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise",
+    "Illinois": "America/Chicago", "Montana": "America/Denver", "Nevada": "America/Los_Angeles",
+    "New Mexico": "America/Denver", "Oregon": "America/Los_Angeles", "Texas": "America/Chicago",
+    "Utah": "America/Denver", "Virginia": "America/New_York", "Wisconsin": "America/Chicago"
 };
 
 const getLocalTimeInfo = (dateString, timeString, stateName) => {
-    if (!dateString || !timeString || !stateName || !STATE_TIMEZONES[stateName]) return timeString;
-    try {
-        const tz = STATE_TIMEZONES[stateName];
-        let match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
-        if (!match) return timeString;
-        let h = parseInt(match[1]);
-        const m = match[2];
-        const mod = match[3].toLowerCase();
-        if (mod.includes('p') && h < 12) h += 12;
-        if (mod.includes('a') && h === 12) h = 0;
-        
-        // Calculamos la diferencia entre el navegador de Admin y el Estado del Prospecto
-        const d = new Date(`${dateString}T${String(h).padStart(2, '0')}:${m}:00`);
-        const targetHour = parseInt(d.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
-        const localHour = parseInt(d.toLocaleString('en-US', { hour: 'numeric', hour12: false }));
-        
-        let diff = localHour - targetHour;
-        if (diff > 12) diff -= 24;
-        if (diff < -12) diff += 24;
-        
-        if (diff === 0) return timeString; // Es la misma zona horaria
-        
-        const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
-        return localDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
-    } catch (e) {
-        return timeString;
-    }
+    if (!dateString || !timeString || !stateName || !STATE_TIMEZONES[stateName]) return timeString;
+    try {
+        const tz = STATE_TIMEZONES[stateName];
+        let match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
+        if (!match) return timeString;
+        let h = parseInt(match[1], 10);
+        const m = match[2];
+        const mod = match[3].toLowerCase();
+        if (mod.includes('p') && h < 12) h += 12;
+        if (mod.includes('a') && h === 12) h = 0;
+
+        const d = new Date(`${dateString}T${String(h).padStart(2, '0')}:${m}:00`);
+
+        // 1. EL SECRETO ANTI-IOS: Usar 'en-GB' garantiza formato 24h sin importar el navegador
+        const targetHourStr = d.toLocaleString('en-GB', { timeZone: tz, hour: 'numeric' });
+        const localHourStr = d.toLocaleString('en-GB', { hour: 'numeric' });
+
+        // 2. Extraer solo dígitos de forma segura para evitar que Safari rompa la matemática
+        const targetHour = parseInt(targetHourStr.match(/\d+/)[0], 10) % 24;
+        const localHour = parseInt(localHourStr.match(/\d+/)[0], 10) % 24;
+
+        let diff = localHour - targetHour;
+        if (diff > 12) diff -= 24;
+        if (diff < -12) diff += 24;
+
+        if (diff === 0) return timeString; // Es la misma zona horaria
+
+        const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
+
+        // 3. CONSTRUCCIÓN MANUAL: Evita que el iPad genere textos con espacios invisibles
+        let outH = localDate.getHours();
+        const outM = String(localDate.getMinutes()).padStart(2, '0');
+        const ampm = outH >= 12 ? 'p.m.' : 'a.m.';
+        outH = outH % 12 || 12; // Convierte 0 a 12
+
+        return `${String(outH).padStart(2, '0')}:${outM} ${ampm}`;
+    } catch (e) {
+        return timeString;
+    }
 };
 
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [] }) => {
