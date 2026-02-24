@@ -776,16 +776,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
-        // Solo verificamos choques si el prospecto ya tiene un agente asignado
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
-            
             const hasConflict = allLeads.some(l => {
-                // Ignorar el mismo prospecto, otros agentes, o archivados
                 if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
-                // Si no es el mismo día, no hay choque
                 if (l.date !== editDate) return false;
                 
-                // MÁGIA: Compara la Hora Local del agente vs la Hora Local que tendría la nueva cita
                 const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state);
                 return otherLocalTime === previewLocalTime; 
             });
@@ -840,35 +835,35 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
-                                <div className={`grid grid-cols-1 ${isEditingDateTime ? '' : 'md:grid-cols-2'} gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0 transition-all`}>
-                                    <div className={`pb-2 border-gray-200/60 ${isEditingDateTime ? 'border-b' : 'border-b md:border-0 md:pb-0'}`}>
-                                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span>
-                                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
+                                {/* AQUÍ ESTÁ EL CAMBIO: Forzado a una sola columna (flex-col) siempre */}
+                                <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
+                                    <div className="border-b border-gray-200/80 pb-4 mb-4">
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
+                                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={14} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
                                     </div>
                                     
-                                    <div className={`pt-1 ${isEditingDateTime ? 'pt-2' : 'md:pt-0'}`}>
-                                        <div className="flex items-center justify-between mb-1">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
                                             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
                                             {!isEditingDateTime && (
-                                                <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition-colors print:hidden shadow-sm" title="Reagendar Cita">
-                                                    <Edit2 size={12}/>
+                                                <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-lg transition-colors print:hidden shadow-sm" title="Reagendar Cita">
+                                                    <Edit2 size={14}/>
                                                 </button>
                                             )}
                                         </div>
                                         
                                         {isEditingDateTime ? (
-                                            <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
+                                            <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
                                                 
-                                                {/* Previsualizador de Doble Zona Horaria */}
-                                                <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex flex-col gap-1">
+                                                <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
-                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2 border border-gray-200 rounded-md outline-none focus:border-blue-500 bg-gray-50 font-medium">
+                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium">
                                                         <option value="">Seleccione hora...</option>
                                                         {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
                                                     </select>
                                                     {previewLocalTime && previewLocalTime !== editTime && (
-                                                        <div className="mt-1 flex items-center gap-1.5 text-blue-700 font-bold text-xs bg-blue-50/50 p-1.5 rounded">
-                                                            <Clock size={12}/> Tu reloj marcará: {previewLocalTime}
+                                                        <div className="mt-1 flex items-center gap-2 text-blue-700 font-bold text-xs bg-blue-50/50 p-2 rounded-lg">
+                                                            <Clock size={14}/> Tu reloj marcará: {previewLocalTime}
                                                         </div>
                                                     )}
                                                 </div>
@@ -876,28 +871,27 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                 <div className="flex flex-col gap-2.5">
                                                     <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm font-medium text-gray-700" min={new Date().toISOString().split('T')[0]} />
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                                                <div className="flex flex-col sm:flex-row gap-2 mt-2">
                                                     <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-3 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
                                                     <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col gap-1.5 mt-2">
+                                            <div className="flex flex-col gap-2 mt-1">
                                                 <span className="font-bold text-gray-900 capitalize text-sm">
                                                     {lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                                                 </span>
                                                 
-                                                {/* BLOQUE VISUAL DE DOBLE HORARIO */}
-                                                <div className="flex flex-col gap-1 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 shadow-sm mt-1">
+                                                <div className="flex flex-col gap-1.5 bg-blue-50/50 p-3 rounded-xl border border-blue-100 shadow-sm mt-1">
                                                     <div className="flex items-center gap-2 text-blue-700 font-bold">
-                                                        <Clock size={14}/> 
+                                                        <Clock size={16}/> 
                                                         <span className="text-sm">{lead.localTime || lead.time}</span>
-                                                        <span className="text-[9px] uppercase tracking-widest bg-blue-100 px-1.5 py-0.5 rounded text-blue-600 shadow-sm">Tu Hora</span>
+                                                        <span className="text-[9px] uppercase tracking-widest bg-blue-100 px-2 py-1 rounded-md text-blue-600 shadow-sm">Tu Hora</span>
                                                     </div>
                                                     
                                                     {lead.localTime && lead.localTime !== lead.time && (
-                                                        <div className="flex items-center gap-2 text-gray-500 font-medium pl-1 mt-0.5">
-                                                            <MapPin size={12}/> 
+                                                        <div className="flex items-center gap-2 text-gray-500 font-medium pl-1 mt-1">
+                                                            <MapPin size={14}/> 
                                                             <span className="text-xs">{lead.time}</span>
                                                             <span className="text-[8px] uppercase tracking-widest text-gray-400">En {lead.state}</span>
                                                         </div>
