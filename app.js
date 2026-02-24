@@ -834,14 +834,13 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
-                                {/* AQUÍ ESTÁ LA MAGIA: Si está editando, quita las 2 columnas y usa todo el ancho */}
                                 <div className={`grid grid-cols-1 ${isEditingDateTime ? '' : 'md:grid-cols-2'} gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0 transition-all`}>
                                     <div className={`pb-2 border-gray-200/60 ${isEditingDateTime ? 'border-b' : 'border-b md:border-0 md:pb-0'}`}>
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span>
                                         <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
                                     </div>
                                     
-                                    {/* SECCIÓN FECHA Y HORA CON EDITOR */}
+                                    {/* SECCIÓN FECHA Y HORA CON EDITOR CORREGIDO PARA IPAD/MÓVIL */}
                                     <div className={`pt-1 ${isEditingDateTime ? 'pt-2' : 'md:pt-0'}`}>
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
@@ -854,16 +853,17 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
-                                                <div className="flex flex-col sm:flex-row gap-2.5">
-                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full sm:w-1/2 text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
-                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full sm:w-1/2 text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
+                                                {/* Obligamos a apilarse verticalmente (flex-col) */}
+                                                <div className="flex flex-col gap-2.5">
+                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
+                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
                                                         <option value="">Seleccione hora...</option>
                                                         {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
                                                     </select>
                                                 </div>
                                                 <div className="flex gap-2 mt-1">
-                                                    <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-2.5 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
-                                                    <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-2.5 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
+                                                    <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-3 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
+                                                    <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
                                                 </div>
                                             </div>
                                         ) : (
