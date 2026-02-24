@@ -1756,13 +1756,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 // --- DICCIONARIO DE ESTADOS ---
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
 
-// --- PORTAL DEL AGENTE (SaaS Premium V5 - Filtro Archivados) ---
+// --- PORTAL DEL AGENTE (SaaS Premium V7 - Bloqueo Estricto de Agenda) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const [activeTab, setActiveTab] = useState('marketplace');
     const [viewingLead, setViewingLead] = useState(null);
     const [cart, setCart] = useState([]);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
-    const [showArchived, setShowArchived] = useState(false); // Nuevo estado para alternar vistas
+    const [showArchived, setShowArchived] = useState(false);
     
     // Filtros inteligentes
     const processedLeads = leads.map(l => ({ ...l, localTime: getLocalTimeInfo(l.date, l.time, l.state) }));
@@ -1770,8 +1770,6 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     // Filtramos los clientes activos y los archivados del agente
     const activeClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
     const archivedClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status === 'archived').sort((a,b) => b.timestamp - a.timestamp);
-    
-    // La lista que se mostrará en "Mis Clientes" dependiendo del interruptor
     const currentClientsList = showArchived ? archivedClients : activeClients;
     
     const availableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
@@ -1785,7 +1783,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         } else if (timeLeft === 0) {
             setCart([]); 
             setTimeLeft(600); 
-            alert("⏳ El tiempo para completar la compra ha expirado. Los prospectos han sido liberados.");
+            alert("⏳ El tiempo para reservar ha expirado. Las citas han sido liberadas.");
         } else if (cart.length === 0) {
             setTimeLeft(600);
         }
@@ -1798,7 +1796,10 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         return `${m}:${s}`;
     };
 
-    const toggleCart = (leadId) => { setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); };
+    const toggleCart = (leadId, isBlocked) => { 
+        if (isBlocked) return; // Si está bloqueado por colisión, no hace nada
+        setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); 
+    };
 
     return (
         <div className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24">
@@ -1822,19 +1823,19 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
                     <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
-                        {tab === 'marketplace' && 'Marketplace'}
+                        {tab === 'marketplace' && 'Citas Disponibles'}
                         {tab === 'clientes' && `Mis Clientes (${activeClients.length})`}
                         {tab === 'agenda' && 'Agenda'}
                     </button>
                 ))}
             </div>
 
-            {/* VISTA 1: MARKETPLACE */}
+            {/* VISTA 1: MARKETPLACE (Citas Disponibles) */}
             {activeTab === 'marketplace' && (
                 <div className="flex-1 p-3 md:p-8 max-w-5xl mx-auto w-full overflow-y-auto">
                     <div className="flex justify-between items-end mb-4 md:mb-6 px-1">
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Bolsa de Prospectos</h1>
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Citas Disponibles</h1>
                             <p className="text-gray-500 text-xs md:text-sm mt-1">Selecciona para reservar (10 min max).</p>
                         </div>
                         <button onClick={() => setActiveTab('historial')} className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors border-b border-transparent hover:border-gray-900 pb-0.5">
@@ -1844,7 +1845,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
 
                     {availableLeads.length === 0 ? (
                         <div className="text-center p-12 md:p-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                            <p className="text-gray-400 font-medium text-sm">No hay prospectos disponibles en este momento.</p>
+                            <p className="text-gray-400 font-medium text-sm">No hay citas disponibles en este momento.</p>
                         </div>
                     ) : (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
@@ -1854,23 +1855,34 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                 let fDate = "Sin fecha";
                                 if (lead.date) fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+                                // LÓGICA DE DETECCIÓN DE COLISIONES (BLOQUEO ESTRICTO)
+                                const conflictClient = activeClients.find(c => c.date === lead.date && c.time === lead.time);
+                                const isBlocked = !!conflictClient;
+
                                 return (
-                                    <div key={lead.id} onClick={() => toggleCart(lead.id)} className={`flex items-center gap-3 md:gap-4 p-4 transition-colors cursor-pointer group ${isSelected ? 'bg-blue-50/40' : 'hover:bg-gray-50/80'}`}>
-                                        <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
-                                            <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleCart(lead.id)}/>
+                                    <div key={lead.id} onClick={() => toggleCart(lead.id, isBlocked)} className={`flex items-start gap-3 md:gap-4 p-4 transition-all ${isBlocked ? 'bg-gray-50/50 opacity-60 cursor-not-allowed' : isSelected ? 'bg-blue-50/40 cursor-pointer' : 'hover:bg-gray-50/80 cursor-pointer group'}`}>
+                                        
+                                        {/* Checkbox o Candado */}
+                                        <div className="flex-shrink-0 mt-1 flex items-center justify-center w-5" onClick={e => e.stopPropagation()}>
+                                            {isBlocked ? (
+                                                <div className="text-gray-400 mt-1"><Lock size={16}/></div>
+                                            ) : (
+                                                <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleCart(lead.id, isBlocked)} disabled={isBlocked}/>
+                                            )}
                                         </div>
-                                        <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border shrink-0 transition-colors ${isSelected ? 'bg-black text-white border-black shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 group-hover:border-gray-300'}`}>
+
+                                        <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border shrink-0 transition-colors mt-0.5 ${isBlocked ? 'bg-gray-100 text-gray-400 border-gray-200' : isSelected ? 'bg-black text-white border-black shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 group-hover:border-gray-300'}`}>
                                             {abbr}
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="font-bold text-gray-900 uppercase text-sm tracking-wide truncate">{lead.state || 'ESTADO'}</span>
+                                            <span className={`font-bold uppercase text-sm tracking-wide truncate ${isBlocked ? 'text-gray-500' : 'text-gray-900'}`}>{lead.state || 'ESTADO'}</span>
                                             
-                                            <span className="text-xs text-gray-500 mt-1 leading-tight block">
+                                            <span className={`text-xs mt-1 leading-tight block ${isBlocked ? 'text-gray-400' : 'text-gray-500'}`}>
                                                 <span className="capitalize">{fDate}</span> <br className="md:hidden" />
                                                 <span className="md:hidden text-gray-300 mx-1">|</span>
                                                 <span className="md:inline hidden"> • </span>
                                                 
-                                                <span className="font-bold text-gray-800">
+                                                <span className={`font-bold ${isBlocked ? 'text-gray-500' : 'text-gray-800'}`}>
                                                     {lead.localTime || lead.time} <span className="text-[10px] font-medium text-gray-400">(Tu hora)</span>
                                                 </span>
                                                 
@@ -1883,6 +1895,14 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                                     </span>
                                                 )}
                                             </span>
+
+                                            {/* MENSAJE DE BLOQUEO ESTRICTO */}
+                                            {isBlocked && (
+                                                <div className="mt-2.5 text-[10px] md:text-xs font-semibold text-gray-500 flex items-start gap-1.5 bg-gray-100 p-2 rounded-lg border border-gray-200">
+                                                    <span className="shrink-0 text-gray-400"><Info size={14}/></span>
+                                                    <span className="leading-tight mt-0.5">Horario ocupado. Tienes cita con <span className="font-bold">{conflictClient.name}</span></span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -1892,11 +1912,10 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 </div>
             )}
 
-            {/* VISTA 2: MIS CLIENTES (Con filtro de Activos/Archivados) */}
+            {/* VISTA 2: MIS CLIENTES */}
             {activeTab === 'clientes' && (
                 <div className="flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto">
                     
-                    {/* Switch Toggle (Activos vs Archivados) */}
                     <div className="flex justify-center mb-6">
                         <div className="bg-gray-200/60 p-1 rounded-xl flex items-center">
                             <button onClick={() => setShowArchived(false)} className={`px-5 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${!showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -1950,7 +1969,6 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* VISTA 3: AGENDA */}
             {activeTab === 'agenda' && (
                 <div className="flex-1 p-3 md:p-6 h-full overflow-hidden">
-                    {/* Solo le pasamos los clientes activos al calendario */}
                     <AdminCalendar leads={activeClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} />
                 </div>
             )}
@@ -2006,7 +2024,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 />
             )}
 
-            {/* BARRA FLOTANTE DE PAGO OPTIMIZADA (Mobile & Desktop) */}
+            {/* BARRA FLOTANTE DE PAGO OPTIMIZADA */}
             {activeTab === 'marketplace' && cart.length > 0 && (
                 <div className="fixed bottom-6 left-0 right-0 px-4 md:px-0 flex justify-center z-50 animate-slide-up pointer-events-none">
                     <div className="w-full md:w-auto max-w-[400px] bg-black/95 backdrop-blur-md text-white p-1.5 md:p-2 rounded-2xl md:rounded-full shadow-2xl flex items-center justify-between gap-2 border border-white/10 pointer-events-auto">
