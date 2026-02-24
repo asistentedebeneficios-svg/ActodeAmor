@@ -776,35 +776,39 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
-        // NORMALIZADOR ESTRICTO DE HORA (Evita fallos por ceros, puntos o espacios)
-        const normalizeTimeStrict = (timeStr) => {
-            if (!timeStr) return '';
-            let clean = timeStr.toLowerCase().replace(/\./g, '').replace(/\s+/g, ''); // Deja todo como "1:00pm" o "01:00pm"
-            if (/^\d:/.test(clean)) clean = '0' + clean; // Si empieza con 1 dígito, le pone el 0 ("01:00pm")
-            return clean;
+        // NORMALIZADOR BLINDADO A 24 HORAS (Destruye espacios invisibles de Apple/iOS)
+        const getClean24h = (tStr) => {
+            if(!tStr) return null;
+            const raw = tStr.toLowerCase().replace(/[^0-9ap]/g, ''); // Arranca todo lo que no sea número, 'a' o 'p'
+            const match = raw.match(/(\d{1,2})(\d{2})([ap])/);
+            if(!match) return null;
+            let h = parseInt(match[1], 10);
+            const m = match[2];
+            const isPm = match[3] === 'p';
+            if(isPm && h < 12) h += 12;
+            if(!isPm && h === 12) h = 0;
+            return `${String(h).padStart(2, '0')}:${m}`; // Devuelve formato militar "17:00"
         };
 
+        // Verificamos colisión matemática
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
-            const targetNormTime = normalizeTimeStrict(previewLocalTime || editTime);
+            const targetTime24h = getClean24h(previewLocalTime || editTime);
 
             const hasConflict = allLeads.some(l => {
-                // 1. Ignorar a sí mismo
-                if (l.id === lead.id) return false;
-                // 2. Ignorar si es de otro agente o no tiene
-                if (!l.assignedTo || l.assignedTo !== lead.assignedTo) return false;
-                // 3. Ignorar archivados
-                if (l.status === 'archived') return false;
-                // 4. Si no es la misma fecha exacta, no choca
+                if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
                 if (l.date !== editDate) return false;
                 
-                // 5. Comparar horas exactas usando el normalizador estricto
+                // Extrae la hora local de la otra cita y la pasa a 24h
                 const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
-                return normalizeTimeStrict(otherLocalTime) === targetNormTime; 
+                const otherTime24h = getClean24h(otherLocalTime);
+                
+                if(!targetTime24h || !otherTime24h) return false;
+                return otherTime24h === targetTime24h; 
             });
             
             if (hasConflict) {
-                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita activa programada para las ${previewLocalTime || editTime} (Su hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`);
-                return; // Bloquea el guardado rotundamente
+                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita activa programada a las ${previewLocalTime || editTime} (Su hora local) en ese día.\n\nPor favor, selecciona un horario distinto para evitar cruces.`);
+                return; 
             }
         }
         
@@ -852,6 +856,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
+                                {/* DISEÑO APILADO PARA IPAD */}
                                 <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
                                     <div className="border-b border-gray-200/80 pb-4 mb-4">
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
@@ -870,6 +875,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
+                                                
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
                                                     <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium">
