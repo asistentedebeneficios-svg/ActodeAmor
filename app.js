@@ -732,7 +732,7 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
         if (mod.includes('p') && h < 12) h += 12;
         if (mod.includes('a') && h === 12) h = 0;
         
-        // Calculamos la diferencia entre el navegador de Jorge y el Estado del Prospecto
+        // Calculamos la diferencia entre el navegador de Admin y el Estado del Prospecto
         const d = new Date(`${dateString}T${String(h).padStart(2, '0')}:${m}:00`);
         const targetHour = parseInt(d.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
         const localHour = parseInt(d.toLocaleString('en-US', { hour: 'numeric', hour12: false }));
@@ -750,15 +750,50 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
     }
 };
 
-const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false }) => {
+const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [] }) => {
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
+    
+    // --- LÓGICA DE REAGENDAMIENTO (Híbrido Opción A) ---
+    const [isEditingDateTime, setIsEditingDateTime] = useState(false);
+    const [editDate, setEditDate] = useState(lead.date || '');
+    const [editTime, setEditTime] = useState(lead.time || '');
+
+    const TIME_SLOTS = [
+        "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.", "12:00 p.m.",
+        "01:00 p.m.", "02:00 p.m.", "03:00 p.m.", "04:00 p.m.", "05:00 p.m.",
+        "06:00 p.m.", "07:00 p.m.", "08:00 p.m."
+    ];
     
     const handleSaveNotes = async () => { 
         setIsSaving(true);
         await onUpdate(lead.id, { notes: currentNotes }); 
         setTimeout(() => setIsSaving(false), 2000);
+    };
+
+    // --- MÁGICA ANTI-CHOQUES DE AGENDA ---
+    const handleSaveDateTime = async () => {
+        // Solo verificamos choques si el prospecto ya tiene un agente asignado
+        if (lead.assignedTo && allLeads && allLeads.length > 0) {
+            const hasConflict = allLeads.some(l => 
+                l.id !== lead.id && // Que no sea este mismo prospecto
+                l.assignedTo === lead.assignedTo && // Del mismo agente
+                l.status !== 'archived' && // Que no esté archivado
+                l.date === editDate && // Misma fecha
+                (l.localTime === editTime || l.time === editTime) // Misma hora
+            );
+            
+            if (hasConflict) {
+                alert("⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene otra cita activa programada para esta misma fecha y hora exacta. Por favor, selecciona un horario distinto para evitar cruces.");
+                return; // Bloquea el guardado
+            }
+        }
+        
+        // Si pasó la prueba, lo guarda
+        await onUpdate(lead.id, { date: editDate, time: editTime });
+        setIsEditingDateTime(false);
+        alert("✅ La cita ha sido reagendada exitosamente.");
     };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
@@ -766,7 +801,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
-            {/* Header - Se oculta al imprimir */}
+            {/* Header */}
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -783,11 +818,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                 </div>
             </div>
             
-            {/* Contenido de la Ficha (Esto SÍ se imprime) */}
+            {/* Contenido de la Ficha */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
                     
-                    {/* ENCABEZADO DE IMPRESIÓN (Solo visible al imprimir) */}
                     <div className="hidden print:block text-center mb-8 border-b-2 border-gray-900 pb-4">
                         <h1 className="text-3xl font-extrabold text-black uppercase tracking-widest">Asistentedebeneficios.com</h1>
                         <p className="text-gray-500 text-sm mt-1">Ficha Oficial de Prospecto (Confidencial)</p>
@@ -797,7 +831,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500 print:text-black"/> Ficha Técnica</h3>
                             
-                            {/* Nombre del cliente en impresión */}
                             <div className="hidden print:block mb-4">
                                 <span className="text-xs text-gray-500 uppercase font-bold tracking-widest block mb-1">Nombre del Prospecto</span>
                                 <p className="font-bold text-black text-2xl">{lead.name}</p>
@@ -806,11 +839,37 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             <div className="space-y-5">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
                                     <div className="border-b border-gray-200/60 md:border-0 pb-2 md:pb-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p></div>
-                                    <div className="pt-1 md:pt-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Cita Solicitada</span>
-                                        <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
-                                            <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
-                                            <span className="text-gray-500 mt-1">{lead.time}</span>
+                                    
+                                    {/* --- INTERFAZ DEL REAGENDADOR --- */}
+                                    <div className="pt-1 md:pt-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
+                                            {/* El botón del lápiz */}
+                                            {!isEditingDateTime && (
+                                                <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition-colors print:hidden shadow-sm" title="Reagendar Cita">
+                                                    <Edit2 size={12}/>
+                                                </button>
+                                            )}
                                         </div>
+                                        
+                                        {isEditingDateTime ? (
+                                            <div className="flex flex-col gap-2 mt-2 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in">
+                                                <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
+                                                <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
+                                                    <option value="">Seleccione hora...</option>
+                                                    {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                                </select>
+                                                <div className="flex gap-2 mt-1">
+                                                    <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-[10px] py-2 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar</button>
+                                                    <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-[10px] py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="font-semibold text-gray-800 text-sm flex flex-col leading-tight mt-1">
+                                                <span>{lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}</span>
+                                                <span className="text-gray-500 mt-1">{lead.localTime || lead.time}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="px-1 print:p-0">
@@ -865,7 +924,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
                                     
-                                    {/* MODO JEFE: Puede cambiar agente */}
                                     {!isAgentView ? (
                                         <button onClick={() => setShowAgentSelector(true)} className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-rose-300 hover:bg-white transition-all print:border-0 print:p-0 print:bg-transparent">
                                             <div className="flex items-center gap-3 overflow-hidden">
@@ -874,7 +932,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                             <ChevronRight size={18} className="text-gray-300 shrink-0 ml-2 print:hidden"/>
                                         </button>
                                     ) : (
-                                    /* MODO AGENTE: Solo ve su nombre, no puede cambiarlo */
                                         <div className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center print:border-0 print:p-0 print:bg-transparent">
                                             <span className="font-bold text-gray-900">{currentAgent?.name || 'Asignado a ti'}</span>
                                         </div>
@@ -885,7 +942,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                     </button>
                                     
-                                    {/* MODO JEFE: Solo el jefe puede eliminar */}
                                     {!isAgentView && (
                                         <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
                                     )}
