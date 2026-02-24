@@ -776,18 +776,35 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
+        // NORMALIZADOR ESTRICTO DE HORA (Evita fallos por ceros, puntos o espacios)
+        const normalizeTimeStrict = (timeStr) => {
+            if (!timeStr) return '';
+            let clean = timeStr.toLowerCase().replace(/\./g, '').replace(/\s+/g, ''); // Deja todo como "1:00pm" o "01:00pm"
+            if (/^\d:/.test(clean)) clean = '0' + clean; // Si empieza con 1 dígito, le pone el 0 ("01:00pm")
+            return clean;
+        };
+
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
+            const targetNormTime = normalizeTimeStrict(previewLocalTime || editTime);
+
             const hasConflict = allLeads.some(l => {
-                if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
+                // 1. Ignorar a sí mismo
+                if (l.id === lead.id) return false;
+                // 2. Ignorar si es de otro agente o no tiene
+                if (!l.assignedTo || l.assignedTo !== lead.assignedTo) return false;
+                // 3. Ignorar archivados
+                if (l.status === 'archived') return false;
+                // 4. Si no es la misma fecha exacta, no choca
                 if (l.date !== editDate) return false;
                 
-                const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state);
-                return otherLocalTime === previewLocalTime; 
+                // 5. Comparar horas exactas usando el normalizador estricto
+                const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
+                return normalizeTimeStrict(otherLocalTime) === targetNormTime; 
             });
             
             if (hasConflict) {
-                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita programada a las ${previewLocalTime} (Su hora local).\n\nPor favor, selecciona un horario distinto para evitar cruces.`);
-                return; 
+                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita activa programada para las ${previewLocalTime || editTime} (Su hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`);
+                return; // Bloquea el guardado rotundamente
             }
         }
         
@@ -835,7 +852,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
-                                {/* AQUÍ ESTÁ EL CAMBIO: Forzado a una sola columna (flex-col) siempre */}
                                 <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
                                     <div className="border-b border-gray-200/80 pb-4 mb-4">
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
@@ -854,7 +870,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
-                                                
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
                                                     <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium">
