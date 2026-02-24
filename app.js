@@ -1371,8 +1371,10 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         <button onClick={today} className="p-2 px-4 text-xs font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors border-r border-gray-200">Hoy</button>
                         <button onClick={next} className="p-2 px-3 hover:bg-gray-50 text-gray-600 transition-colors"><ArrowRight size={16}/></button>
                     </div>
-                    
-                    <button onClick={onOpenSettings} className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-rose-600 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm shrink-0"><Settings size={14}/> Horarios</button>
+
+                    {onOpenSettings && (
+                        <button onClick={onOpenSettings} className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-rose-600 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm shrink-0"><Settings size={14}/> Horarios</button>
+                    )}
                 </div>
             </div>
 
@@ -1381,9 +1383,11 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
             {view === 'day' && renderDay()}
             {view === 'year' && renderYear()}
 
-            <div className="lg:hidden p-3 border-t border-gray-200 bg-white shrink-0">
-                <button onClick={onOpenSettings} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"><Settings size={14}/> Configurar Horas Disponibles</button>
-            </div>
+            {onOpenSettings && (
+                <div className="lg:hidden p-3 border-t border-gray-200 bg-white shrink-0">
+                    <button onClick={onOpenSettings} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"><Settings size={14}/> Configurar Horas Disponibles</button>
+                </div>
+            )}
         </div>
     );
 };
@@ -2277,7 +2281,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             )}
 
             {/* VISTA 3 y 4: AGENDA E HISTORIAL (Omitidas por brevedad, no cambiaron) */}
-            {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} /></div>}
+            {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} onLeadClick={setViewingLead} /></div>}
             {activeTab === 'historial' && <div className="flex-1 p-3 md:p-8"> {/* Historial */} </div>}
 
             {viewingLead && (
