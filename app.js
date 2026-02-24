@@ -923,50 +923,20 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 };
 
 const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
-    const assignedLeads = leads.filter(l => l.assignedTo === agent.id);
-
-    // Separamos la lógica para evitar el error de sintaxis en el diseño
-    let contentBlock;
-    if (assignedLeads.length > 0) {
-        contentBlock = (
-            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                {assignedLeads.map(lead => (
-                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
-                        <div className="flex items-center gap-3 md:gap-4">
-                            <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
-                                
-                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
-                                    <span className="capitalize">
-                                        {lead.date ? new Date(lead.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'}
-                                    </span>
-                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
-                                    <span className="font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                        {lead.localTime || lead.time}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
-                            <span className={`hidden md:inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${lead.status === 'new' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
-                                {lead.status === 'new' ? 'Activo' : 'Archivado'}
-                            </span>
-                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
-    } else {
-        contentBlock = (
-            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 shadow-sm">
-                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Briefcase size={24} className="opacity-30"/></div>
-                <p className="font-medium text-gray-600">Bandeja Vacía</p>
-                <p className="text-xs mt-1">Este agente no tiene prospectos en este momento.</p>
-            </div>
-        );
-    }
+    const [innerSearch, setInnerSearch] = useState('');
+    
+    // Filtramos los leads asignados a este agente usando el buscador interno inteligente
+    const assignedLeads = leads.filter(l => {
+        if (l.assignedTo !== agent.id) return false;
+        if (!innerSearch) return true;
+        
+        const term = innerSearch.toLowerCase();
+        return (l.name && l.name.toLowerCase().includes(term)) || 
+               (l.phone && l.phone.includes(term)) ||
+               (l.state && l.state.toLowerCase().includes(term)) ||
+               (l.notes && l.notes.toLowerCase().includes(term)) ||
+               (l.date && l.date.includes(term));
+    });
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
@@ -991,22 +961,54 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
             
             <div className="p-4 md:p-8 flex-1 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-6">
-                    {agent.bio && (
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sobre el Agente</h3>
-                            <p className="text-sm text-gray-700 leading-relaxed">{agent.bio}</p>
-                        </div>
-                    )}
+                    
+                    {/* Buscador Interno Premium */}
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={20}/>
+                        <input 
+                            type="text" 
+                            placeholder="Buscar en la cartera de este agente (nombre, teléfono, estado...)" 
+                            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-300 transition-all text-sm font-medium shadow-sm"
+                            value={innerSearch}
+                            onChange={(e) => setInnerSearch(e.target.value)}
+                        />
+                    </div>
 
                     <div>
                         <div className="flex items-center justify-between mb-4 px-2">
-                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2"><Briefcase size={16} className="text-gray-400"/> Carteras Asignadas</h3>
+                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2"><Briefcase size={16} className="text-gray-400"/> Prospectos Asignados</h3>
                             <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-xs font-bold shadow-md">{assignedLeads.length}</span>
                         </div>
                         
-                        {/* Imprimimos el bloque que precalculamos arriba */}
-                        {contentBlock}
-                        
+                        {assignedLeads.length > 0 ? (
+                            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                                {assignedLeads.map(lead => (
+                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
+                                        <div className="flex items-center gap-3 md:gap-4">
+                                            <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
+                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
+                                                    <span className="capitalize">{lead.date || 'Sin fecha'}</span>
+                                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
+                                                    <span className="font-bold text-blue-600">{lead.localTime || lead.time}</span>
+                                                    <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider">{lead.state}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
+                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 shadow-sm">
+                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 opacity-30"><Briefcase size={24}/></div>
+                                <p className="font-medium text-gray-600">No se encontraron prospectos.</p>
+                                <p className="text-xs mt-1">Prueba con otro término de búsqueda.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1420,7 +1422,15 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 
     const getFilteredAgents = () => {
         let list = agents;
-        if(searchTerm) { const lower = searchTerm.toLowerCase(); list = list.filter(a => a.name.toLowerCase().includes(lower) || (a.email && a.email.toLowerCase().includes(lower))); }
+        if(searchTerm) { 
+            const lower = searchTerm.toLowerCase(); 
+            list = list.filter(a => 
+                (a.name && a.name.toLowerCase().includes(lower)) || 
+                (a.email && a.email.toLowerCase().includes(lower)) ||
+                (a.license && a.license.toLowerCase().includes(lower)) || // MÁGIA: Filtra por Estado/Licencia
+                (a.phone && a.phone.includes(lower))
+            ); 
+        }
         return list;
     };
 
