@@ -2263,7 +2263,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                         <div className="flex items-center gap-3 min-w-0 pr-2">
                                             <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0">{lead.name.charAt(0)}</div>
                                             <div className="min-w-0">
-                                                <h4 className={`font-semibold text-sm truncate ${showArchived ? 'text-gray-500 line-through' : 'text-gray-900'}`}>{lead.name}</h4>
+                                                <h4 className={`font-semibold text-sm truncate ${showArchived ? 'text-gray-500' : 'text-gray-900'}`}>{lead.name}</h4>
                                                 <div className="flex items-center gap-1.5 mt-1 text-[11px] md:text-xs text-gray-500 truncate">
                                                     <span>{lead.phone}</span>
                                                     <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
