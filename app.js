@@ -1942,7 +1942,109 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 // --- PORTAL DEL AGENTE (SaaS) ---
 // --- DICCIONARIO DE ESTADOS ---
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
+// --- ✅ MAPA DE TIMEZONES POR ESTADO (solo los que usas) ---
+const STATE_TZ = {
+  "Arizona": "America/Phoenix",
+  "California": "America/Los_Angeles",
+  "Colorado": "America/Denver",
+  "Florida": "America/New_York", // simplificado (si quieres lo afinamos para FL)
+  "Hawaii": "Pacific/Honolulu",
+  "Idaho": "America/Boise",
+  "Illinois": "America/Chicago",
+  "Montana": "America/Denver",
+  "Nevada": "America/Los_Angeles",
+  "New Mexico": "America/Denver",
+  "Oregon": "America/Los_Angeles",
+  "Texas": "America/Chicago",
+  "Utah": "America/Denver",
+  "Virginia": "America/New_York",
+  "Wisconsin": "America/Chicago"
+};
 
+// --- ✅ Normaliza hora (corrige espacios raros iOS y formatos) ---
+const normalizeTimeString = (t) => {
+  if (!t) return '';
+  let s = String(t).trim().replace(/\u202F|\u00A0/g, ' '); // iOS spaces
+
+  // "HH:MM" o "H:MM"
+  if (/^\d{1,2}:\d{2}$/.test(s)) {
+    const [hh, mm] = s.split(':').map(n => parseInt(n, 10));
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  }
+
+  // "H:MM AM/PM"
+  const [clock, modRaw] = s.split(' ');
+  const mod = (modRaw || '').toUpperCase();
+  let [hh, mm] = clock.split(':').map(n => parseInt(n, 10));
+  if (hh === 12) hh = 0;
+  if (mod === 'PM') hh += 12;
+
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+};
+
+// --- ✅ Convierte "fecha+hora" en timezone X a timestamp UTC ---
+const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
+  // dateStr: "YYYY-MM-DD", timeStr: "H:MM AM" o "HH:MM"
+  const hhmm = normalizeTimeString(timeStr); // "HH:MM"
+  if (!dateStr || !hhmm || !timeZone) return null;
+
+  const [Y, M, D] = dateStr.split('-').map(n => parseInt(n, 10));
+  const [h, m] = hhmm.split(':').map(n => parseInt(n, 10));
+
+  // 1) Creamos una fecha "naive" en UTC con esos números
+  const utcGuess = new Date(Date.UTC(Y, M - 1, D, h, m, 0));
+
+  // 2) Calculamos el offset real de ese timezone en ese instante
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+
+  const parts = dtf.formatToParts(utcGuess).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+
+  // Esto es "cómo se ve" utcGuess dentro del timezone
+  const tzAsUtc = Date.UTC(
+    parseInt(parts.year, 10),
+    parseInt(parts.month, 10) - 1,
+    parseInt(parts.day, 10),
+    parseInt(parts.hour, 10),
+    parseInt(parts.minute, 10),
+    parseInt(parts.second, 10)
+  );
+
+  // 3) Offset = (tzAsUtc - utcGuessMs)
+  const offsetMs = tzAsUtc - utcGuess.getTime();
+
+  // 4) Para que la hora sea "real" en ese timezone, ajustamos
+  return utcGuess.getTime() - offsetMs;
+};
+
+// --- ✅ Devuelve "fecha+hora" ya en LOCAL DEL AGENTE (device/local) ---
+const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
+  const tz = STATE_TZ[prospectState] || null;
+  if (!tz) return null;
+
+  const utcMs = zonedDateTimeToUtcMs(dateStr, timeStr, tz);
+  if (utcMs == null) return null;
+
+  const local = new Date(utcMs); // se muestra en local del agente (device)
+  const yyyy = local.getFullYear();
+  const mm = String(local.getMonth() + 1).padStart(2, '0');
+  const dd = String(local.getDate()).padStart(2, '0');
+  const HH = String(local.getHours()).padStart(2, '0');
+  const MM = String(local.getMinutes()).padStart(2, '0');
+
+  return {
+    localDateStr: `${yyyy}-${mm}-${dd}`,
+    localTime24: `${HH}:${MM}`,
+    localMs: local.getTime()
+  };
+};
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const [activeTab, setActiveTab] = useState('marketplace');
@@ -2178,8 +2280,16 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} onLeadClick={setViewingLead} onOpenSettings={() => {}} /></div>}
             {activeTab === 'historial' && <div className="flex-1 p-3 md:p-8"> {/* Historial */} </div>}
 
-            {viewingLead && <LeadDetail lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} onClose={() => setViewingLead(null)} onUpdate={onUpdateLead} isAgentView={true} agents={[agent]} />}
-
+            {viewingLead && (
+              <LeadDetail
+                lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead}
+                onClose={() => setViewingLead(null)}
+                onUpdate={onUpdateLead}
+                isAgentView={true}
+                agents={[agent]}
+                allLeads={processedLeads}
+              />
+            )}
             {/* BARRA FLOTANTE DE PAGO OPTIMIZADA (Ahora con Precio Dinámico) */}
             {activeTab === 'marketplace' && cart.length > 0 && (
                 <div className="fixed bottom-6 left-0 right-0 px-4 md:px-0 flex justify-center z-50 animate-slide-up pointer-events-none">
