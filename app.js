@@ -1348,7 +1348,8 @@ const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
     );
 };
 
-const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onClose, onLogout }) => {    const [activeTab, setActiveTab] = useState('active'); 
+const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onClose, onLogout }) => {
+    const [activeTab, setActiveTab] = useState('active'); 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
     const [selectedLeads, setSelectedLeads] = useState([]);
@@ -1360,16 +1361,43 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
 
-    // MÁGIA: Agregamos la hora convertida a cada lead procesado
-    const processedLeads = leads.map(l => ({
-        ...l,
-        localTime: getLocalTimeInfo(l.date, l.time, l.state)
-    }));
+    // --- NUEVO: Función para calcular horas restantes (La misma del Agente) ---
+    const getHoursUntil = (dateStr, timeStr) => {
+        if (!dateStr || !timeStr) return 999;
+        try {
+            const [time, modifier] = timeStr.split(' ');
+            let [hours, minutes] = time.split(':');
+            if (hours === '12') hours = '00';
+            if (modifier && modifier.toUpperCase() === 'PM') hours = parseInt(hours, 10) + 12;
+            
+            const aptDate = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
+            const now = new Date();
+            return (aptDate - now) / (1000 * 60 * 60); // Diferencia en horas
+        } catch(e) {
+            return 999; 
+        }
+    };
+
+    // MÁGIA: Agregamos la hora local Y las horas restantes al registro
+    const processedLeads = leads.map(l => {
+        const localTime = getLocalTimeInfo(l.date, l.time, l.state);
+        return {
+            ...l,
+            localTime,
+            hoursUntil: getHoursUntil(l.date, localTime || l.time)
+        };
+    });
+
+    // --- NUEVO: El contador dinámico de rescate ---
+    const urgentLeadsCount = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).length;
 
     const getFilteredLeads = () => {
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
-        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
+        // Marketplace ahora excluye a los urgentes (solo muestra > 2 horas)
+        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
+        // --- NUEVA BANDEJA: Solo los que están a punto de caducar o ya caducaron ---
+        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
@@ -1487,14 +1515,24 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             </div>
 
             <div className="flex px-2 md:px-8 gap-2 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
-                        className={`py-3 px-3 md:px-1 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-rose-600 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-800'}`}
+                        className={`py-3 px-3 md:px-1 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === tab ? (tab === 'urgent' ? 'border-red-600 text-red-600' : 'border-rose-600 text-rose-600') : (tab === 'urgent' ? 'border-transparent text-red-500/80 hover:text-red-600' : 'border-transparent text-gray-400 hover:text-gray-800')}`}
                     >
                         {tab === 'active' && 'Bandeja'}
                         {tab === 'marketplace' && 'Marketplace'}
+                        {tab === 'urgent' && (
+                            <>
+                                Urgente
+                                {urgentLeadsCount > 0 && (
+                                    <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-extrabold shadow-sm animate-pulse leading-none">
+                                        {urgentLeadsCount}
+                                    </span>
+                                )}
+                            </>
+                        )}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
                         {tab === 'agents' && 'Equipo'}
