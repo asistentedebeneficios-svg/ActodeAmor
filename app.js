@@ -776,21 +776,26 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
-        // NORMALIZADOR BLINDADO A 24 HORAS (Destruye espacios invisibles de Apple/iOS)
+        // BLINDAJE MULTI-DISPOSITIVO (Destruye la magia negra de iOS/Safari)
         const getClean24h = (tStr) => {
-            if(!tStr) return null;
-            const raw = tStr.toLowerCase().replace(/[^0-9ap]/g, ''); // Arranca todo lo que no sea número, 'a' o 'p'
-            const match = raw.match(/(\d{1,2})(\d{2})([ap])/);
-            if(!match) return null;
-            let h = parseInt(match[1], 10);
-            const m = match[2];
-            const isPm = match[3] === 'p';
-            if(isPm && h < 12) h += 12;
-            if(!isPm && h === 12) h = 0;
-            return `${String(h).padStart(2, '0')}:${m}`; // Devuelve formato militar "17:00"
+            if (!tStr) return null;
+            // 1. Limpiamos espacios invisibles, puntos y espacios normales
+            let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+            // 2. Detectamos si tiene 'a' o 'p'
+            let isPM = clean.includes('p');
+            let isAM = clean.includes('a');
+            // 3. Extraemos SOLO los números puros
+            let nums = clean.replace(/[^0-9]/g, '');
+            if (nums.length < 3) return null;
+            // 4. Calculamos horas y minutos
+            let h = parseInt(nums.slice(0, -2), 10);
+            const m = nums.slice(-2);
+            // 5. Convertimos a formato militar real (Incluso si iOS ya lo mandó en 24h, lo respeta)
+            if (isPM && h < 12) h += 12;
+            if (isAM && h === 12) h = 0;
+            return `${String(h).padStart(2, '0')}:${m}`; 
         };
 
-        // Verificamos colisión matemática
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
             const targetTime24h = getClean24h(previewLocalTime || editTime);
 
@@ -798,7 +803,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                 if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
                 if (l.date !== editDate) return false;
                 
-                // Extrae la hora local de la otra cita y la pasa a 24h
+                // Lee la hora del otro prospecto y la estandariza al 100%
                 const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
                 const otherTime24h = getClean24h(otherLocalTime);
                 
