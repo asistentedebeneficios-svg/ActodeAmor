@@ -721,45 +721,47 @@ const STATE_TIMEZONES = {
 };
 
 const getLocalTimeInfo = (dateString, timeString, stateName) => {
-    if (!dateString || !timeString || !stateName || !STATE_TIMEZONES[stateName]) return timeString;
-    try {
-        const tz = STATE_TIMEZONES[stateName];
-        let match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
-        if (!match) return timeString;
-        let h = parseInt(match[1], 10);
-        const m = match[2];
-        const mod = match[3].toLowerCase();
-        if (mod.includes('p') && h < 12) h += 12;
-        if (mod.includes('a') && h === 12) h = 0;
+    if (!dateString || !timeString || !stateName || !STATE_TIMEZONES[stateName]) return timeString;
+    try {
+        const tz = STATE_TIMEZONES[stateName];
+        let match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
+        if (!match) return timeString;
+        let h = parseInt(match[1], 10);
+        const m = match[2];
+        const mod = match[3].toLowerCase();
+        if (mod.includes('p') && h < 12) h += 12;
+        if (mod.includes('a') && h === 12) h = 0;
 
-        const d = new Date(`${dateString}T${String(h).padStart(2, '0')}:${m}:00`);
+        // 🔴 EL PARCHE PARA IPAD/SAFARI: Construimos la fecha número por número
+        // Así evitamos que iOS malinterprete la zona horaria al leer un texto ISO
+        const [year, month, day] = dateString.split('-');
+        const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), h, parseInt(m, 10), 0);
 
-        // 1. EL SECRETO ANTI-IOS: Usar 'en-GB' garantiza formato 24h sin importar el navegador
-        const targetHourStr = d.toLocaleString('en-GB', { timeZone: tz, hour: 'numeric' });
-        const localHourStr = d.toLocaleString('en-GB', { hour: 'numeric' });
+        // Forzamos 'en-GB' para que siempre devuelva formato de 24 hrs matemáticamente perfecto
+        const targetHourStr = d.toLocaleString('en-GB', { timeZone: tz, hour: 'numeric' });
+        const localHourStr = d.toLocaleString('en-GB', { hour: 'numeric' });
 
-        // 2. Extraer solo dígitos de forma segura para evitar que Safari rompa la matemática
-        const targetHour = parseInt(targetHourStr.match(/\d+/)[0], 10) % 24;
-        const localHour = parseInt(localHourStr.match(/\d+/)[0], 10) % 24;
+        const targetHour = parseInt(targetHourStr.match(/\d+/)[0], 10) % 24;
+        const localHour = parseInt(localHourStr.match(/\d+/)[0], 10) % 24;
 
-        let diff = localHour - targetHour;
-        if (diff > 12) diff -= 24;
-        if (diff < -12) diff += 24;
+        let diff = localHour - targetHour;
+        if (diff > 12) diff -= 24;
+        if (diff < -12) diff += 24;
 
-        if (diff === 0) return timeString; // Es la misma zona horaria
+        if (diff === 0) return timeString; // Mismo huso horario
 
-        const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
+        const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
 
-        // 3. CONSTRUCCIÓN MANUAL: Evita que el iPad genere textos con espacios invisibles
-        let outH = localDate.getHours();
-        const outM = String(localDate.getMinutes()).padStart(2, '0');
-        const ampm = outH >= 12 ? 'p.m.' : 'a.m.';
-        outH = outH % 12 || 12; // Convierte 0 a 12
+        // Construcción manual del texto para evitar que iOS inyecte espacios invisibles
+        let outH = localDate.getHours();
+        const outM = String(localDate.getMinutes()).padStart(2, '0');
+        const ampm = outH >= 12 ? 'p.m.' : 'a.m.';
+        outH = outH % 12 || 12; 
 
-        return `${String(outH).padStart(2, '0')}:${outM} ${ampm}`;
-    } catch (e) {
-        return timeString;
-    }
+        return `${String(outH).padStart(2, '0')}:${outM} ${ampm}`;
+    } catch (e) {
+        return timeString;
+    }
 };
 
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [] }) => {
