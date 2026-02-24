@@ -755,7 +755,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
     
-    // --- LÓGICA DE REAGENDAMIENTO (Híbrido Opción A) ---
+    // --- LÓGICA DE REAGENDAMIENTO ---
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
@@ -772,25 +772,22 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         setTimeout(() => setIsSaving(false), 2000);
     };
 
-    // --- MÁGICA ANTI-CHOQUES DE AGENDA ---
     const handleSaveDateTime = async () => {
-        // Solo verificamos choques si el prospecto ya tiene un agente asignado
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
             const hasConflict = allLeads.some(l => 
-                l.id !== lead.id && // Que no sea este mismo prospecto
-                l.assignedTo === lead.assignedTo && // Del mismo agente
-                l.status !== 'archived' && // Que no esté archivado
-                l.date === editDate && // Misma fecha
-                (l.localTime === editTime || l.time === editTime) // Misma hora
+                l.id !== lead.id && 
+                l.assignedTo === lead.assignedTo && 
+                l.status !== 'archived' && 
+                l.date === editDate && 
+                (l.localTime === editTime || l.time === editTime) 
             );
             
             if (hasConflict) {
                 alert("⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene otra cita activa programada para esta misma fecha y hora exacta. Por favor, selecciona un horario distinto para evitar cruces.");
-                return; // Bloquea el guardado
+                return; 
             }
         }
         
-        // Si pasó la prueba, lo guarda
         await onUpdate(lead.id, { date: editDate, time: editTime });
         setIsEditingDateTime(false);
         alert("✅ La cita ha sido reagendada exitosamente.");
@@ -837,14 +834,17 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
-                                    <div className="border-b border-gray-200/60 md:border-0 pb-2 md:pb-0"><span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span><p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p></div>
+                                {/* AQUÍ ESTÁ LA MAGIA: Si está editando, quita las 2 columnas y usa todo el ancho */}
+                                <div className={`grid grid-cols-1 ${isEditingDateTime ? '' : 'md:grid-cols-2'} gap-3 md:gap-4 bg-gray-50 rounded-2xl p-3 md:p-4 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0 transition-all`}>
+                                    <div className={`pb-2 border-gray-200/60 ${isEditingDateTime ? 'border-b' : 'border-b md:border-0 md:pb-0'}`}>
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Estado</span>
+                                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
+                                    </div>
                                     
-                                    {/* --- INTERFAZ DEL REAGENDADOR --- */}
-                                    <div className="pt-1 md:pt-0">
+                                    {/* SECCIÓN FECHA Y HORA CON EDITOR */}
+                                    <div className={`pt-1 ${isEditingDateTime ? 'pt-2' : 'md:pt-0'}`}>
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
-                                            {/* El botón del lápiz */}
                                             {!isEditingDateTime && (
                                                 <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition-colors print:hidden shadow-sm" title="Reagendar Cita">
                                                     <Edit2 size={12}/>
@@ -853,15 +853,17 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         </div>
                                         
                                         {isEditingDateTime ? (
-                                            <div className="flex flex-col gap-2 mt-2 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in">
-                                                <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
-                                                <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-xs p-2 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
-                                                    <option value="">Seleccione hora...</option>
-                                                    {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
-                                                </select>
+                                            <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
+                                                <div className="flex flex-col sm:flex-row gap-2.5">
+                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full sm:w-1/2 text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm" min={new Date().toISOString().split('T')[0]} />
+                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full sm:w-1/2 text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm">
+                                                        <option value="">Seleccione hora...</option>
+                                                        {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                                    </select>
+                                                </div>
                                                 <div className="flex gap-2 mt-1">
-                                                    <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-[10px] py-2 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar</button>
-                                                    <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-[10px] py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
+                                                    <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-2.5 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
+                                                    <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-2.5 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
                                                 </div>
                                             </div>
                                         ) : (
@@ -872,6 +874,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         )}
                                     </div>
                                 </div>
+                                
                                 <div className="px-1 print:p-0">
                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Teléfono y Correo</span>
                                     <p className="font-bold text-gray-900 text-lg">{lead.phone}</p>
