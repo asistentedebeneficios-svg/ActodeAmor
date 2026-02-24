@@ -1367,7 +1367,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
 
-    // --- NUEVO: Función para calcular horas restantes (La misma del Agente) ---
+    // Función para calcular horas restantes
     const getHoursUntil = (dateStr, timeStr) => {
         if (!dateStr || !timeStr) return 999;
         try {
@@ -1378,13 +1378,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             
             const aptDate = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
             const now = new Date();
-            return (aptDate - now) / (1000 * 60 * 60); // Diferencia en horas
+            return (aptDate - now) / (1000 * 60 * 60);
         } catch(e) {
             return 999; 
         }
     };
 
-    // MÁGIA: Agregamos la hora local Y las horas restantes al registro
+    // Procesamos todos los leads agregando la hora local y el tiempo restante
     const processedLeads = leads.map(l => {
         const localTime = getLocalTimeInfo(l.date, l.time, l.state);
         return {
@@ -1394,25 +1394,23 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         };
     });
 
-    // --- NUEVO: El contador dinámico de rescate ---
     const urgentLeadsCount = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).length;
 
+    // --- MÁGIA: BUSCADOR OMNIDIRECCIONAL ---
     const getFilteredLeads = () => {
-        // --- MÁGIA GLOBAL: Si escribes algo, ignora las pestañas y busca en TODA la base de datos ---
-        if(searchTerm) {
+        // 1. Si hay texto en el buscador, IGNORA LAS PESTAÑAS y busca en toda la base de datos
+        if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             return processedLeads.filter(l => 
                 (l.name && l.name.toLowerCase().includes(lower)) || 
                 (l.phone && l.phone.includes(lower)) || 
                 (l.email && l.email.toLowerCase().includes(lower)) || 
                 (l.state && l.state.toLowerCase().includes(lower)) ||
-                (l.notes && l.notes.toLowerCase().includes(lower)) ||
-                (l.time && l.time.toLowerCase().includes(lower)) ||
-                (l.date && l.date.includes(lower))
-            ).sort((a,b) => b.timestamp - a.timestamp); // Muestra los más recientes primero
+                (l.notes && l.notes.toLowerCase().includes(lower))
+            );
         }
 
-        // --- SI EL BUSCADOR ESTÁ VACÍO: Funciona normal por pestañas ---
+        // 2. Si el buscador está vacío, funciona normal por pestañas
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
@@ -1423,6 +1421,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         return list;
     };
 
+    // Buscador Inteligente de Agentes
     const getFilteredAgents = () => {
         let list = agents;
         if(searchTerm) { 
@@ -1430,7 +1429,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             list = list.filter(a => 
                 (a.name && a.name.toLowerCase().includes(lower)) || 
                 (a.email && a.email.toLowerCase().includes(lower)) ||
-                (a.license && a.license.toLowerCase().includes(lower)) || // MÁGIA: Filtra por Estado/Licencia
+                (a.license && a.license.toLowerCase().includes(lower)) ||
                 (a.phone && a.phone.includes(lower))
             ); 
         }
@@ -1444,7 +1443,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const toggleSelectAll = () => { if (selectedLeads.length === sortedLeads.length && sortedLeads.length > 0) setSelectedLeads([]); else setSelectedLeads(sortedLeads.map(l => l.id)); };
     const toggleSelect = (id) => { setSelectedLeads(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
 
-    // --- 🛠️ FUNCIÓN MAESTRA PARA ENVIAR CORREOS ---
     const triggerAssignmentWebhook = (leadObj, agentObj) => {
         if (!webhooks || !webhooks.assignment) return;
         
@@ -1526,7 +1524,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                 {activeTab !== 'schedule' && (
                     <div className="relative w-full md:w-[400px] group">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
-                        <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente' : 'prospecto'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
                 )}
                 
@@ -1565,7 +1563,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             </div>
 
             {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
-                
                 <div className="fixed bottom-4 md:bottom-8 left-0 w-full flex justify-center px-4 z-[100] pointer-events-none">
                     <div className="bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-3xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up border border-gray-700 w-full max-w-[400px] md:max-w-none pointer-events-auto">
                         <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0">
@@ -1657,7 +1654,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                         {sortedLeads.length === 0 ? (
                             <div className="p-16 md:p-24 text-center flex flex-col items-center bg-white rounded-3xl md:rounded-none shadow-soft md:shadow-none">
                                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4"><Archive size={24} className="text-gray-300"/></div>
-                                <p className="text-gray-400 font-medium">Bandeja vacía.</p>
+                                <p className="text-gray-400 font-medium">No hay prospectos aquí.</p>
                             </div>
                         ) : (
                             sortedLeads.map(lead => {
@@ -1683,6 +1680,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
                                         <div>
+                                            {/* ETIQUETA INTELIGENTE DE ESTADO */}
                                             <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
@@ -1710,6 +1708,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
+                                            {/* ETIQUETA INTELIGENTE DE ESTADO (MÓVIL) */}
                                             <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
@@ -1779,6 +1778,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                     onUpdate={onUpdateLead} 
                     onDelete={onDeleteLead} 
                     agents={agents} 
+                    allLeads={leads}
                     onAssignAgent={(leadId, agentId) => { 
                         onUpdateLead(leadId, { assignedTo: agentId }); 
                         const assignedLead = processedLeads.find(l => l.id === leadId);
