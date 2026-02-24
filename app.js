@@ -2054,6 +2054,16 @@ const App = () => {
     // --- NUEVO: Estado de verificación para evitar el pestañeo ---
     const [isVerifying, setIsVerifying] = useState(true); 
     
+    // --- NUEVO: Detector de Enlace Exclusivo para Agentes ---
+    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal');
+
+    // Escuchar si la URL cambia manualmente
+    useEffect(() => {
+        const handleHashChange = () => setIsPortalRoute(window.location.hash === '#portal');
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+    
     // --- CAMBIO 1: Leer la memoria al cargar la página ---
     const [showAdmin, setShowAdmin] = useState(() => {
         return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -2183,6 +2193,44 @@ const App = () => {
         localStorage.removeItem('isAdminLoggedIn');
     };
 
+    if (isPortalRoute && !showAdmin) {
+        return (
+            <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans px-4 animate-fade-in">
+                <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                    <div className="text-center mb-8">
+                        <div className="w-12 h-12 bg-black rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
+                            <Briefcase size={24} className="text-white"/>
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Portal Corporativo</h1>
+                        <p className="text-sm text-gray-500 mt-2">Acceso exclusivo para agentes autorizados.</p>
+                    </div>
+
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        handleLogin(e.target.email.value, e.target.password.value);
+                    }} className="space-y-5">
+                        <div>
+                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
+                            <input type="email" name="email" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" placeholder="agente@empresa.com" />
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Contraseña</label>
+                            <input type="password" name="password" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" placeholder="••••••••" />
+                        </div>
+                        <button type="submit" className="w-full bg-black text-white font-bold text-sm py-3.5 rounded-xl hover:bg-gray-800 transition-colors shadow-md mt-2">
+                            Iniciar Sesión
+                        </button>
+                    </form>
+                    <div className="mt-6 text-center">
+                        <a href="#" onClick={() => window.location.hash = ''} className="text-xs text-gray-400 hover:text-gray-900 transition-colors font-medium">
+                            ← Volver al inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
     if (showAdmin && user && !user.isAnonymous) {
         
         // PANTALLA DE CARGA PREMIUM (Bloquea el pestañeo)
