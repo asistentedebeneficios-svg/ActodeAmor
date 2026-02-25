@@ -874,28 +874,136 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
-    const handleDelete = () => { 
-        setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
+    const handleDelete = () => { 
+        setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
+    };
+
+    // --- MOTOR DEFINITIVO DE IMPRESIÓN ---
+    const handlePrint = () => {
+        // 1. Limpiamos si quedó alguna impresión anterior
+        const oldIframe = document.getElementById('print-iframe');
+        if (oldIframe) oldIframe.remove();
+
+        // 2. Creamos un Iframe de TAMAÑO COMPLETO, pero invisible y detrás de todo.
+        // Esto evita que el iPhone corte el contenido creyendo que mide 0px.
+        const iframe = document.createElement('iframe');
+        iframe.id = 'print-iframe';
+        iframe.style.position = 'fixed';
+        iframe.style.top = '0';
+        iframe.style.left = '0';
+        iframe.style.width = '100vw';
+        iframe.style.height = '100vh';
+        iframe.style.zIndex = '-9999';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        document.body.appendChild(iframe);
+
+        const fDate = lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+        const safeMotivations = Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation;
+        const safePolicyFor = getLabelsForArray('policy_for', lead.policy_for);
+        const safeAmount = getLabelForValue('coverage_amount', lead.coverage_amount);
+        const safeBudget = getLabelForValue('budget', lead.budget) || 'Pendiente';
+
+        // 3. HTML Limpio, ligero, sin Tailwind. Abre instantáneo en iPad.
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Ficha - ${lead.name}</title>
+                <style>
+                    @page { size: letter; margin: 1.5cm; }
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        color: #000; 
+                        line-height: 1.5; 
+                        margin: 0; 
+                        padding: 0;
+                        background: #fff;
+                    }
+                    .container { width: 100%; max-width: 800px; margin: 0 auto; }
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+                    .header p { margin: 5px 0 0; color: #555; font-size: 13px; }
+                    .section-title { font-size: 15px; font-weight: bold; text-transform: uppercase; margin-top: 25px; margin-bottom: 10px; color: #e11d48; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                    table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }
+                    td { padding: 12px 8px; border-bottom: 1px solid #eee; vertical-align: top; width: 50%; word-wrap: break-word; }
+                    .label { font-size: 10px; color: #666; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
+                    .value { font-size: 14px; font-weight: bold; color: #000; display: block; }
+                    .notes-box { margin-top: 10px; padding: 15px; border: 1px solid #ccc; border-radius: 6px; min-height: 100px; background: #fdfdfd; white-space: pre-wrap; font-size: 13px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Asistentedebeneficios.com</h1>
+                        <p>Ficha Oficial de Prospecto (Confidencial)</p>
+                    </div>
+                    
+                    <div class="section-title">Ficha Técnica</div>
+                    <table>
+                        <tr>
+                            <td><span class="label">Nombre del Prospecto</span><span class="value">${lead.name}</span></td>
+                            <td><span class="label">Estado</span><span class="value">${lead.state || 'N/A'}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">Teléfono</span><span class="value">${lead.phone}</span></td>
+                            <td><span class="label">Cita Solicitada</span><span class="value">${fDate} - ${lead.localTime || lead.time}</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><span class="label">Correo Electrónico</span><span class="value">${lead.email || 'N/A'}</span></td>
+                        </tr>
+                    </table>
+
+                    <div class="section-title">Perfil de Interés</div>
+                    <table>
+                        <tr>
+                            <td><span class="label">Cobertura Para</span><span class="value">${safePolicyFor}</span></td>
+                            <td><span class="label">Monto Estimado</span><span class="value">${safeAmount}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="label">Presupuesto Mensual</span><span class="value">${safeBudget}</span></td>
+                            <td><span class="label">Motivaciones Principales</span><span class="value">${safeMotivations}</span></td>
+                        </tr>
+                    </table>
+
+                    <div class="section-title">Bloc de Notas del Agente</div>
+                    <div class="notes-box">${currentNotes || 'Sin notas registradas...'}</div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(html);
+        iframe.contentWindow.document.close();
+
+        // Le damos medio segundo exacto para que renderice y lanzamos la impresión.
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }, 500);
     };
 
-    return (
-        <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
-            <CustomDialog isOpen={!!dialog} {...dialog} />
-            <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
-                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
-                    <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
-                    <div className="truncate">
-                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">{lead.name}</h2>
-                        <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <button onClick={() => setTimeout(() => window.print(), 150)} className="p-2.5 md:p-3 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center" title="Imprimir Ficha"><Printer size={18}/></button>
-                    <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
-                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
-                </div>
-            </div>
+    return (
+        <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
+            <CustomDialog isOpen={!!dialog} {...dialog} />
+            <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
+                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
+                    <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
+                    <div className="truncate">
+                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">{lead.name}</h2>
+                        <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {/* BOTÓN ACTUALIZADO PARA LLAMAR A handlePrint */}
+                    <button onClick={handlePrint} className="p-2.5 md:p-3 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center" title="Imprimir Ficha"><Printer size={18}/></button>
+                    <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
+                </div>
+            </div>
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
