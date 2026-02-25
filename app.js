@@ -2167,9 +2167,16 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         currentClientsList = showArchived ? archivedClients : activeClients;
     }
     
-    // Filtro Inteligente del Marketplace (Soporta Múltiples Estados)
+    // Filtro Inteligente del Marketplace (Soporta Múltiples Estados y Contadores)
     const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
-    const availableMarketplaceStates = [...new Set(allAvailableLeads.map(l => l.state))].filter(Boolean).sort();
+    
+    // Motor matemático: Cuenta cuántos leads hay por cada estado
+    const stateCounts = allAvailableLeads.reduce((acc, lead) => {
+        if(lead.state) acc[lead.state] = (acc[lead.state] || 0) + 1;
+        return acc;
+    }, {});
+    
+    const availableMarketplaceStates = Object.keys(stateCounts).sort();
     
     const availableLeads = allAvailableLeads
         .filter(l => marketplaceStateFilters.length > 0 ? marketplaceStateFilters.includes(l.state) : true)
@@ -2291,7 +2298,9 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                                                 checked={marketplaceStateFilters.includes(st)} 
                                                                 onChange={() => toggleStateFilter(st)} 
                                                             />
-                                                            <span className="text-sm font-semibold text-gray-700 group-hover:text-rose-700">{st}</span>
+                                                            <span className="text-sm font-semibold text-gray-700 group-hover:text-rose-700">
+                                                                {st} <span className="text-gray-400 font-medium ml-1">({stateCounts[st]})</span>
+                                                            </span>
                                                         </label>
                                                     ))
                                                 )}
