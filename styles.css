@@ -101,56 +101,69 @@ input[type="date"], input[type="time"] {
     font-family: inherit;
 }
 
-/* --- OPTIMIZACIÓN DE IMPRESIÓN PARA iPAD Y iPHONE --- */
+
+/* ==========================================================================
+   --- MOTOR DE IMPRESIÓN PERFECTA (INSTANTÁNEO, SIN HOJAS BLANCAS) --- 
+   ========================================================================== */
 @media print {
-    /* 1. Liberamos la altura para que el iPhone sepa que hay más hojas */
-    body, html {
+    /* 1. Limpiamos el lienzo por completo */
+    @page { size: auto; margin: 1cm; }
+    body, html, #root {
+        background-color: white !important;
         height: auto !important;
         min-height: 100% !important;
         overflow: visible !important;
-        background-color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    
-    body * {
-        visibility: hidden;
+
+    /* 2. DESTRUIMOS TODO LO QUE NO SEA LA FICHA (Evita lag en iPad y hojas blancas en PC) */
+    .min-h-screen > div:not(.z-\[60\]),
+    .z-50 > div:not(.z-\[60\]) {
+        display: none !important;
     }
-    
-    .print\:absolute, .print\:absolute * {
-        visibility: visible;
-    }
-    
-    /* 2. LA MAGIA: Cambiamos de 'absolute' a 'static' para que el iPhone no corte el contenido */
-    .print\:absolute {
+
+    /* 3. COLOCAMOS LA FICHA EN EL PUNTO CERO (Arregla el hueco del Teléfono) */
+    .z-\[60\] {
         position: static !important; 
         display: block !important;
         width: 100% !important;
         height: auto !important;
-        min-height: auto !important;
-        overflow: visible !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background-color: white !important;
-    }
-    
-    /* 3. Rompemos las cajas con scroll para que fluyan hacia abajo en el papel */
-    .overflow-y-auto, .flex-1, .h-full {
-        overflow: visible !important;
-        height: auto !important;
-        display: block !important;
-    }
-    
-    .glass-panel, .fixed {
+        min-height: 0 !important;
         background: white !important;
-        box-shadow: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        position: static !important;
+        overflow: visible !important;
     }
 
-    /* 4. Evitamos que las tarjetas se partan a la mitad entre la página 1 y 2 */
+    /* 4. EXPANDIMOS LOS CONTENEDORES PARA QUE FLUYAN HACIA ABAJO */
+    .z-\[60\] .overflow-y-auto,
+    .z-\[60\] .flex-1,
+    .z-\[60\] .h-full {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    /* 5. OCULTAMOS EL BOTÓN DE IMPRESIÓN PARA QUE NO SALGA EN EL PAPEL */
+    .print\:hidden {
+        display: none !important;
+    }
+
+    /* 6. PROTEGEMOS LAS TARJETAS (Evita que se corten a la mitad entre la página 1 y 2) */
     .shadow-soft {
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important; /* Le ponemos borde de línea para que se vea claro impreso */
         margin-bottom: 24px !important;
+    }
+
+    /* 7. QUITAMOS EL BLUR PARA NO TRABAR LA MEMORIA DEL NAVEGADOR */
+    .glass-panel, .fixed, .bg-apple-gray {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
     }
 }
