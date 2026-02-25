@@ -2056,54 +2056,37 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
     const [showArchived, setShowArchived] = useState(false);
     
-    // --- NUEVO: Función para calcular horas restantes para la cita ---
-    const getHoursUntil = (dateStr, timeStr) => {
-        if (!dateStr || !timeStr) return 999;
-        try {
-            const [time, modifier] = timeStr.split(' ');
-            let [hours, minutes] = time.split(':');
-            if (hours === '12') hours = '00';
-            if (modifier && modifier.toUpperCase() === 'PM') hours = parseInt(hours, 10) + 12;
-            
-            const aptDate = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
-            const now = new Date();
-            return (aptDate - now) / (1000 * 60 * 60); // Diferencia en horas
-        } catch(e) {
-            return 999; // Si hay error de formato, lo manda al fondo
-        }
-    };
+    // --- 1. RECREAMOS processedLeads (Para que nada se rompa más abajo) ---
+    const processedLeads = leads.map(l => {
+        const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
+        const now = Date.now();
+        const hoursUntil = timeInfo ? (timeInfo.localMs - now) / (1000 * 60 * 60) : 999;
+        return { 
+            ...l, 
+            hoursUntil, 
+            localTime: timeInfo?.localTime24 || l.time, 
+            sortMs: timeInfo?.localMs || 0 
+        };
+    });
 
-    // Función para ordenar por la fecha/hora real de la cita
-    const processAndSort = (list) => {
-        return list.map(l => {
-            const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-            return { ...l, localTime: timeInfo?.localTime24 || l.time, sortMs: timeInfo?.localMs || 0 };
-        }).sort((a, b) => a.sortMs - b.sortMs); // Ordenados de la cita más próxima a la más lejana
-    };
-
-    const myLeads = leads.filter(l => l.assignedTo === agent.id);
-    const activeClients = processAndSort(myLeads.filter(l => l.status !== 'archived'));
-    const archivedClients = processAndSort(myLeads.filter(l => l.status === 'archived'));
+    // --- 2. ORDENAMOS Y FILTRAMOS (Las citas más cercanas van arriba) ---
+    const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
+    const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
+    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => a.sortMs - b.sortMs);
     const currentClientsList = showArchived ? archivedClients : activeClients;
     
-    const availableLeads = leads
-        .filter(l => l.status === 'marketplace' && !l.assignedTo)
-        .map(l => {
-            const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-            const hoursUntil = timeInfo ? (timeInfo.localMs - Date.now()) / (1000 * 60 * 60) : 999;
-            return { ...l, hoursUntil, localTime: timeInfo?.localTime24 || l.time, sortMs: timeInfo?.localMs || 0 };
-        })
-        .filter(l => l.hoursUntil > 2) 
+    const availableLeads = processedLeads
+        .filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2)
         .sort((a, b) => a.sortMs - b.sortMs);
 
-    const myHistory = processedLeads.filter(l => l.assignedTo === agent.id).sort((a,b) => b.timestamp - a.timestamp);
+    const myHistory = myLeads.sort((a,b) => b.timestamp - a.timestamp);
 
-    // --- NUEVA LÓGICA DEL CARRITO (Calcula precio variable) ---
+    // --- 3. LÓGICA DEL CARRITO DINÁMICO ---
     const cartTotal = cart.reduce((total, leadId) => {
         const lead = availableLeads.find(l => l.id === leadId);
         if (!lead) return total;
-        const isFireSale = lead.hoursUntil <= 3; // Si faltan 3 hrs o menos (y más de 2)
-        return total + (isFireSale ? 10 : 40); // Suma $10 o $40
+        const isFireSale = lead.hoursUntil <= 3; 
+        return total + (isFireSale ? 10 : 40); 
     }, 0);
 
     // Lógica del Temporizador
