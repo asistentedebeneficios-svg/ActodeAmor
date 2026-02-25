@@ -1738,7 +1738,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                     {/* Botones Móvil */}
                     <div className="flex gap-2 md:hidden">
                         <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
-                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cerrar Sesión"><LogOut size={16}/></button>
+                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Salir"><LogOut size={16}/></button>
                     </div>
                 </div>
                 
@@ -1752,7 +1752,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                 {/* Botones Desktop */}
                 <div className="hidden md:flex gap-2">
                      <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
-                     <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Cerrar Sesión</button>
+                     <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
             </div>
 
