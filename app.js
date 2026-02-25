@@ -2136,10 +2136,12 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         };
     });
 
-    // --- 4. ORDENAMOS Y FILTRAMOS (Las citas más cercanas van arriba) ---
+    // --- 4. ORDENAMOS Y FILTRAMOS ---
     const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
+    // Activas: La más próxima en el tiempo va primero (Ascendente)
     const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
-    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => a.sortMs - b.sortMs);
+    // Pasadas: La más reciente que acaba de pasar va primero (Descendente)
+    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.sortMs - a.sortMs);
     const currentClientsList = showArchived ? archivedClients : activeClients;
     
     const availableLeads = processedLeads
