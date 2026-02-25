@@ -2121,8 +2121,20 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
 
     const [cart, setCart] = useState([]);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
-    const [showArchived, setShowArchived] = useState(false);
     
+    // --- MEMORIA INTELIGENTE PARA LA SUB-PESTAÑA DE CITAS ---
+    const [showArchived, setShowArchived] = useState(() => {
+        return localStorage.getItem('agentShowArchived') === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('agentShowArchived', showArchived);
+    }, [showArchived]);
+    
+    // --- NUEVO: ESTADOS PARA LOS BUSCADORES Y FILTROS ---
+    const [clientSearchTerm, setClientSearchTerm] = useState('');
+    const [marketplaceStateFilter, setMarketplaceStateFilter] = useState('');
+
     // --- 3. RECREAMOS processedLeads (Para que nada se rompa más abajo) ---
     const processedLeads = leads.map(l => {
         const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
@@ -2131,21 +2143,32 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         return { 
             ...l, 
             hoursUntil, 
-            localTime: timeInfo?.localTimeAmPm || l.time, // Usa formato p.m. / a.m.
+            localTime: timeInfo?.localTimeAmPm || l.time,
             sortMs: timeInfo?.localMs || 0 
         };
     });
 
     // --- 4. ORDENAMOS Y FILTRAMOS ---
     const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
-    // Activas: La más próxima en el tiempo va primero (Ascendente)
     const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
-    // Pasadas: La más reciente que acaba de pasar va primero (Descendente)
     const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.sortMs - a.sortMs);
-    const currentClientsList = showArchived ? archivedClients : activeClients;
     
-    const availableLeads = processedLeads
-        .filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2)
+    // Buscador Inteligente de Clientes Propios
+    const baseClientsList = showArchived ? archivedClients : activeClients;
+    const currentClientsList = baseClientsList.filter(l => {
+        if (!clientSearchTerm) return true;
+        const term = clientSearchTerm.toLowerCase();
+        return (l.name && l.name.toLowerCase().includes(term)) || 
+               (l.phone && l.phone.includes(term)) || 
+               (l.state && l.state.toLowerCase().includes(term));
+    });
+    
+    // Filtro Inteligente del Marketplace (Solo muestra estados disponibles)
+    const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
+    const availableMarketplaceStates = [...new Set(allAvailableLeads.map(l => l.state))].filter(Boolean).sort();
+    
+    const availableLeads = allAvailableLeads
+        .filter(l => marketplaceStateFilter ? l.state === marketplaceStateFilter : true)
         .sort((a, b) => a.sortMs - b.sortMs);
 
     const myHistory = myLeads.sort((a,b) => b.timestamp - a.timestamp);
@@ -2217,15 +2240,28 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* VISTA 1: MARKETPLACE */}
             {activeTab === 'marketplace' && (
                 <div className="flex-1 p-3 md:p-8 max-w-5xl mx-auto w-full overflow-y-auto">
-                    <div className="flex justify-between items-end mb-4 md:mb-6 px-1">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-4 md:mb-6 px-1 gap-4">
                         <div>
                             <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Marketplace</h1>
                             <p className="text-gray-500 text-xs md:text-sm mt-1">Adquiere tus próximas citas de asesoría.</p>
                         </div>
-                        <button onClick={() => setActiveTab('historial')} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-all shadow-sm">
-                            <FileText size={14} className="text-gray-400" />
-                            Recibos
-                        </button>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                            {/* NUEVO: Filtro por Estado Inteligente */}
+                            <div className="relative w-full sm:w-48 group">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={14}/>
+                                <select value={marketplaceStateFilter} onChange={(e) => setMarketplaceStateFilter(e.target.value)} className="w-full pl-8 pr-8 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 appearance-none shadow-sm cursor-pointer transition-all">
+                                    <option value="">Todos los Estados</option>
+                                    {availableMarketplaceStates.map(st => <option key={st} value={st}>{st}</option>)}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"><ChevronRight size={12} className="rotate-90"/></div>
+                            </div>
+                            
+                            <button onClick={() => setActiveTab('historial')} className="flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-all shadow-sm shrink-0">
+                                <FileText size={14} className="text-gray-400" />
+                                <span className="sm:hidden">Ver Mis Recibos</span>
+                                <span className="hidden sm:inline">Recibos</span>
+                            </button>
+                        </div>
                     </div>
 
                     {availableLeads.length === 0 ? (
@@ -2307,10 +2343,23 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* VISTA 2: MIS CLIENTES */}
             {activeTab === 'clientes' && (
                 <div className="flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto">
-                    <div className="flex justify-center mb-6">
-                        <div className="bg-gray-200/60 p-1.5 rounded-xl flex items-center shadow-inner">
-                            <button onClick={() => setShowArchived(false)} className={`px-5 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${!showArchived ? 'bg-white text-rose-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Próximas citas ({activeClients.length})</button>
-                            <button onClick={() => setShowArchived(true)} className={`px-5 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Citas pasadas ({archivedClients.length})</button>
+                    <div className="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4">
+                        {/* Pestañas de estado (Activas/Pasadas) */}
+                        <div className="bg-gray-200/60 p-1.5 rounded-xl flex items-center shadow-inner w-full lg:w-auto overflow-x-auto scrollbar-hide shrink-0">
+                            <button onClick={() => setShowArchived(false)} className={`flex-1 lg:flex-none px-4 md:px-5 py-2 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${!showArchived ? 'bg-white text-rose-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Próximas citas ({activeClients.length})</button>
+                            <button onClick={() => setShowArchived(true)} className={`flex-1 lg:flex-none px-4 md:px-5 py-2 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Citas pasadas ({archivedClients.length})</button>
+                        </div>
+                        
+                        {/* NUEVO: Buscador Interno de Clientes */}
+                        <div className="relative w-full lg:w-72 group shrink-0">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
+                            <input 
+                                type="text" 
+                                placeholder="Buscar cliente, teléfono o estado..." 
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all text-sm font-medium shadow-sm" 
+                                value={clientSearchTerm} 
+                                onChange={e => setClientSearchTerm(e.target.value)} 
+                            />
                         </div>
                     </div>
                     
