@@ -878,163 +878,106 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
     };
 
-    // --- NUEVO: Motor de Impresión Universal (A prueba de móviles) ---
+    // --- NUEVO: Motor de Impresión Pestaña Nueva (Solución Definitiva Móvil) ---
     const handlePrint = () => {
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
-
-        const contentWindow = iframe.contentWindow;
         const fDate = lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
         const safeMotivations = Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation;
         const safePolicyFor = getLabelsForArray('policy_for', lead.policy_for);
         const safeAmount = getLabelForValue('coverage_amount', lead.coverage_amount);
         const safeBudget = getLabelForValue('budget', lead.budget) || 'Pendiente';
 
-        // Usamos CSS extremadamente defensivo para móviles: porcentajes, no envoltura (no-wrap) donde es crítico, y márgenes generosos.
+        // 1. Abrimos una pestaña nueva en blanco
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permite las ventanas emergentes (pop-ups) para imprimir.');
+            return;
+        }
+
+        // 2. Le inyectamos el HTML crudo
         const html = `
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=1.0">
-                <title>Ficha - ${lead.name}</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <title>Imprimir Ficha - ${lead.name}</title>
                 <style>
-                    @page { size: letter; margin: 1cm; }
+                    /* Forzar que trate esto como una hoja de papel siempre */
+                    @page { size: auto; margin: 15mm; }
                     body { 
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-                        color: #000; 
-                        line-height: 1.4; 
+                        color: #111; 
+                        line-height: 1.5; 
                         margin: 0; 
-                        padding: 2%; /* Relleno relativo */
+                        padding: 20px; 
                         background: #fff;
                     }
-                    .container { 
-                        width: 100%; 
-                        max-width: 100%; /* El contenedor ocupa todo el ancho de la hoja */
-                        box-sizing: border-box;
-                    }
-                    .header { 
-                        text-align: center; 
-                        border-bottom: 2px solid #000; 
-                        padding-bottom: 15px; 
-                        margin-bottom: 20px; 
-                    }
-                    .header h1 { 
-                        margin: 0; 
-                        font-size: 24px; /* Tamaño más seguro para móviles */
-                        text-transform: uppercase; 
-                        letter-spacing: 1px; 
-                    }
-                    .header p { 
-                        margin: 5px 0 0; 
-                        color: #555; 
-                        font-size: 12px; 
-                    }
-                    .section-title { 
-                        font-size: 14px; 
-                        font-weight: bold; 
-                        text-transform: uppercase; 
-                        letter-spacing: 1px; 
-                        margin-top: 25px; 
-                        margin-bottom: 10px; 
-                        color: #e11d48; 
-                        border-bottom: 1px solid #ccc; 
-                        padding-bottom: 5px; 
-                    }
-                    table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                        table-layout: fixed; /* Fuerza a la tabla a no salirse del contenedor */
-                    }
-                    td { 
-                        padding: 10px 5px; 
-                        border-bottom: 1px solid #eee; 
-                        vertical-align: top; 
-                        width: 50%; /* Divide el ancho equitativamente */
-                        box-sizing: border-box;
-                        word-wrap: break-word; /* Permite romper palabras largas si es necesario */
-                    }
-                    .label { 
-                        font-size: 10px; 
-                        color: #666; 
-                        text-transform: uppercase; 
-                        font-weight: bold; 
-                        letter-spacing: 0.5px; 
-                        margin-bottom: 3px; 
-                    }
-                    .value { 
-                        font-size: 14px; 
-                        font-weight: 600; 
-                        color: #000; 
-                    }
-                    .notes-box { 
-                        margin-top: 10px; 
-                        padding: 15px; 
-                        border: 1px solid #ccc; 
-                        border-radius: 4px; 
-                        min-height: 100px; 
-                        background: #f9f9f9; 
-                        white-space: pre-wrap; 
-                        font-size: 13px; 
-                    }
+                    .container { max-width: 100%; margin: 0 auto; }
+                    .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 25px; }
+                    .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+                    .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
+                    .section-title { font-size: 16px; font-weight: bold; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; color: #e11d48; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                    td { padding: 12px; border-bottom: 1px solid #f9f9f9; vertical-align: top; width: 50%; word-wrap: break-word; }
+                    .label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
+                    .value { font-size: 16px; font-weight: 600; color: #000; display: block; }
+                    .notes-box { margin-top: 15px; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px; min-height: 120px; background: #fafafa; white-space: pre-wrap; font-size: 15px; }
                 </style>
             </head>
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Asistentedebeneficios.com</h1>
+                        <h1>Asistente de Beneficios</h1>
                         <p>Ficha Oficial de Prospecto (Confidencial)</p>
                     </div>
                     
                     <div class="section-title">Ficha Técnica</div>
                     <table>
                         <tr>
-                            <td><div class="label">Nombre del Prospecto</div><div class="value">${lead.name}</div></td>
-                            <td><div class="label">Estado</div><div class="value">${lead.state || 'N/A'}</div></td>
+                            <td><span class="label">Nombre del Prospecto</span><span class="value">${lead.name}</span></td>
+                            <td><span class="label">Estado</span><span class="value">${lead.state || 'N/A'}</span></td>
                         </tr>
                         <tr>
-                            <td><div class="label">Teléfono</div><div class="value">${lead.phone}</div></td>
-                            <td><div class="label">Cita Solicitada</div><div class="value">${fDate} - ${lead.localTime || lead.time}</div></td>
+                            <td><span class="label">Teléfono</span><span class="value">${lead.phone}</span></td>
+                            <td><span class="label">Cita Solicitada</span><span class="value">${fDate} - ${lead.localTime || lead.time}</span></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><div class="label">Correo Electrónico</div><div class="value">${lead.email || 'N/A'}</div></td>
+                            <td colspan="2"><span class="label">Correo Electrónico</span><span class="value">${lead.email || 'N/A'}</span></td>
                         </tr>
                     </table>
 
                     <div class="section-title">Perfil de Interés</div>
                     <table>
                         <tr>
-                            <td><div class="label">Cobertura Para</div><div class="value">${safePolicyFor}</div></td>
-                            <td><div class="label">Monto Estimado</div><div class="value">${safeAmount}</div></td>
+                            <td><span class="label">Cobertura Para</span><span class="value">${safePolicyFor}</span></td>
+                            <td><span class="label">Monto Estimado</span><span class="value">${safeAmount}</span></td>
                         </tr>
                         <tr>
-                            <td><div class="label">Presupuesto Mensual</div><div class="value">${safeBudget}</div></td>
-                            <td><div class="label">Motivaciones Principales</div><div class="value">${safeMotivations}</div></td>
+                            <td><span class="label">Presupuesto Mensual</span><span class="value">${safeBudget}</span></td>
+                            <td><span class="label">Motivaciones Principales</span><span class="value">${safeMotivations}</span></td>
                         </tr>
                     </table>
 
                     <div class="section-title">Bloc de Notas del Agente</div>
                     <div class="notes-box">${currentNotes || 'Sin notas registradas...'}</div>
                 </div>
+                <script>
+                    // 3. Cuando la pestaña termine de cargar, lanza la orden de imprimir
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            // 4. Se cierra sola despues de imprimir
+                            setTimeout(function() { window.close(); }, 500); 
+                        }, 250);
+                    };
+                </script>
             </body>
             </html>
         `;
 
-        contentWindow.document.open();
-        contentWindow.document.write(html);
-        contentWindow.document.close();
-
-        setTimeout(() => {
-            contentWindow.focus();
-            contentWindow.print();
-            setTimeout(() => { document.body.removeChild(iframe); }, 2000);
-        }, 300);
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
     };
 
     return (
