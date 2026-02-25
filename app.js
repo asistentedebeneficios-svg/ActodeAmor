@@ -2271,8 +2271,19 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             {/* Pestañas de Navegación */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
-                    <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
-                        {tab === 'marketplace' && `Marketplace (${availableLeads.length})`}
+                    <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                        {tab === 'marketplace' && (
+                            <>
+                                Marketplace
+                                {availableLeads.length > 0 ? (
+                                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm leading-none min-w-[20px] text-center animate-pulse-once">
+                                        {availableLeads.length}
+                                    </span>
+                                ) : (
+                                    <span>(0)</span>
+                                )}
+                            </>
+                        )}
                         {tab === 'clientes' && 'Mis Clientes'}
                         {tab === 'agenda' && 'Agenda'}
                     </button>
