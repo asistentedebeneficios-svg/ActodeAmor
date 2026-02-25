@@ -2286,10 +2286,62 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 </div>
             )}
 
-            {/* VISTA 3 y 4: AGENDA E HISTORIAL (Omitidas por brevedad, no cambiaron) */}
+            {/* VISTA 3: AGENDA */}
             {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} onLeadClick={setViewingLead} /></div>}
-            {activeTab === 'historial' && <div className="flex-1 p-3 md:p-8"> {/* Historial */} </div>}
+            
+            {/* VISTA 4: HISTORIAL DE RECIBOS */}
+            {activeTab === 'historial' && (
+                <div className="flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto animate-fade-in">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2"><FileText size={24} className="text-rose-500"/> Mis Recibos</h2>
+                            <p className="text-gray-500 text-sm mt-1">Historial de prospectos adquiridos.</p>
+                        </div>
+                    </div>
 
+                    {myHistory.length === 0 ? (
+                        <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm mt-4">
+                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><FileText size={24} className="text-gray-300"/></div>
+                            <p className="text-gray-500 font-medium text-sm">No tienes compras registradas aún.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+                            {myHistory.map(lead => {
+                                // Generamos un ID de recibo falso pero constante basado en el ID del lead
+                                const receiptId = `REC-${lead.id.substring(0, 6).toUpperCase()}`;
+                                // Asumimos un precio base para el recibo (si es de hoy y urgente, $10, si no $40. Esto se afinará con Stripe)
+                                const paidAmount = lead.status === 'marketplace' && lead.hoursUntil <= 3 ? '$10.00' : '$40.00';
+                                
+                                return (
+                                    <div key={`rec-${lead.id}`} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0 border border-green-100">
+                                                <DollarSign size={20} strokeWidth={2.5}/>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-gray-900 text-base">Adquisición de Prospecto</h4>
+                                                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border border-gray-200">{receiptId}</span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-1"><span className="font-medium text-gray-900">{lead.name}</span> • {lead.state || 'N/A'}</p>
+                                                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400 font-medium">
+                                                    <Calendar size={12}/>
+                                                    <span>{new Date(lead.timestamp).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
+                                            <span className="text-lg font-extrabold text-gray-900">{paidAmount}</span>
+                                            <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-md mt-1 flex items-center gap-1"><Check size={10}/> Pagado</span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+            
             {viewingLead && (
               <LeadDetail
                 lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead}
@@ -2349,16 +2401,19 @@ const App = () => {
     const { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
-    // --- AUTO-ARCHIVADO DE CITAS PASADAS ---
+    // --- AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas) ---
     useEffect(() => {
         if (!leads || leads.length === 0 || !bulkUpdateLeads) return;
         const checkExpirations = () => {
             const now = Date.now();
+            // 2 horas en milisegundos = 2 * 60 * 60 * 1000 = 7200000
+            const GRACE_PERIOD = 7200000; 
+            
             const toArchive = leads.filter(l => {
                 if (l.status === 'archived' || !l.date || !l.time) return false;
                 const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-                // Si la hora de la cita (convertida a tu hora local) ya es menor a la hora actual, lo marca para archivar
-                return timeInfo && timeInfo.localMs < now;
+                // Solo la archiva si la hora actual es MAYOR a (la hora de la cita + 2 horas)
+                return timeInfo && (timeInfo.localMs + GRACE_PERIOD) < now;
             }).map(l => l.id);
 
             if (toArchive.length > 0) {
