@@ -1964,40 +1964,34 @@ const STATE_TZ = {
   "Wisconsin": "America/Chicago"
 };
 
-// --- ✅ Normaliza hora (corrige espacios raros iOS y formatos) ---
+// --- ✅ Normaliza hora (A prueba de p.m., P.M., PM, pm) ---
 const normalizeTimeString = (t) => {
   if (!t) return '';
-  let s = String(t).trim().replace(/\u202F|\u00A0/g, ' '); // iOS spaces
-
-  // "HH:MM" o "H:MM"
-  if (/^\d{1,2}:\d{2}$/.test(s)) {
-    const [hh, mm] = s.split(':').map(n => parseInt(n, 10));
-    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-  }
-
-  // "H:MM AM/PM"
-  const [clock, modRaw] = s.split(' ');
-  const mod = (modRaw || '').toUpperCase();
-  let [hh, mm] = clock.split(':').map(n => parseInt(n, 10));
-  if (hh === 12) hh = 0;
-  if (mod === 'PM') hh += 12;
-
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  let clean = String(t).toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+  let isPM = clean.includes('p');
+  let isAM = clean.includes('a');
+  let nums = clean.replace(/[^0-9]/g, '');
+  if (nums.length < 3) return null;
+  
+  let hh = parseInt(nums.slice(0, -2), 10);
+  const mm = nums.slice(-2);
+  
+  if (isPM && hh < 12) hh += 12;
+  if (isAM && hh === 12) hh = 0;
+  
+  return `${String(hh).padStart(2, '0')}:${mm}`;
 };
 
 // --- ✅ Convierte "fecha+hora" en timezone X a timestamp UTC ---
 const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
-  // dateStr: "YYYY-MM-DD", timeStr: "H:MM AM" o "HH:MM"
-  const hhmm = normalizeTimeString(timeStr); // "HH:MM"
+  const hhmm = normalizeTimeString(timeStr);
   if (!dateStr || !hhmm || !timeZone) return null;
 
   const [Y, M, D] = dateStr.split('-').map(n => parseInt(n, 10));
   const [h, m] = hhmm.split(':').map(n => parseInt(n, 10));
 
-  // 1) Creamos una fecha "naive" en UTC con esos números
   const utcGuess = new Date(Date.UTC(Y, M - 1, D, h, m, 0));
 
-  // 2) Calculamos el offset real de ese timezone en ese instante
   const dtf = new Intl.DateTimeFormat('en-US', {
     timeZone,
     hour12: false,
@@ -2010,7 +2004,6 @@ const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
     return acc;
   }, {});
 
-  // Esto es "cómo se ve" utcGuess dentro del timezone
   const tzAsUtc = Date.UTC(
     parseInt(parts.year, 10),
     parseInt(parts.month, 10) - 1,
@@ -2020,14 +2013,11 @@ const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
     parseInt(parts.second, 10)
   );
 
-  // 3) Offset = (tzAsUtc - utcGuessMs)
   const offsetMs = tzAsUtc - utcGuess.getTime();
-
-  // 4) Para que la hora sea "real" en ese timezone, ajustamos
   return utcGuess.getTime() - offsetMs;
 };
 
-// --- ✅ Devuelve "fecha+hora" ya en LOCAL DEL AGENTE (device/local) ---
+// --- ✅ Devuelve "fecha+hora" ya en LOCAL DEL AGENTE ---
 const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
   const tz = STATE_TZ[prospectState] || null;
   if (!tz) return null;
@@ -2035,16 +2025,20 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
   const utcMs = zonedDateTimeToUtcMs(dateStr, timeStr, tz);
   if (utcMs == null) return null;
 
-  const local = new Date(utcMs); // se muestra en local del agente (device)
+  const local = new Date(utcMs); 
   const yyyy = local.getFullYear();
   const mm = String(local.getMonth() + 1).padStart(2, '0');
   const dd = String(local.getDate()).padStart(2, '0');
-  const HH = String(local.getHours()).padStart(2, '0');
+  const HH = local.getHours();
   const MM = String(local.getMinutes()).padStart(2, '0');
+  
+  const ampm = HH >= 12 ? 'p.m.' : 'a.m.';
+  const displayHH = HH % 12 || 12;
 
   return {
     localDateStr: `${yyyy}-${mm}-${dd}`,
-    localTime24: `${HH}:${MM}`,
+    localTime24: `${String(HH).padStart(2, '0')}:${MM}`,
+    localTimeAmPm: `${String(displayHH).padStart(2, '0')}:${MM} ${ampm}`,
     localMs: local.getTime()
   };
 };
@@ -2064,7 +2058,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         return { 
             ...l, 
             hoursUntil, 
-            localTime: timeInfo?.localTime24 || l.time, 
+            localTime: timeInfo?.localTimeAmPm || l.time, // Usa formato p.m. / a.m.
             sortMs: timeInfo?.localMs || 0 
         };
     });
