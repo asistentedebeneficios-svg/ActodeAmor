@@ -878,7 +878,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
     };
 
-    // --- NUEVO: Motor de Impresión Ultrarrápido para iPad ---
+    // --- NUEVO: Motor de Impresión Universal (Fuerza tamaño Carta/A4 en Teléfonos) ---
     const handlePrint = () => {
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -900,38 +900,45 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=800">
                 <title>Ficha - ${lead.name}</title>
                 <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
-                    .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px; }
-                    .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
-                    .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
-                    .section-title { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; color: #e11d48; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-                    table { width: 100%; border-collapse: collapse; }
-                    td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 50%; }
-                    .label { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; }
-                    .value { font-size: 16px; font-weight: 600; color: #000; }
-                    .notes-box { margin-top: 10px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; min-height: 150px; background: #fafafa; white-space: pre-wrap; font-size: 14px; }
+                    /* Medidas de papel físico (pt y cm) para impresión perfecta en móviles */
+                    @page { size: letter; margin: 1.5cm; }
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 0; }
+                    .container { width: 100%; max-width: 800px; margin: 0 auto; }
+                    .header { text-align: center; border-bottom: 2pt solid #111; padding-bottom: 15pt; margin-bottom: 20pt; }
+                    .header h1 { margin: 0; font-size: 24pt; text-transform: uppercase; letter-spacing: 2pt; }
+                    .header p { margin: 5pt 0 0; color: #666; font-size: 12pt; }
+                    .section-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1pt; margin-top: 20pt; margin-bottom: 10pt; color: #e11d48; border-bottom: 1pt solid #eee; padding-bottom: 5pt; }
+                    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                    td { padding: 10pt; border-bottom: 1pt solid #f0f0f0; vertical-align: top; width: 50%; }
+                    .label { font-size: 9pt; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1pt; margin-bottom: 3pt; }
+                    .value { font-size: 14pt; font-weight: 600; color: #000; word-wrap: break-word; }
+                    .notes-box { margin-top: 10pt; padding: 15pt; border: 1pt solid #ddd; border-radius: 6pt; min-height: 100pt; background: #fafafa; white-space: pre-wrap; font-size: 12pt; }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <h1>Asistentedebeneficios.com</h1>
-                    <p>Ficha Oficial de Prospecto (Confidencial)</p>
+                <div class="container">
+                    <div class="header">
+                        <h1>Asistentedebeneficios.com</h1>
+                        <p>Ficha Oficial de Prospecto (Confidencial)</p>
+                    </div>
+                    <div class="section-title">Ficha Técnica</div>
+                    <table>
+                        <tr><td><div class="label">Nombre del Prospecto</div><div class="value">${lead.name}</div></td><td><div class="label">Estado</div><div class="value">${lead.state || 'N/A'}</div></td></tr>
+                        <tr><td><div class="label">Teléfono</div><div class="value">${lead.phone}</div></td><td><div class="label">Cita Solicitada</div><div class="value">${fDate} - ${lead.localTime || lead.time}</div></td></tr>
+                        <tr><td colspan="2"><div class="label">Correo Electrónico</div><div class="value">${lead.email || 'N/A'}</div></td></tr>
+                    </table>
+                    <div class="section-title">Perfil de Interés</div>
+                    <table>
+                        <tr><td><div class="label">Cobertura Para</div><div class="value">${safePolicyFor}</div></td><td><div class="label">Monto Estimado</div><div class="value">${safeAmount}</div></td></tr>
+                        <tr><td><div class="label">Presupuesto Mensual</div><div class="value">${safeBudget}</div></td><td><div class="label">Motivaciones Principales</div><div class="value">${safeMotivations}</div></td></tr>
+                    </table>
+                    <div class="section-title">Bloc de Notas del Agente</div>
+                    <div class="notes-box">${currentNotes || 'Sin notas registradas...'}</div>
                 </div>
-                <div class="section-title">Ficha Técnica</div>
-                <table>
-                    <tr><td><div class="label">Nombre del Prospecto</div><div class="value">${lead.name}</div></td><td><div class="label">Estado</div><div class="value">${lead.state || 'N/A'}</div></td></tr>
-                    <tr><td><div class="label">Teléfono</div><div class="value">${lead.phone}</div></td><td><div class="label">Cita Solicitada</div><div class="value">${fDate} - ${lead.localTime || lead.time}</div></td></tr>
-                    <tr><td colspan="2"><div class="label">Correo Electrónico</div><div class="value">${lead.email || 'N/A'}</div></td></tr>
-                </table>
-                <div class="section-title">Perfil de Interés</div>
-                <table>
-                    <tr><td><div class="label">Cobertura Para</div><div class="value">${safePolicyFor}</div></td><td><div class="label">Monto Estimado</div><div class="value">${safeAmount}</div></td></tr>
-                    <tr><td><div class="label">Presupuesto Mensual</div><div class="value">${safeBudget}</div></td><td><div class="label">Motivaciones Principales</div><div class="value">${safeMotivations}</div></td></tr>
-                </table>
-                <div class="section-title">Bloc de Notas del Agente</div>
-                <div class="notes-box">${currentNotes || 'Sin notas registradas...'}</div>
             </body>
             </html>
         `;
@@ -940,7 +947,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         contentWindow.document.write(html);
         contentWindow.document.close();
 
-        // Le da 0.3 segundos al iPad para leer este HTML ligero y lanza la impresión
         setTimeout(() => {
             contentWindow.focus();
             contentWindow.print();
