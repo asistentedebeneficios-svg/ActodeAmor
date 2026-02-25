@@ -101,69 +101,65 @@ input[type="date"], input[type="time"] {
     font-family: inherit;
 }
 
-
 /* ==========================================================================
-   --- MOTOR DE IMPRESIÓN PERFECTA (INSTANTÁNEO, SIN HOJAS BLANCAS) --- 
+   --- MOTOR DE IMPRESIÓN 3.0 (SOLUCIÓN DEFINITIVA MULTI-DISPOSITIVO) --- 
    ========================================================================== */
 @media print {
-    /* 1. Limpiamos el lienzo por completo */
-    @page { size: auto; margin: 1cm; }
-    body, html, #root {
-        background-color: white !important;
+    @page { size: auto; margin: 1.5cm; }
+    
+    /* 1. Reset total del layout para impresión */
+    html, body, #root {
+        background: white !important;
         height: auto !important;
-        min-height: 100% !important;
         overflow: visible !important;
-        margin: 0 !important;
-        padding: 0 !important;
     }
 
-    /* 2. DESTRUIMOS TODO LO QUE NO SEA LA FICHA (Evita lag en iPad y hojas blancas en PC) */
-    .min-h-screen > div:not(.z-\[60\]),
-    .z-50 > div:not(.z-\[60\]) {
+    /* 2. Ocultar todo lo que no sea el modal de la ficha */
+    body > div:not(.z-\[60\]),
+    #root > div:not(.z-\[60\]),
+    .glass-panel, .print\:hidden {
         display: none !important;
     }
 
-    /* 3. COLOCAMOS LA FICHA EN EL PUNTO CERO (Arregla el hueco del Teléfono) */
+    /* 3. Forzar que la ficha ocupe todo el ancho y fluya verticalmente */
     .z-\[60\] {
-        position: static !important; 
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        background: white !important;
+    }
+
+    /* 4. Convertir el Grid de 12 columnas en una sola columna para el papel */
+    .grid {
+        display: block !important;
+    }
+
+    /* 5. Forzar a que todos los contenedores hijos se expandan */
+    .overflow-y-auto, .flex-1, .h-full, .md\:col-span-5, .md\:col-span-7 {
         display: block !important;
         width: 100% !important;
         height: auto !important;
-        min-height: 0 !important;
-        background: white !important;
         overflow: visible !important;
-    }
-
-    /* 4. EXPANDIMOS LOS CONTENEDORES PARA QUE FLUYAN HACIA ABAJO */
-    .z-\[60\] .overflow-y-auto,
-    .z-\[60\] .flex-1,
-    .z-\[60\] .h-full {
-        overflow: visible !important;
-        height: auto !important;
-        max-height: none !important;
-        display: block !important;
         padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* 5. OCULTAMOS EL BOTÓN DE IMPRESIÓN PARA QUE NO SALGA EN EL PAPEL */
-    .print\:hidden {
-        display: none !important;
-    }
-
-    /* 6. PROTEGEMOS LAS TARJETAS (Evita que se corten a la mitad entre la página 1 y 2) */
-    .shadow-soft {
+    /* 6. Estilo de las tarjetas para que no se corten feo */
+    .bg-white {
+        border: 1px solid #eee !important;
+        border-radius: 12px !important;
+        margin-bottom: 20px !important;
+        padding: 20px !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         box-shadow: none !important;
-        border: 1px solid #e5e7eb !important; /* Le ponemos borde de línea para que se vea claro impreso */
-        margin-bottom: 24px !important;
     }
 
-    /* 7. QUITAMOS EL BLUR PARA NO TRABAR LA MEMORIA DEL NAVEGADOR */
-    .glass-panel, .fixed, .bg-apple-gray {
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
+    /* 7. Eliminar fondos grises y efectos pesados */
+    .bg-apple-gray, .bg-gray-50, .bg-amber-50\/30 {
+        background: white !important;
+        border: 1px solid #eee !important;
     }
 }
