@@ -1811,10 +1811,12 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                     </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
-                        <div className="hidden md:grid grid-cols-[50px_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        {/* 1. CABECERA DE LA TABLA (Ahora con 7 columnas) */}
+                        <div className="hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                             <div className="flex items-center justify-center"><input type="checkbox" className="custom-checkbox" checked={selectedLeads.length === sortedLeads.length && sortedLeads.length > 0} onChange={toggleSelectAll}/></div>
                             <div>Prospecto</div>
-                            <div>Fecha Solicitud</div>
+                            <div>Creación</div>
+                            <div>Cita Programada</div>
                             <div>Estado</div>
                             <div>Agente</div>
                             <div className="text-right">Acciones</div>
@@ -1832,7 +1834,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                 
                                 return (
                                 <React.Fragment key={lead.id}>
-                                    <div onClick={() => setViewingLead(lead)} className={`hidden md:grid grid-cols-[50px_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 border-b border-gray-50 items-center hover:bg-gray-50/80 cursor-pointer transition-colors text-sm group ${isSelected ? 'bg-rose-50/50' : ''}`}>
+                                    {/* 2. FILA DE COMPUTADORA (Adaptada a las 7 columnas) */}
+                                    <div onClick={() => setViewingLead(lead)} className={`hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 border-b border-gray-50 items-center hover:bg-gray-50/80 cursor-pointer transition-colors text-sm group ${isSelected ? 'bg-rose-50/50' : ''}`}>
                                         <div className="flex items-center justify-center" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
                                         </div>
@@ -1843,9 +1846,15 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                                 {lead.state && <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded uppercase text-[9px] tracking-wider">{lead.state}</span>}
                                             </div>
                                         </div>
+                                        {/* COLUMNA: FECHA DE CREACIÓN HISTÓRICA */}
                                         <div className="text-gray-500 text-xs font-medium">
                                             <span className="block text-gray-900">{new Date(lead.timestamp).toLocaleDateString()}</span>
-                                            <span className="flex items-center gap-1 mt-0.5"><Clock size={10}/> {lead.localTime || lead.time}</span>
+                                            <span className="text-[9px] text-gray-400 block mt-0.5">{new Date(lead.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        </div>
+                                        {/* COLUMNA: CITA PROGRAMADA (DINÁMICA) */}
+                                        <div className="text-gray-500 text-xs font-medium">
+                                            <span className="block text-gray-900 font-bold">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
+                                            <span className="flex items-center gap-1 mt-0.5 text-blue-600 font-bold"><Clock size={10}/> {lead.localTime || lead.time}</span>
                                             {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
                                         <div>
@@ -1871,6 +1880,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                     </div>
 
+                                    {/* 3. TARJETA MÓVIL (Separando Creación vs Cita Programada) */}
                                     <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-4 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative ${isSelected ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-gray-100'}`}>
                                         <div className="absolute top-4 right-4 z-10" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
@@ -1908,12 +1918,19 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             </button>
                                         </div>
 
+                                        {/* SEPARACIÓN VISUAL EN MÓVIL (Creación vs Cita) */}
                                         <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
-                                            <div>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Fecha y Hora</span>
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="font-semibold text-gray-700">{new Date(lead.timestamp).toLocaleDateString()}</span>
-                                                    <span className="font-bold text-blue-600">{lead.localTime || lead.time}</span>
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Creación</span>
+                                                    <span className="font-semibold text-gray-700 text-xs">{new Date(lead.timestamp).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Cita Programada</span>
+                                                    <div className="flex flex-col text-xs items-end">
+                                                        <span className="font-bold text-gray-900">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
+                                                        <span className="font-bold text-blue-600 flex items-center gap-1 mt-0.5"><Clock size={10}/> {lead.localTime || lead.time}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2" onClick={e => e.stopPropagation()}>
