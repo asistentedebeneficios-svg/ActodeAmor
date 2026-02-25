@@ -795,31 +795,35 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [editTime, setEditTime] = useState(lead.time || '');
     const [dialog, setDialog] = useState(null);
 
+    // 1. HORAS COMPLETAS: Se agregaron las 24 horas del día
     const TIME_SLOTS = [
-        "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.", "12:00 p.m.",
-        "01:00 p.m.", "02:00 p.m.", "03:00 p.m.", "04:00 p.m.", "05:00 p.m.",
-        "06:00 p.m.", "07:00 p.m.", "08:00 p.m."
+        "12:00 a.m.", "01:00 a.m.", "02:00 a.m.", "03:00 a.m.", "04:00 a.m.", "05:00 a.m.",
+        "06:00 a.m.", "07:00 a.m.", "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.",
+        "12:00 p.m.", "01:00 p.m.", "02:00 p.m.", "03:00 p.m.", "04:00 p.m.", "05:00 p.m.",
+        "06:00 p.m.", "07:00 p.m.", "08:00 p.m.", "09:00 p.m.", "10:00 p.m.", "11:00 p.m."
     ];
     
     const previewLocalTime = editDate && editTime ? getLocalTimeInfo(editDate, editTime, lead.state) : '';
 
+    // 2. BLOQUEO ESTRICTO DE FECHA: Calcula el día exacto en tu zona horaria local (Evita bugs de UTC)
+    const localNow = new Date();
+    const yyyy = localNow.getFullYear();
+    const mm = String(localNow.getMonth() + 1).padStart(2, '0');
+    const dd = String(localNow.getDate()).padStart(2, '0');
+    const minDateLocal = `${yyyy}-${mm}-${dd}`;
+
     const getAvailableTimeSlots = () => {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const todayStrLocal = `${yyyy}-${mm}-${dd}`;
-        
-        if (editDate !== todayStrLocal) return TIME_SLOTS;
+        const isToday = editDate === minDateLocal;
 
         return TIME_SLOTS.filter(slot => {
+            if (!isToday) return true;
             const clean = slot.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
             const isPm = clean.includes('p');
             let [h, m] = clean.replace(/[^0-9:]/g, '').split(':').map(Number);
             if (isPm && h < 12) h += 12;
             if (!isPm && h === 12) h = 0;
             const slotMins = h * 60 + m;
-            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const currentMins = localNow.getHours() * 60 + localNow.getMinutes();
             return slotMins > currentMins; 
         });
     };
@@ -914,10 +918,29 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
+                                                
+                                                {/* 3. ORDEN INVERTIDO: FECHA PRIMERO */}
+                                                <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Seleccione el Día:</span>
+                                                    <input 
+                                                        type="date" 
+                                                        value={editDate} 
+                                                        onChange={e => { setEditDate(e.target.value); setEditTime(''); }} 
+                                                        className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium text-gray-700 cursor-pointer" 
+                                                        min={minDateLocal} 
+                                                    />
+                                                </div>
+
+                                                {/* 4. ORDEN INVERTIDO: HORA DESPUÉS */}
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
-                                                    <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium">
-                                                        <option value="">Seleccione hora...</option>
+                                                    <select 
+                                                        value={editTime} 
+                                                        onChange={e => setEditTime(e.target.value)} 
+                                                        disabled={!editDate} 
+                                                        className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <option value="">{editDate ? 'Seleccione hora...' : 'Primero seleccione el día'}</option>
                                                         {getAvailableTimeSlots().map(t => <option key={t} value={t}>{t}</option>)}
                                                     </select>
                                                     {previewLocalTime && previewLocalTime !== editTime && (
@@ -927,9 +950,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                     )}
                                                 </div>
 
-                                                <div className="flex flex-col gap-2.5">
-                                                    <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full text-sm p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-white shadow-sm font-medium text-gray-700" min={new Date().toISOString().split('T')[0]} />
-                                                </div>
                                                 <div className="flex flex-col sm:flex-row gap-2 mt-2">
                                                     <button onClick={handleSaveDateTime} disabled={!editDate || !editTime} className="flex-1 bg-black text-white text-xs py-3 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-md">Guardar Cita</button>
                                                     <button onClick={() => setIsEditingDateTime(false)} className="flex-1 bg-gray-200 text-gray-700 text-xs py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors">Cancelar</button>
