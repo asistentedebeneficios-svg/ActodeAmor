@@ -1181,7 +1181,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
     );
 };
 
-const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
+const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState('month'); 
 
@@ -1236,12 +1236,16 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                                     {dayLeads.length > 0 && <span className="md:hidden w-2 h-2 rounded-full bg-blue-500 mt-1.5"></span>}
                                 </div>
                                 <div className="flex-1 flex flex-col gap-1 overflow-y-auto scrollbar-hide">
-                                    {dayLeads.slice(0, 3).map(lead => (
-                                        <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className="bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:block">
-                                            <div className="font-bold text-[9px] truncate">{lead.localTime || lead.time}</div>
-                                            <div className="text-[9px] truncate opacity-80">{lead.name.split(' ')[0]}</div>
+                                    {dayLeads.slice(0, 3).map(lead => {
+                                        const assignedAgent = agents.find(a => a.id === lead.assignedTo);
+                                        const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                        return (
+                                        <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className="bg-blue-50 hover:bg-blue-100 border border-blue-100 p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:flex flex-col gap-1">
+                                            <div className="font-bold text-[10px] text-blue-700 flex items-center gap-1"><Clock size={10}/> {lead.localTime || lead.time}</div>
+                                            <div className="text-[9.5px] truncate font-bold text-gray-800 flex items-center gap-1"><User size={10} className="text-gray-400 shrink-0"/> {lead.name}</div>
+                                            <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><Briefcase size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
                                         </div>
-                                    ))}
+                                    )})}
                                     {dayLeads.length > 3 && <div className="text-[9px] text-gray-400 font-bold text-center hidden md:block">+{dayLeads.length - 3} más</div>}
                                 </div>
                             </div>
@@ -1281,12 +1285,16 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                         const dayLeads = getLeadsForDate(dateString);
                         return (
                             <div key={i} className="border-r border-gray-100 p-1.5 md:p-2 flex flex-col gap-2 min-h-[300px] bg-white">
-                                {dayLeads.map(lead => (
-                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
-                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 mb-1 flex items-center gap-1"><Clock size={10}/> {lead.localTime || lead.time}</div>
-                                        <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate">{lead.name.split(' ')[0]}</div>
+                                {dayLeads.map(lead => {
+                                    const assignedAgent = agents.find(a => a.id === lead.assignedTo);
+                                    const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                    return (
+                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex flex-col gap-1.5">
+                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 flex items-center gap-1"><Clock size={12}/> {lead.localTime || lead.time}</div>
+                                        <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate flex items-center gap-1"><User size={12} className="text-gray-400 shrink-0"/> {lead.name}</div>
+                                        <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><Briefcase size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
                                     </div>
-                                ))}
+                                )})}
                                 {dayLeads.length === 0 && <div className="text-center text-gray-300 text-[9px] uppercase font-bold tracking-widest mt-4 rotate-90 md:rotate-0 origin-left ml-2 md:ml-0">Libre</div>}
                             </div>
                         );
@@ -1322,14 +1330,22 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                                 <p className="text-gray-400 text-xs mt-1">Día libre para prospección u otras tareas.</p>
                             </div>
                         ) : (
-                            dayLeads.map(lead => (
+                            dayLeads.map(lead => {
+                                const assignedAgent = agents.find(a => a.id === lead.assignedTo);
+                                const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                return (
                                 <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex items-center gap-4 group">
                                     <div className="w-20 md:w-24 text-center shrink-0 border-r border-gray-100 pr-4">
                                         <span className="block font-bold text-sm md:text-base text-blue-600">{lead.localTime || lead.time}</span>
                                     </div>
                                     <div className="flex-1 min-w-0 pl-2">
-                                        <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <User size={14} className="text-gray-400 shrink-0"/>
+                                            <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
+                                            <span className="flex items-center gap-1"><Briefcase size={12}/> {agentName}</span>
+                                            <span className="hidden sm:block w-1 h-1 bg-gray-300 rounded-full"></span>
                                             <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
                                             {lead.state && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded uppercase text-[10px] tracking-wider">{lead.state}</span>}
                                         </div>
@@ -1338,7 +1354,7 @@ const AdminCalendar = ({ leads, onLeadClick, onOpenSettings }) => {
                                         <ChevronRight size={18}/>
                                     </div>
                                 </div>
-                            ))
+                            )})
                         )}
                     </div>
                 </div>
@@ -1775,15 +1791,15 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                 {
                  activeTab === 'schedule' ? (
                      showScheduleSettings ? (
-                         <div className="max-w-4xl mx-auto">
-                             <div className="mb-6">
-                                 <button onClick={() => setShowScheduleSettings(false)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200 transition-colors"><ArrowLeft size={16}/> Volver al Calendario</button>
-                             </div>
-                             <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
-                         </div>
-                     ) : (
-                         <AdminCalendar leads={processedLeads} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
-                     )
+                        <div className="max-w-4xl mx-auto">
+                            <div className="mb-6">
+                                <button onClick={() => setShowScheduleSettings(false)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200 transition-colors"><ArrowLeft size={16}/> Volver al Calendario</button>
+                            </div>
+                            <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
+                        </div>
+                    ) : (
+                        <AdminCalendar leads={processedLeads} agents={agents} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
+                    )
                  ) :
                  activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto">
@@ -2536,8 +2552,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             )}
 
             {/* VISTA 3: AGENDA */}
-            {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} onLeadClick={setViewingLead} /></div>}
-            
+            {activeTab === 'agenda' && <div className="flex-1 p-3 md:p-6 h-full"><AdminCalendar leads={activeClients} agents={[agent]} onLeadClick={setViewingLead} /></div>}
             {/* VISTA 4: HISTORIAL DE RECIBOS */}
             {activeTab === 'historial' && (
                 <div className="flex-1 p-3 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto animate-fade-in">
