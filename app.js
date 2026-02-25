@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 // Importación limpia de iconos para evitar fallos
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -245,6 +245,27 @@ const useFirebaseDatabase = () => {
     const adminLogout = async () => { await signOut(auth); };
 
     return { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout };
+};
+
+const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-slide-up text-center border border-gray-100">
+                <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-inner ${type === 'danger' ? 'bg-red-50 text-red-500' : type === 'warning' ? 'bg-amber-50 text-amber-500' : 'bg-green-50 text-green-500'}`}>
+                    {type === 'danger' ? <Trash2 size={32}/> : type === 'warning' ? <AlertTriangle size={32}/> : <Check size={32}/>}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">{title}</h3>
+                <p className="text-gray-500 text-sm mb-6 whitespace-pre-wrap leading-relaxed">{message}</p>
+                <div className="flex gap-3">
+                    {onCancel && (
+                        <button onClick={onCancel} className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors text-sm">Cancelar</button>
+                    )}
+                    <button onClick={onConfirm} className={`flex-1 py-3.5 rounded-xl font-bold text-white transition-colors shadow-md text-sm ${type === 'danger' ? 'bg-red-600 hover:bg-red-700' : type === 'warning' ? 'bg-black hover:bg-gray-800' : 'bg-green-600 hover:bg-green-700'}`}>Aceptar</button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // --- COMPONENTS ---
@@ -772,6 +793,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
+    
+    // --- NUEVO: Estado para el Cuadro de Diálogo (Custom Modal) ---
+    const [dialog, setDialog] = useState(null);
 
     const TIME_SLOTS = [
         "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.", "12:00 p.m.",
@@ -779,8 +803,31 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         "06:00 p.m.", "07:00 p.m.", "08:00 p.m."
     ];
     
-    // Pre-calcula la hora local que tendría esa cita si se guarda
     const previewLocalTime = editDate && editTime ? getLocalTimeInfo(editDate, editTime, lead.state) : '';
+
+    // --- NUEVO: Filtrar Horas Pasadas del día de hoy ---
+    const getAvailableTimeSlots = () => {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const todayStrLocal = `${yyyy}-${mm}-${dd}`;
+        
+        const isToday = editDate === todayStrLocal;
+
+        return TIME_SLOTS.filter(slot => {
+            if (!isToday) return true;
+            const clean = slot.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+            const isPm = clean.includes('p');
+            let [h, m] = clean.replace(/[^0-9:]/g, '').split(':').map(Number);
+            if (isPm && h < 12) h += 12;
+            if (!isPm && h === 12) h = 0;
+            
+            const slotMins = h * 60 + m;
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            return slotMins > currentMins; // Solo muestra horas futuras
+        });
+    };
 
     const handleSaveNotes = async () => { 
         setIsSaving(true);
@@ -789,21 +836,15 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     const handleSaveDateTime = async () => {
-        // BLINDAJE MULTI-DISPOSITIVO (Destruye la magia negra de iOS/Safari)
         const getClean24h = (tStr) => {
             if (!tStr) return null;
-            // 1. Limpiamos espacios invisibles, puntos y espacios normales
             let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-            // 2. Detectamos si tiene 'a' o 'p'
             let isPM = clean.includes('p');
             let isAM = clean.includes('a');
-            // 3. Extraemos SOLO los números puros
             let nums = clean.replace(/[^0-9]/g, '');
             if (nums.length < 3) return null;
-            // 4. Calculamos horas y minutos
             let h = parseInt(nums.slice(0, -2), 10);
             const m = nums.slice(-2);
-            // 5. Convertimos a formato militar real (Incluso si iOS ya lo mandó en 24h, lo respeta)
             if (isPM && h < 12) h += 12;
             if (isAM && h === 12) h = 0;
             return `${String(h).padStart(2, '0')}:${m}`; 
@@ -811,35 +852,36 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
             const targetTime24h = getClean24h(previewLocalTime || editTime);
-
             const hasConflict = allLeads.some(l => {
                 if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
                 if (l.date !== editDate) return false;
-                
-                // Lee la hora del otro prospecto y la estandariza al 100%
                 const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
                 const otherTime24h = getClean24h(otherLocalTime);
-                
                 if(!targetTime24h || !otherTime24h) return false;
                 return otherTime24h === targetTime24h; 
             });
             
             if (hasConflict) {
-                alert(`⚠️ ALERTA DE COLISIÓN\n\nEl agente ya tiene una cita activa programada a las ${previewLocalTime || editTime} (Su hora local) en ese día.\n\nPor favor, selecciona un horario distinto para evitar cruces.`);
+                // USAMOS EL CUSTOM MODAL EN LUGAR DE ALERT
+                setDialog({ title: 'Alerta de Colisión', message: `Ya tienes una cita activa programada a las ${previewLocalTime || editTime} (Tu hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`, type: 'warning', onConfirm: () => setDialog(null) });
                 return; 
             }
         }
         
         await onUpdate(lead.id, { date: editDate, time: editTime });
         setIsEditingDateTime(false);
-        alert("✅ La cita ha sido reagendada exitosamente.");
+        setDialog({ title: '¡Éxito!', message: 'La cita ha sido reagendada correctamente.', type: 'success', onConfirm: () => setDialog(null) });
     };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
-    const handleDelete = () => { if(window.confirm('⚠️ ¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.')) { onDelete(lead.id); onClose(); }};
+    
+    const handleDelete = () => { 
+        setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
+    };
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up print:bg-white print:absolute print:inset-0 print:z-[9999]">
+            <CustomDialog isOpen={!!dialog} {...dialog} />
             <div className="glass-panel px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
@@ -849,7 +891,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                     <button onClick={() => window.print()} className="p-2.5 md:px-4 md:py-2.5 text-gray-600 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2 font-bold text-xs" title="Imprimir Ficha"><span className="text-lg">🖨️</span> <span className="hidden md:inline">Imprimir Ficha</span></button>
+                     <button onClick={() => window.print()} className="p-2.5 md:px-4 md:py-2.5 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2 font-bold text-xs" title="Imprimir Ficha"><Printer size={18}/> <span className="hidden md:inline">Imprimir</span></button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
                      <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
                      <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
@@ -858,7 +900,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
-                    
                     <div className="hidden print:block text-center mb-8 border-b-2 border-gray-900 pb-4">
                         <h1 className="text-3xl font-extrabold text-black uppercase tracking-widest">Asistentedebeneficios.com</h1>
                         <p className="text-gray-500 text-sm mt-1">Ficha Oficial de Prospecto (Confidencial)</p>
@@ -874,7 +915,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
 
                             <div className="space-y-5">
-                                {/* DISEÑO APILADO PARA IPAD */}
                                 <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
                                     <div className="border-b border-gray-200/80 pb-4 mb-4">
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
@@ -893,12 +933,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
-                                                
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
                                                     <select value={editTime} onChange={e => setEditTime(e.target.value)} className="w-full text-sm p-2.5 border border-gray-200 rounded-lg outline-none focus:border-blue-500 bg-gray-50 font-medium">
                                                         <option value="">Seleccione hora...</option>
-                                                        {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                                        {getAvailableTimeSlots().map(t => <option key={t} value={t}>{t}</option>)}
                                                     </select>
                                                     {previewLocalTime && previewLocalTime !== editTime && (
                                                         <div className="mt-1 flex items-center gap-2 text-blue-700 font-bold text-xs bg-blue-50/50 p-2 rounded-lg">
@@ -920,18 +959,15 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                 <span className="font-bold text-gray-900 capitalize text-sm">
                                                     {lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                                                 </span>
-                                                
                                                 <div className="flex flex-col gap-1.5 bg-blue-50/50 p-3 rounded-xl border border-blue-100 shadow-sm mt-1">
                                                     <div className="flex items-center gap-2 text-blue-700 font-bold">
                                                         <Clock size={16}/> 
                                                         <span className="text-sm">{lead.localTime || lead.time}</span>
                                                         <span className="text-[9px] uppercase tracking-widest bg-blue-100 px-2 py-1 rounded-md text-blue-600 shadow-sm">Tu Hora</span>
                                                     </div>
-                                                    
                                                     {lead.localTime && lead.localTime !== lead.time && (
                                                         <div className="flex items-center gap-2 text-gray-500 font-medium pl-1 mt-1">
-                                                            <MapPin size={14}/> 
-                                                            <span className="text-xs">{lead.time}</span>
+                                                            <MapPin size={14}/> <span className="text-xs">{lead.time}</span>
                                                             <span className="text-[8px] uppercase tracking-widest text-gray-400">En {lead.state}</span>
                                                         </div>
                                                     )}
@@ -940,7 +976,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         )}
                                     </div>
                                 </div>
-                                
                                 <div className="px-1 print:p-0">
                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Teléfono y Correo</span>
                                     <p className="font-bold text-gray-900 text-lg">{lead.phone}</p>
@@ -950,7 +985,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Método Preferido</span>
                                      {lead.callType === 'video' ? (
                                          <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="font-bold text-[#128C7E] text-sm bg-[#E7F6F4] hover:bg-[#D1EBE7] transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
-                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Videollamada (Abrir WhatsApp)
+                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Videollamada
                                          </a>
                                      ) : (
                                          <a href={`tel:${lead.phone}`} className="font-bold text-blue-700 text-sm bg-blue-50 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
@@ -973,11 +1008,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                     <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
-                                    <span className="text-sm text-gray-500 font-medium">Presupuesto mensual</span>
+                                    <span className="text-sm text-gray-500 font-medium">Presupuesto</span>
                                     <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
                                 </div>
                                 <div className="px-1 pt-1">
-                                    <span className="text-sm text-gray-500 font-medium block mb-2">Principales Motivaciones</span>
+                                    <span className="text-sm text-gray-500 font-medium block mb-2">Motivaciones</span>
                                     <p className="font-bold text-sm text-gray-800">
                                         {Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation}
                                     </p>
@@ -988,7 +1023,8 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     
                     <div className="md:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500 print:text-black"/> Estado y Asignación</h3>
+                            {/* TITULO ACTUALIZADO A SOLO "ASIGNACIÓN" */}
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500 print:text-black"/> Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
@@ -1006,12 +1042,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         </div>
                                     )}
                                 </div>
+                                {/* BOTONES OCULTOS PARA EL AGENTE */}
                                 {!isAgentView && (
                                     <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0 print:hidden">
                                         <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                             {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                         </button>
-                                        
                                         <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
                                     </div>
                                 )}
@@ -1026,7 +1062,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </button>
                             </div>
                             <h3 className="hidden print:block font-bold text-black text-sm uppercase tracking-widest mb-4 border-b border-gray-300 pb-2">Notas del Agente</h3>
-                            
                             <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 resize-none outline-none focus:bg-white focus:border-rose-300 transition-all print:bg-transparent print:border-0 print:p-0 print:text-black" placeholder="Escribe aquí los detalles de la llamada..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
                         </div>
                     </div>
@@ -1036,11 +1071,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             {showAgentSelector && !isAgentView && (
                 <AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { 
                     const selectedAgent = agents.find(a => a.id === agentId);
-                    const confirmMsg = selectedAgent ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
-                    if (window.confirm(confirmMsg)) {
-                        onAssignAgent(lead.id, agentId); 
-                        setShowAgentSelector(false); 
+                    if (!selectedAgent) {
+                        setDialog({ title: 'Quitar Asignación', message: '¿Estás seguro de quitar la asignación actual?', type: 'warning', onConfirm: () => { onAssignAgent(lead.id, ''); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
+                        return;
                     }
+                    setDialog({ title: 'Asignar Agente', message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`, type: 'info', onConfirm: () => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
                 }}/>
             )}
         </div>
@@ -2044,13 +2079,51 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 };
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
-    const [activeTab, setActiveTab] = useState('marketplace');
+    // --- 1. ENRUTADOR WEB (Memoria de pestaña al actualizar) ---
+    const TABS = ['marketplace', 'clientes', 'agenda', 'historial'];
+    const [activeTab, setActiveTab] = useState(() => {
+        const hash = window.location.hash.replace('#', '');
+        return TABS.includes(hash) ? hash : 'marketplace';
+    });
+
+    useEffect(() => { window.location.hash = activeTab; }, [activeTab]);
+
+    useEffect(() => {
+        const handleHash = () => {
+            const hash = window.location.hash.replace('#', '');
+            if (TABS.includes(hash)) setActiveTab(hash);
+        };
+        window.addEventListener('hashchange', handleHash);
+        return () => window.removeEventListener('hashchange', handleHash);
+    }, []);
+
+    // --- 2. MOTOR TÁCTIL (Swipe para cambiar de pestaña en el iPad/Teléfono) ---
+    const [touchStart, setTouchStart] = useState({ x: null, y: null });
+    
+    const handleTouchStart = (e) => {
+        setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+    };
+    
+    const handleTouchEnd = (e) => {
+        if (!touchStart.x || !touchStart.y) return;
+        const dx = touchStart.x - e.changedTouches[0].clientX;
+        const dy = touchStart.y - e.changedTouches[0].clientY;
+        
+        // Verifica que se deslizó horizontalmente y no verticalmente
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+            const currentIndex = TABS.indexOf(activeTab);
+            if (dx > 0 && currentIndex < TABS.length - 1) setActiveTab(TABS[currentIndex + 1]); // Swipe a la Izquierda
+            if (dx < 0 && currentIndex > 0) setActiveTab(TABS[currentIndex - 1]); // Swipe a la Derecha
+        }
+        setTouchStart({ x: null, y: null });
+    };
+
     const [viewingLead, setViewingLead] = useState(null);
     const [cart, setCart] = useState([]);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
     const [showArchived, setShowArchived] = useState(false);
     
-    // --- 1. RECREAMOS processedLeads (Para que nada se rompa más abajo) ---
+    // --- 3. RECREAMOS processedLeads (Para que nada se rompa más abajo) ---
     const processedLeads = leads.map(l => {
         const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
         const now = Date.now();
@@ -2063,7 +2136,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         };
     });
 
-    // --- 2. ORDENAMOS Y FILTRAMOS (Las citas más cercanas van arriba) ---
+    // --- 4. ORDENAMOS Y FILTRAMOS (Las citas más cercanas van arriba) ---
     const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
     const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
     const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => a.sortMs - b.sortMs);
@@ -2075,7 +2148,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
 
     const myHistory = myLeads.sort((a,b) => b.timestamp - a.timestamp);
 
-    // --- 3. LÓGICA DEL CARRITO DINÁMICO ---
+    // --- 5. LÓGICA DEL CARRITO DINÁMICO ---
     const cartTotal = cart.reduce((total, leadId) => {
         const lead = availableLeads.find(l => l.id === leadId);
         if (!lead) return total;
@@ -2091,6 +2164,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         } else if (timeLeft === 0) {
             setCart([]); 
             setTimeLeft(600); 
+            // Opcional: Reemplazar el alert si quieres, pero por ahora lo dejamos por seguridad.
             alert("⏳ El tiempo para reservar ha expirado. Las citas han sido liberadas.");
         } else if (cart.length === 0) {
             setTimeLeft(600);
@@ -2110,7 +2184,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24">
+        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24 overflow-x-hidden">
             {/* Header Minimalista */}
             <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
                 <div className="flex items-center gap-3">
