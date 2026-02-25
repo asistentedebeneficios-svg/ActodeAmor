@@ -1279,9 +1279,10 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                     {dayLeads.slice(0, 3).map(lead => {
                                         const assignedAgent = agents.find(a => a.id === lead.assignedTo);
                                         const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                        const isAssigned = !!lead.assignedTo;
                                         return (
-                                        <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className="bg-blue-50 hover:bg-blue-100 border border-blue-100 p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:flex flex-col gap-1">
-                                            <div className="font-bold text-[10px] text-blue-700 flex items-center gap-1"><Clock size={10}/> {lead.localTime || lead.time}</div>
+                                        <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className={`${isAssigned ? 'bg-green-50 hover:bg-green-100 border-green-200' : 'bg-blue-50 hover:bg-blue-100 border-blue-100'} border p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:flex flex-col gap-1`}>
+                                            <div className={`font-bold text-[10px] ${isAssigned ? 'text-green-700' : 'text-blue-700'} flex items-center gap-1`}><Clock size={10}/> {lead.localTime || lead.time}</div>
                                             <div className="text-[9.5px] truncate font-bold text-gray-800 flex items-center gap-1"><User size={10} className="text-gray-400 shrink-0"/> {lead.name}</div>
                                             <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><Briefcase size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
                                         </div>
@@ -1328,9 +1329,10 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                 {dayLeads.map(lead => {
                                     const assignedAgent = agents.find(a => a.id === lead.assignedTo);
                                     const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                    const isAssigned = !!lead.assignedTo;
                                     return (
-                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex flex-col gap-1.5">
-                                        <div className="font-bold text-[10px] md:text-xs text-blue-600 flex items-center gap-1"><Clock size={12}/> {lead.localTime || lead.time}</div>
+                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className={`bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col gap-1.5 ${isAssigned ? 'hover:border-green-400' : 'hover:border-blue-300'}`}>
+                                        <div className={`font-bold text-[10px] md:text-xs flex items-center gap-1 ${isAssigned ? 'text-green-600' : 'text-blue-600'}`}><Clock size={12}/> {lead.localTime || lead.time}</div>
                                         <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate flex items-center gap-1"><User size={12} className="text-gray-400 shrink-0"/> {lead.name}</div>
                                         <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><Briefcase size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
                                     </div>
@@ -1373,10 +1375,11 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                             dayLeads.map(lead => {
                                 const assignedAgent = agents.find(a => a.id === lead.assignedTo);
                                 const agentName = assignedAgent ? assignedAgent.name : 'Sin asignar';
+                                const isAssigned = !!lead.assignedTo;
                                 return (
-                                <div key={lead.id} onClick={() => onLeadClick(lead)} className="bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex items-center gap-4 group">
+                                <div key={lead.id} onClick={() => onLeadClick(lead)} className={`bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 group ${isAssigned ? 'hover:border-green-400' : 'hover:border-blue-300'}`}>
                                     <div className="w-20 md:w-24 text-center shrink-0 border-r border-gray-100 pr-4">
-                                        <span className="block font-bold text-sm md:text-base text-blue-600">{lead.localTime || lead.time}</span>
+                                        <span className={`block font-bold text-sm md:text-base ${isAssigned ? 'text-green-600' : 'text-blue-600'}`}>{lead.localTime || lead.time}</span>
                                     </div>
                                     <div className="flex-1 min-w-0 pl-2">
                                         <div className="flex items-center gap-1.5 mb-1">
@@ -1390,7 +1393,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                             {lead.state && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded uppercase text-[10px] tracking-wider">{lead.state}</span>}
                                         </div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shrink-0 border border-gray-100">
+                                    <div className={`w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center transition-colors shrink-0 border border-gray-100 ${isAssigned ? 'group-hover:bg-green-50 group-hover:text-green-600' : 'group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
                                         <ChevronRight size={18}/>
                                     </div>
                                 </div>
