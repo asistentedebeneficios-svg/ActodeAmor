@@ -1540,7 +1540,13 @@ const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
 };
 
 const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onClose, onLogout }) => {
-    const [activeTab, setActiveTab] = useState('active'); 
+    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
+    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
+    const [activeTab, setActiveTab] = useState(() => {
+        const hashParts = window.location.hash.replace('#', '').split('/');
+        return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
+    }); 
+
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
     const [selectedLeads, setSelectedLeads] = useState([]);
@@ -1551,6 +1557,36 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
+
+    // 1. Recuperar la ficha automáticamente si el usuario refresca la página (F5)
+    useEffect(() => {
+        const hashParts = window.location.hash.replace('#', '').split('/');
+        if (hashParts.length > 1 && leads.length > 0 && !viewingLead) {
+            const savedLead = leads.find(l => l.id === hashParts[1]);
+            if (savedLead) setViewingLead(savedLead);
+        }
+    }, [leads]); 
+
+    // 2. Actualizar la URL cuando cambia la pestaña o se abre/cierra una ficha
+    useEffect(() => { 
+        const hashLead = viewingLead ? `/${viewingLead.id}` : '';
+        window.location.hash = `${activeTab}${hashLead}`; 
+    }, [activeTab, viewingLead]);
+
+    // 3. Escuchar el botón "Atrás/Adelante" del navegador web
+    useEffect(() => {
+        const handleHash = () => {
+            const hashParts = window.location.hash.replace('#', '').split('/');
+            if (ADMIN_TABS.includes(hashParts[0])) setActiveTab(hashParts[0]);
+            
+            // Si el usuario presiona "Atrás" en el navegador para salir de la ficha, se cierra visualmente
+            if (hashParts.length === 1 && viewingLead) {
+                setViewingLead(null);
+            }
+        };
+        window.addEventListener('hashchange', handleHash);
+        return () => window.removeEventListener('hashchange', handleHash);
+    }, [viewingLead]);
 
     // Función para calcular horas restantes
     const getHoursUntil = (dateStr, timeStr) => {
