@@ -891,7 +891,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                     <button onClick={() => window.print()} className="p-2.5 md:px-4 md:py-2.5 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center gap-2 font-bold text-xs" title="Imprimir Ficha"><Printer size={18}/> <span className="hidden md:inline">Imprimir</span></button>
+                     <button onClick={() => setTimeout(() => window.print(), 150)} className="p-2.5 md:p-3 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center" title="Imprimir Ficha"><Printer size={18}/></button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
                      <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
                      <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
@@ -2079,46 +2079,68 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 };
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
-    // --- 1. ENRUTADOR WEB (Memoria de pestaña al actualizar) ---
     const TABS = ['marketplace', 'clientes', 'agenda', 'historial'];
+    const [viewingLead, setViewingLead] = useState(null);
+    
+    // --- 1. ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
     const [activeTab, setActiveTab] = useState(() => {
-        const hash = window.location.hash.replace('#', '');
-        return TABS.includes(hash) ? hash : 'marketplace';
+        const hashParts = window.location.hash.replace('#', '').split('/');
+        return TABS.includes(hashParts[0]) ? hashParts[0] : 'marketplace';
     });
 
-    useEffect(() => { window.location.hash = activeTab; }, [activeTab]);
+    // Recuperar la ficha automáticamente si el usuario refresca la página (F5)
+    useEffect(() => {
+        const hashParts = window.location.hash.replace('#', '').split('/');
+        if (hashParts.length > 1 && leads.length > 0 && !viewingLead) {
+            const savedLead = leads.find(l => l.id === hashParts[1]);
+            if (savedLead) setViewingLead(savedLead);
+        }
+    }, [leads]); 
 
+    // Actualizar la URL cuando cambia la pestaña o se abre/cierra una ficha
+    useEffect(() => { 
+        const hashLead = viewingLead ? `/${viewingLead.id}` : '';
+        window.location.hash = `${activeTab}${hashLead}`; 
+    }, [activeTab, viewingLead]);
+
+    // Escuchar el botón "Atrás/Adelante" del navegador web
     useEffect(() => {
         const handleHash = () => {
-            const hash = window.location.hash.replace('#', '');
-            if (TABS.includes(hash)) setActiveTab(hash);
+            const hashParts = window.location.hash.replace('#', '').split('/');
+            if (TABS.includes(hashParts[0])) setActiveTab(hashParts[0]);
+            
+            // Si el usuario presiona "Atrás" en el navegador para salir de la ficha, se cierra visualmente
+            if (hashParts.length === 1 && viewingLead) {
+                setViewingLead(null);
+            }
         };
         window.addEventListener('hashchange', handleHash);
         return () => window.removeEventListener('hashchange', handleHash);
-    }, []);
+    }, [viewingLead]);
 
-    // --- 2. MOTOR TÁCTIL (Swipe para cambiar de pestaña en el iPad/Teléfono) ---
+    // --- 2. MOTOR TÁCTIL (Swipe para cambiar de pestaña) ---
     const [touchStart, setTouchStart] = useState({ x: null, y: null });
     
     const handleTouchStart = (e) => {
-        setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+        // Bloquear el swipe de pestañas si la ficha del prospecto está abierta
+        if (!viewingLead) {
+            setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+        }
     };
     
     const handleTouchEnd = (e) => {
-        if (!touchStart.x || !touchStart.y) return;
+        if (!touchStart.x || !touchStart.y || viewingLead) return;
         const dx = touchStart.x - e.changedTouches[0].clientX;
         const dy = touchStart.y - e.changedTouches[0].clientY;
         
-        // Verifica que se deslizó horizontalmente y no verticalmente
         if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
             const currentIndex = TABS.indexOf(activeTab);
-            if (dx > 0 && currentIndex < TABS.length - 1) setActiveTab(TABS[currentIndex + 1]); // Swipe a la Izquierda
-            if (dx < 0 && currentIndex > 0) setActiveTab(TABS[currentIndex - 1]); // Swipe a la Derecha
+            if (dx > 0 && currentIndex < TABS.length - 1) setActiveTab(TABS[currentIndex + 1]); 
+            if (dx < 0 && currentIndex > 0) setActiveTab(TABS[currentIndex - 1]); 
         }
         setTouchStart({ x: null, y: null });
     };
 
-    const [viewingLead, setViewingLead] = useState(null);
     const [cart, setCart] = useState([]);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutos
     const [showArchived, setShowArchived] = useState(false);
