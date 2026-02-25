@@ -874,9 +874,78 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
-    
     const handleDelete = () => { 
         setDialog({ title: 'Eliminar Prospecto', message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.', type: 'danger', onConfirm: () => { onDelete(lead.id); onClose(); setDialog(null); }, onCancel: () => setDialog(null) });
+    };
+
+    // --- NUEVO: Motor de Impresión Ultrarrápido para iPad ---
+    const handlePrint = () => {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const contentWindow = iframe.contentWindow;
+        const fDate = lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+        const safeMotivations = Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation;
+        const safePolicyFor = getLabelsForArray('policy_for', lead.policy_for);
+        const safeAmount = getLabelForValue('coverage_amount', lead.coverage_amount);
+        const safeBudget = getLabelForValue('budget', lead.budget) || 'Pendiente';
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Ficha - ${lead.name}</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #111; line-height: 1.5; }
+                    .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px; }
+                    .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
+                    .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
+                    .section-title { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 30px; margin-bottom: 15px; color: #e11d48; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    td { padding: 12px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; width: 50%; }
+                    .label { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; }
+                    .value { font-size: 16px; font-weight: 600; color: #000; }
+                    .notes-box { margin-top: 10px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; min-height: 150px; background: #fafafa; white-space: pre-wrap; font-size: 14px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Asistentedebeneficios.com</h1>
+                    <p>Ficha Oficial de Prospecto (Confidencial)</p>
+                </div>
+                <div class="section-title">Ficha Técnica</div>
+                <table>
+                    <tr><td><div class="label">Nombre del Prospecto</div><div class="value">${lead.name}</div></td><td><div class="label">Estado</div><div class="value">${lead.state || 'N/A'}</div></td></tr>
+                    <tr><td><div class="label">Teléfono</div><div class="value">${lead.phone}</div></td><td><div class="label">Cita Solicitada</div><div class="value">${fDate} - ${lead.localTime || lead.time}</div></td></tr>
+                    <tr><td colspan="2"><div class="label">Correo Electrónico</div><div class="value">${lead.email || 'N/A'}</div></td></tr>
+                </table>
+                <div class="section-title">Perfil de Interés</div>
+                <table>
+                    <tr><td><div class="label">Cobertura Para</div><div class="value">${safePolicyFor}</div></td><td><div class="label">Monto Estimado</div><div class="value">${safeAmount}</div></td></tr>
+                    <tr><td><div class="label">Presupuesto Mensual</div><div class="value">${safeBudget}</div></td><td><div class="label">Motivaciones Principales</div><div class="value">${safeMotivations}</div></td></tr>
+                </table>
+                <div class="section-title">Bloc de Notas del Agente</div>
+                <div class="notes-box">${currentNotes || 'Sin notas registradas...'}</div>
+            </body>
+            </html>
+        `;
+
+        contentWindow.document.open();
+        contentWindow.document.write(html);
+        contentWindow.document.close();
+
+        // Le da 0.3 segundos al iPad para leer este HTML ligero y lanza la impresión
+        setTimeout(() => {
+            contentWindow.focus();
+            contentWindow.print();
+            setTimeout(() => { document.body.removeChild(iframe); }, 2000);
+        }, 300);
     };
 
     return (
