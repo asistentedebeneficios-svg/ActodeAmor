@@ -812,21 +812,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const dd = String(localNow.getDate()).padStart(2, '0');
     const minDateLocal = `${yyyy}-${mm}-${dd}`;
 
-    const getAvailableTimeSlots = () => {
-        const isToday = editDate === minDateLocal;
-
-        return TIME_SLOTS.filter(slot => {
-            if (!isToday) return true;
-            const clean = slot.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-            const isPm = clean.includes('p');
-            let [h, m] = clean.replace(/[^0-9:]/g, '').split(':').map(Number);
-            if (isPm && h < 12) h += 12;
-            if (!isPm && h === 12) h = 0;
-            const slotMins = h * 60 + m;
-            const currentMins = localNow.getHours() * 60 + localNow.getMinutes();
-            return slotMins > currentMins; 
-        });
-    };
+    // Liberamos el menú para que muestre las 24 horas, ya que la zona horaria 
+    // y el bloqueo de tiempo real se calculan en el botón "Guardar Cita".
+    const getAvailableTimeSlots = () => TIME_SLOTS;
 
     const handleSaveNotes = async () => { 
         setIsSaving(true);
