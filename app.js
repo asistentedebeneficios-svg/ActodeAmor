@@ -1704,12 +1704,17 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                 </div>
             </div>
 
-            <div className="flex px-2 md:px-8 gap-2 md:gap-8 border-b border-gray-200 bg-white/80 backdrop-blur-md overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
+            {/* Pestañas de Navegación Admin (Estilo Elegante) */}
+            <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
-                        className={`py-3 px-3 md:px-1 text-xs md:text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === tab ? (tab === 'urgent' ? 'border-red-600 text-red-600' : 'border-rose-600 text-rose-600') : (tab === 'urgent' ? 'border-transparent text-red-500/80 hover:text-red-600' : 'border-transparent text-gray-400 hover:text-gray-800')}`}
+                        className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                            activeTab === tab 
+                                ? (tab === 'urgent' ? 'border-red-600 text-red-600' : 'border-gray-900 text-gray-900') 
+                                : (tab === 'urgent' ? 'border-transparent text-red-500/80 hover:text-red-600' : 'border-transparent text-gray-400 hover:text-gray-600')
+                        }`}
                     >
                         {tab === 'active' && 'Bandeja'}
                         {tab === 'marketplace' && 'Marketplace'}
@@ -1717,7 +1722,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                             <>
                                 Urgente
                                 {urgentLeadsCount > 0 && (
-                                    <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-extrabold shadow-sm animate-pulse leading-none">
+                                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">
                                         {urgentLeadsCount}
                                     </span>
                                 )}
