@@ -1006,15 +1006,15 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         </div>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0 print:hidden">
-                                    <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                                        {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
-                                    </button>
-                                    
-                                    {!isAgentView && (
+                                {!isAgentView && (
+                                    <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0 print:hidden">
+                                        <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                                            {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
+                                        </button>
+                                        
                                         <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -2252,21 +2252,38 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                     ) : (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
                             {currentClientsList.map(lead => {
-                                const abbr = STATE_ABBR[lead.state] || "US";
+                                let fDate = "Sin fecha";
+                                if (lead.date) {
+                                    fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                                }
                                 return (
-                                    <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 hover:bg-gray-50 cursor-pointer flex justify-between group">
+                                    <div key={lead.id} onClick={() => setViewingLead(lead)} className="p-4 hover:bg-gray-50 cursor-pointer flex justify-between items-center group">
                                         <div className="flex items-center gap-3 min-w-0 pr-2">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0">{lead.name.charAt(0)}</div>
-                                            <div className="min-w-0">
-                                                <h4 className={`font-semibold text-sm truncate ${showArchived ? 'text-gray-500' : 'text-gray-900'}`}>{lead.name}</h4>
-                                                <div className="flex items-center gap-1.5 mt-1 text-[11px] md:text-xs text-gray-500 truncate">
-                                                    <span>{lead.phone}</span>
-                                                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                                    <span className="font-bold text-gray-700">{lead.localTime || lead.time}</span>
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0 shadow-sm">{lead.name.charAt(0)}</div>
+                                            <div className="min-w-0 flex flex-col gap-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className={`font-bold text-sm truncate ${showArchived ? 'text-gray-500' : 'text-gray-900'}`}>{lead.name}</h4>
+                                                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold border border-blue-100 text-[10px]"><Calendar size={10}/> {fDate}</span>
+                                                </div>
+                                                
+                                                {/* BLOQUE DE DOBLE HORARIO Y TELÉFONO */}
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-[11px] md:text-xs text-gray-500">
+                                                    <span className="flex items-center gap-1 font-medium"><Phone size={12}/> {lead.phone}</span>
+                                                    
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="hidden sm:inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
+                                                        <span className="font-bold text-blue-600 flex items-center gap-1 bg-blue-50/50 px-1.5 rounded"><Clock size={12}/> {lead.localTime || lead.time} <span className="text-[9px] font-normal text-blue-400 uppercase tracking-widest">(Local)</span></span>
+                                                        
+                                                        {lead.localTime !== lead.time && (
+                                                            <span className="flex items-center gap-1 font-medium text-gray-400 pl-1 border-l border-gray-200">
+                                                                {lead.time} <span className="text-[9px] uppercase tracking-widest">en {lead.state}</span>
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 shrink-0"/>
+                                        <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-900 shrink-0 transition-colors"/>
                                     </div>
                                 )
                             })}
