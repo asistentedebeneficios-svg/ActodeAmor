@@ -2133,7 +2133,8 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     
     // --- NUEVO: ESTADOS PARA LOS BUSCADORES Y FILTROS ---
     const [clientSearchTerm, setClientSearchTerm] = useState('');
-    const [marketplaceStateFilter, setMarketplaceStateFilter] = useState('');
+    const [marketplaceStateFilters, setMarketplaceStateFilters] = useState([]); // Ahora es un arreglo múltiple
+    const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false); // Controla el menú flotante
 
     // --- 3. RECREAMOS processedLeads (Para que nada se rompa más abajo) ---
     const processedLeads = leads.map(l => {
@@ -2157,24 +2158,26 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     let currentClientsList = [];
     if (clientSearchTerm) {
         const term = clientSearchTerm.toLowerCase();
-        // Si hay texto, busca en TODA la cartera (activas y pasadas al mismo tiempo)
         currentClientsList = myLeads.filter(l => 
             (l.name && l.name.toLowerCase().includes(term)) || 
             (l.phone && l.phone.includes(term)) || 
             (l.state && l.state.toLowerCase().includes(term))
-        ).sort((a, b) => b.sortMs - a.sortMs); // Las coincidencias más recientes salen arriba
+        ).sort((a, b) => b.sortMs - a.sortMs); 
     } else {
-        // Si no hay texto, respeta las pestañas
         currentClientsList = showArchived ? archivedClients : activeClients;
     }
     
-    // Filtro Inteligente del Marketplace (Solo muestra estados disponibles)
+    // Filtro Inteligente del Marketplace (Soporta Múltiples Estados)
     const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
     const availableMarketplaceStates = [...new Set(allAvailableLeads.map(l => l.state))].filter(Boolean).sort();
     
     const availableLeads = allAvailableLeads
-        .filter(l => marketplaceStateFilter ? l.state === marketplaceStateFilter : true)
+        .filter(l => marketplaceStateFilters.length > 0 ? marketplaceStateFilters.includes(l.state) : true)
         .sort((a, b) => a.sortMs - b.sortMs);
+
+    const toggleStateFilter = (st) => {
+        setMarketplaceStateFilters(prev => prev.includes(st) ? prev.filter(s => s !== st) : [...prev, st]);
+    };
 
     const myHistory = myLeads.sort((a,b) => b.timestamp - a.timestamp);
 
@@ -2252,14 +2255,60 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                         </div>
                         {/* AQUÍ LA MAGIA: flex-col-reverse pone el botón arriba en el móvil, pero sm:flex-row lo deja normal en PC */}
                         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                            {/* Filtro por Estado Inteligente */}
-                            <div className="relative w-full sm:w-48 group shrink-0">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={14}/>
-                                <select value={marketplaceStateFilter} onChange={(e) => setMarketplaceStateFilter(e.target.value)} className="w-full pl-8 pr-8 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 appearance-none shadow-sm cursor-pointer transition-all">
-                                    <option value="">Todos los Estados</option>
-                                    {availableMarketplaceStates.map(st => <option key={st} value={st}>{st}</option>)}
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"><ChevronRight size={12} className="rotate-90"/></div>
+                            {/* Filtro Multi-Estado Inteligente */}
+                            <div className="relative w-full sm:w-56 shrink-0 z-30">
+                                <button 
+                                    onClick={() => setIsStateDropdownOpen(!isStateDropdownOpen)} 
+                                    className="w-full pl-4 pr-3 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 shadow-sm transition-all flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <MapPin className="text-gray-400 shrink-0" size={14} />
+                                        <span className="truncate">
+                                            {marketplaceStateFilters.length === 0 
+                                                ? 'Todos los Estados' 
+                                                : `${marketplaceStateFilters.length} Estado(s) seleccionado(s)`}
+                                        </span>
+                                    </div>
+                                    <ChevronRight size={12} className={`text-gray-400 shrink-0 transition-transform ${isStateDropdownOpen ? '-rotate-90' : 'rotate-90'}`} />
+                                </button>
+
+                                {/* Menú Flotante de Checkboxes */}
+                                {isStateDropdownOpen && (
+                                    <>
+                                        {/* Overlay invisible para cerrar al hacer clic afuera */}
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsStateDropdownOpen(false)}></div>
+                                        
+                                        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-slide-up z-50">
+                                            <div className="max-h-60 overflow-y-auto p-2 scrollbar-hide">
+                                                {availableMarketplaceStates.length === 0 ? (
+                                                    <p className="text-xs text-gray-400 text-center py-4">No hay estados disponibles</p>
+                                                ) : (
+                                                    availableMarketplaceStates.map(st => (
+                                                        <label key={st} className="flex items-center gap-3 p-2.5 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors group">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="custom-checkbox shrink-0" 
+                                                                checked={marketplaceStateFilters.includes(st)} 
+                                                                onChange={() => toggleStateFilter(st)} 
+                                                            />
+                                                            <span className="text-sm font-semibold text-gray-700 group-hover:text-rose-700">{st}</span>
+                                                        </label>
+                                                    ))
+                                                )}
+                                            </div>
+                                            {marketplaceStateFilters.length > 0 && (
+                                                <div className="p-2 border-t border-gray-100 bg-gray-50">
+                                                    <button 
+                                                        onClick={() => setMarketplaceStateFilters([])} 
+                                                        className="w-full py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:text-rose-600 hover:border-rose-200 transition-colors shadow-sm"
+                                                    >
+                                                        Limpiar Filtros
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             
                             <button onClick={() => setActiveTab('historial')} className="flex items-center justify-center gap-2 px-3 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-all shadow-sm shrink-0">
