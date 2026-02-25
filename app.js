@@ -793,7 +793,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
-    const [dialog, setDialog] = useState(null); // Alerta Moderna
+    const [dialog, setDialog] = useState(null);
 
     const TIME_SLOTS = [
         "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.", "12:00 p.m.",
@@ -873,24 +873,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     };
 
     return (
-        <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up print:static print:block print:bg-white print:w-full print:h-auto print:min-h-0 print:overflow-visible">
+        <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up">
             <CustomDialog isOpen={!!dialog} {...dialog} />
-            
-            {/* INYECCIÓN QUIRÚRGICA: Oculta la app de atrás al imprimir, evita lag en iPad y hojas blancas en PC */}
-            <style>{`
-                @media print {
-                    @page { margin: 1cm; size: auto; }
-                    body, html { background: white !important; height: auto !important; overflow: visible !important; }
-                    /* Oculta TODO el dashboard que está detrás de la ficha */
-                    #root > div > div > div:not(.z-\\[60\\]) { display: none !important; }
-                    /* Rompe el scroll de la ficha para que fluya hacia abajo en el papel (Arregla iPhone) */
-                    .print\\:overflow-visible { overflow: visible !important; height: auto !important; max-height: none !important; display: block !important; }
-                    /* Evita que las tarjetas se partan a la mitad al saltar de hoja */
-                    .shadow-soft { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #e5e7eb !important; margin-bottom: 20px !important; }
-                }
-            `}</style>
 
-            <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm print:hidden border-b border-gray-200">
+            <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
@@ -899,41 +885,28 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                     <button onClick={() => setTimeout(() => window.print(), 150)} className="p-2.5 md:p-3 text-gray-500 hover:text-black bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-200 flex items-center justify-center" title="Imprimir Ficha"><Printer size={18}/></button>
-                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
                      <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
                      <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
                 </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12 print:p-0 print:overflow-visible print:h-auto print:block">
-                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full print:block print:max-w-none">
-                    <div className="hidden print:block text-center mb-8 border-b-2 border-gray-900 pb-4">
-                        <h1 className="text-3xl font-extrabold text-black uppercase tracking-widest">Asistentedebeneficios.com</h1>
-                        <p className="text-gray-500 text-sm mt-1">Ficha Oficial de Prospecto (Confidencial)</p>
-                    </div>
-
-                    <div className="md:col-span-5 space-y-6 print:mb-6">
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500 print:text-black"/> Ficha Técnica</h3>
-                            
-                            <div className="hidden print:block mb-4">
-                                <span className="text-xs text-gray-500 uppercase font-bold tracking-widest block mb-1">Nombre del Prospecto</span>
-                                <p className="font-bold text-black text-2xl">{lead.name}</p>
-                            </div>
-
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
+                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
+                    <div className="md:col-span-5 space-y-6">
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
                             <div className="space-y-5">
-                                <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50 print:bg-transparent print:border-0 print:p-0">
+                                <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50">
                                     <div className="border-b border-gray-200/80 pb-4 mb-4">
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
-                                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={14} className="text-gray-400 print:hidden"/> {lead.state || 'N/A'}</p>
+                                        <p className="font-semibold text-gray-800 text-sm flex items-center gap-1.5"><MapPin size={14} className="text-gray-400"/> {lead.state || 'N/A'}</p>
                                     </div>
                                     
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block">Cita Solicitada</span>
                                             {!isEditingDateTime && (
-                                                <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-lg transition-colors print:hidden shadow-sm" title="Reagendar Cita">
+                                                <button onClick={() => { setIsEditingDateTime(true); setEditDate(lead.date); setEditTime(lead.time); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-lg transition-colors shadow-sm" title="Reagendar Cita">
                                                     <Edit2 size={14}/>
                                                 </button>
                                             )}
@@ -984,19 +957,19 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         )}
                                     </div>
                                 </div>
-                                <div className="px-1 print:p-0">
+                                <div className="px-1">
                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Teléfono y Correo</span>
                                     <p className="font-bold text-gray-900 text-lg">{lead.phone}</p>
                                     <p className="font-medium text-gray-600 text-sm">{lead.email}</p>
                                 </div>
-                                <div className="px-1 print:p-0">
+                                <div className="px-1">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Método Preferido</span>
                                      {lead.callType === 'video' ? (
-                                         <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="font-bold text-[#128C7E] text-sm bg-[#E7F6F4] hover:bg-[#D1EBE7] transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
+                                         <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="font-bold text-[#128C7E] text-sm bg-[#E7F6F4] hover:bg-[#D1EBE7] transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5">
                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Videollamada
                                          </a>
                                      ) : (
-                                         <a href={`tel:${lead.phone}`} className="font-bold text-blue-700 text-sm bg-blue-50 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 print:bg-transparent print:text-black print:p-0 print:border print:border-black print:px-2">
+                                         <a href={`tel:${lead.phone}`} className="font-bold text-blue-700 text-sm bg-blue-50 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5">
                                              <Phone size={14} strokeWidth={2.5}/> Llamada Telefónica
                                          </a>
                                      )}
@@ -1004,20 +977,20 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
                         </div>
                         
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500 print:text-black"/> Perfil de Interés</h3>
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Cobertura para</span>
                                     <span className="font-bold text-gray-900 text-sm text-right">{getLabelsForArray('policy_for', lead.policy_for)}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Monto estimado</span>
-                                    <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
+                                    <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 print:border-gray-300">
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Presupuesto</span>
-                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded print:bg-transparent print:text-black print:p-0">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
+                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
                                 </div>
                                 <div className="px-1 pt-1">
                                     <span className="text-sm text-gray-500 font-medium block mb-2">Motivaciones</span>
@@ -1030,27 +1003,27 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     </div>
                     
                     <div className="md:col-span-7 space-y-6 flex flex-col">
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0 print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500 print:text-black"/> Asignación</h3>
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
                                     
                                     {!isAgentView ? (
-                                        <button onClick={() => setShowAgentSelector(true)} className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-rose-300 hover:bg-white transition-all print:border-0 print:p-0 print:bg-transparent">
+                                        <button onClick={() => setShowAgentSelector(true)} className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between hover:border-rose-300 hover:bg-white transition-all">
                                             <div className="flex items-center gap-3 overflow-hidden">
                                                 {currentAgent ? (<><span className="font-bold text-gray-900 block truncate">{currentAgent.name}</span></>) : (<span className="italic text-sm">Seleccionar Agente...</span>)}
                                             </div>
-                                            <ChevronRight size={18} className="text-gray-300 shrink-0 ml-2 print:hidden"/>
+                                            <ChevronRight size={18} className="text-gray-300 shrink-0 ml-2"/>
                                         </button>
                                     ) : (
-                                        <div className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center print:border-0 print:p-0 print:bg-transparent">
+                                        <div className="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center">
                                             <span className="font-bold text-gray-900">{currentAgent?.name || 'Asignado a ti'}</span>
                                         </div>
                                     )}
                                 </div>
                                 {!isAgentView && (
-                                    <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0 print:hidden">
+                                    <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0">
                                         <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                             {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                         </button>
@@ -1060,15 +1033,14 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px] print:shadow-none print:border-2 print:border-gray-800 print:rounded-none">
-                            <div className="flex justify-between items-center mb-4 print:hidden">
+                        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col flex-1 min-h-[300px]">
+                            <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-sm uppercase tracking-widest"><PenTool size={16} className="text-rose-500"/> Bloc de Notas</h3>
                                 <button onClick={handleSaveNotes} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 ${isSaving ? 'bg-green-500 text-white' : 'bg-black text-white hover:scale-105'}`}>
                                     {isSaving ? <><Check size={14}/> Guardado</> : <><Save size={14}/> Guardar</>}
                                 </button>
                             </div>
-                            <h3 className="hidden print:block font-bold text-black text-sm uppercase tracking-widest mb-4 border-b border-gray-300 pb-2">Notas del Agente</h3>
-                            <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 resize-none outline-none focus:bg-white focus:border-rose-300 transition-all print:bg-transparent print:border-0 print:p-0 print:text-black" placeholder="Escribe aquí los detalles de la llamada..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
+                            <textarea className="flex-1 w-full bg-amber-50/30 rounded-2xl p-4 text-sm text-gray-800 border border-amber-100/50 resize-none outline-none focus:bg-white focus:border-rose-300 transition-all" placeholder="Escribe aquí los detalles de la llamada..." value={currentNotes} onChange={(e) => setCurrentNotes(e.target.value)} />
                         </div>
                     </div>
                 </div>
