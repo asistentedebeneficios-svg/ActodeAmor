@@ -2153,15 +2153,20 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
     const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.sortMs - a.sortMs);
     
-    // Buscador Inteligente de Clientes Propios
-    const baseClientsList = showArchived ? archivedClients : activeClients;
-    const currentClientsList = baseClientsList.filter(l => {
-        if (!clientSearchTerm) return true;
+    // Buscador Inteligente Universal de Clientes
+    let currentClientsList = [];
+    if (clientSearchTerm) {
         const term = clientSearchTerm.toLowerCase();
-        return (l.name && l.name.toLowerCase().includes(term)) || 
-               (l.phone && l.phone.includes(term)) || 
-               (l.state && l.state.toLowerCase().includes(term));
-    });
+        // Si hay texto, busca en TODA la cartera (activas y pasadas al mismo tiempo)
+        currentClientsList = myLeads.filter(l => 
+            (l.name && l.name.toLowerCase().includes(term)) || 
+            (l.phone && l.phone.includes(term)) || 
+            (l.state && l.state.toLowerCase().includes(term))
+        ).sort((a, b) => b.sortMs - a.sortMs); // Las coincidencias más recientes salen arriba
+    } else {
+        // Si no hay texto, respeta las pestañas
+        currentClientsList = showArchived ? archivedClients : activeClients;
+    }
     
     // Filtro Inteligente del Marketplace (Solo muestra estados disponibles)
     const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
@@ -2245,9 +2250,10 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                             <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Marketplace</h1>
                             <p className="text-gray-500 text-xs md:text-sm mt-1">Adquiere tus próximas citas de asesoría.</p>
                         </div>
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                            {/* NUEVO: Filtro por Estado Inteligente */}
-                            <div className="relative w-full sm:w-48 group">
+                        {/* AQUÍ LA MAGIA: flex-col-reverse pone el botón arriba en el móvil, pero sm:flex-row lo deja normal en PC */}
+                        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                            {/* Filtro por Estado Inteligente */}
+                            <div className="relative w-full sm:w-48 group shrink-0">
                                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={14}/>
                                 <select value={marketplaceStateFilter} onChange={(e) => setMarketplaceStateFilter(e.target.value)} className="w-full pl-8 pr-8 py-2.5 sm:py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 appearance-none shadow-sm cursor-pointer transition-all">
                                     <option value="">Todos los Estados</option>
