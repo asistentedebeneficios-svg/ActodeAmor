@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 // Importación limpia de iconos para evitar fallos
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw } from 'https://esm.sh/lucide-react@0.344.0';
-
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -2074,19 +2073,28 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         }
     };
 
-    // Filtros inteligentes
-    const processedLeads = leads.map(l => ({ ...l, localTime: getLocalTimeInfo(l.date, l.time, l.state) }));
-    
-    const activeClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status !== 'archived').sort((a,b) => b.timestamp - a.timestamp);
-    const archivedClients = processedLeads.filter(l => l.assignedTo === agent.id && l.status === 'archived').sort((a,b) => b.timestamp - a.timestamp);
+    // Función para ordenar por la fecha/hora real de la cita
+    const processAndSort = (list) => {
+        return list.map(l => {
+            const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
+            return { ...l, localTime: timeInfo?.localTime24 || l.time, sortMs: timeInfo?.localMs || 0 };
+        }).sort((a, b) => a.sortMs - b.sortMs); // Ordenados de la cita más próxima a la más lejana
+    };
+
+    const myLeads = leads.filter(l => l.assignedTo === agent.id);
+    const activeClients = processAndSort(myLeads.filter(l => l.status !== 'archived'));
+    const archivedClients = processAndSort(myLeads.filter(l => l.status === 'archived'));
     const currentClientsList = showArchived ? archivedClients : activeClients;
     
-    // --- NUEVA LÓGICA DE MARKETPLACE (Filtro 2hrs, Oferta 3hrs y Orden) ---
-    const availableLeads = processedLeads
+    const availableLeads = leads
         .filter(l => l.status === 'marketplace' && !l.assignedTo)
-        .map(l => ({ ...l, hoursUntil: getHoursUntil(l.date, l.localTime || l.time) }))
-        .filter(l => l.hoursUntil > 2) // REGLA: Ocultar si faltan 2 horas o menos
-        .sort((a, b) => a.hoursUntil - b.hoursUntil); // REGLA: Ordenar de más próximo a más lejano
+        .map(l => {
+            const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
+            const hoursUntil = timeInfo ? (timeInfo.localMs - Date.now()) / (1000 * 60 * 60) : 999;
+            return { ...l, hoursUntil, localTime: timeInfo?.localTime24 || l.time, sortMs: timeInfo?.localMs || 0 };
+        })
+        .filter(l => l.hoursUntil > 2) 
+        .sort((a, b) => a.sortMs - b.sortMs);
 
     const myHistory = processedLeads.filter(l => l.assignedTo === agent.id).sort((a,b) => b.timestamp - a.timestamp);
 
@@ -2146,7 +2154,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
                     <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
-                        {tab === 'marketplace' && 'Citas Disponibles'}
+                        {tab === 'marketplace' && 'Marketplace'}
                         {tab === 'clientes' && `Mis Clientes (${activeClients.length})`}
                         {tab === 'agenda' && 'Agenda'}
                     </button>
@@ -2158,10 +2166,11 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 <div className="flex-1 p-3 md:p-8 max-w-5xl mx-auto w-full overflow-y-auto">
                     <div className="flex justify-between items-end mb-4 md:mb-6 px-1">
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Citas Disponibles</h1>
-                            <p className="text-gray-500 text-xs md:text-sm mt-1">Selecciona para reservar (10 min max).</p>
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Marketplace</h1>
+                            <p className="text-gray-500 text-xs md:text-sm mt-1">Adquiere tus próximas citas de asesoría.</p>
                         </div>
-                        <button onClick={() => setActiveTab('historial')} className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors border-b border-transparent hover:border-gray-900 pb-0.5">
+                        <button onClick={() => setActiveTab('historial')} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-all shadow-sm">
+                            <FileText size={14} className="text-gray-400" />
                             Recibos
                         </button>
                     </div>
@@ -2340,11 +2349,32 @@ const App = () => {
     });
     
     const [showLogin, setShowLogin] = useState(false);
-    
     const { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
+    // --- AUTO-ARCHIVADO DE CITAS PASADAS ---
+    useEffect(() => {
+        if (!leads || leads.length === 0 || !bulkUpdateLeads) return;
+        const checkExpirations = () => {
+            const now = Date.now();
+            const toArchive = leads.filter(l => {
+                if (l.status === 'archived' || !l.date || !l.time) return false;
+                const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
+                // Si la hora de la cita (convertida a tu hora local) ya es menor a la hora actual, lo marca para archivar
+                return timeInfo && timeInfo.localMs < now;
+            }).map(l => l.id);
+
+            if (toArchive.length > 0) {
+                bulkUpdateLeads(toArchive, { status: 'archived' });
+            }
+        };
+        checkExpirations();
+        const interval = setInterval(checkExpirations, 60000); // Revisa cada 60 segundos
+        return () => clearInterval(interval);
+    }, [leads, bulkUpdateLeads]);
+
     // --- NUEVO: Temporizador inteligente que espera a Firebase ---
+    
     useEffect(() => {
         if (showAdmin) {
             // Le damos a Firebase hasta 1.5 segundos máximo para descargar todo
