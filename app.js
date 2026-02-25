@@ -849,8 +849,27 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             return `${String(h).padStart(2, '0')}:${m}`; 
         };
 
+        const targetTime24h = getClean24h(previewLocalTime || editTime);
+
+        // --- 1. VALIDACIÓN ESTRICTA DE FECHA/HORA PASADA (Seguridad contra iPhone/iPad) ---
+        if (targetTime24h && editDate) {
+            const [year, month, day] = editDate.split('-').map(Number);
+            const [hours, minutes] = targetTime24h.split(':').map(Number);
+            const selectedDateTime = new Date(year, month - 1, day, hours, minutes);
+            
+            if (selectedDateTime < new Date()) {
+                setDialog({ 
+                    title: 'Horario Inválido', 
+                    message: 'Estás intentando agendar en una fecha u hora del pasado.\n\nPor favor, elige un momento en el futuro.', 
+                    type: 'warning', 
+                    onConfirm: () => setDialog(null) 
+                });
+                return; // Bloquea el guardado inmediatamente
+            }
+        }
+
+        // --- 2. VALIDACIÓN DE COLISIÓN CON OTRAS CITAS ---
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
-            const targetTime24h = getClean24h(previewLocalTime || editTime);
             const hasConflict = allLeads.some(l => {
                 if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
                 if (l.date !== editDate) return false;
