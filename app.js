@@ -1732,7 +1732,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                         <div className="bg-black text-white p-2 rounded-xl shadow-md"><ShieldCheck size={20} /></div>
                         <div className="leading-tight">
                             <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Asistentedebeneficios.com</p>
                         </div>
                     </div>
                     {/* Botones Móvil */}
