@@ -1672,7 +1672,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
 
     // --- MÁGIA: BUSCADOR OMNIDIRECCIONAL ---
     const getFilteredLeads = () => {
-        // 1. Si hay texto en el buscador, IGNORA LAS PESTAÑAS y busca en toda la base de datos
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             return processedLeads.filter(l => 
@@ -1684,11 +1683,11 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
             );
         }
 
-        // 2. Si el buscador está vacío, funciona normal por pestañas
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
-        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
-        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2).sort((a,b) => a.hoursUntil - b.hoursUntil);        else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
+        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
+        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2);
+        else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
         return list;
@@ -1710,7 +1709,27 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
     };
 
     const filteredLeads = activeTab !== 'agents' && activeTab !== 'schedule' ? getFilteredLeads() : [];
-    const sortedLeads = [...filteredLeads].sort((a,b) => b.timestamp - a.timestamp);
+    
+    // --- ORDENAMIENTO INTELIGENTE (Próxima Cita Arriba / Recientes Pasadas en Archivados) ---
+    const sortedLeads = [...filteredLeads].sort((a, b) => {
+        const aHasDate = a.hoursUntil !== 999;
+        const bHasDate = b.hoursUntil !== 999;
+
+        // Si uno tiene fecha y el otro no, el que tiene fecha va arriba
+        if (aHasDate && !bHasDate) return -1;
+        if (!aHasDate && bHasDate) return 1;
+        // Si ninguno tiene fecha, se ordenan por el más nuevo creado
+        if (!aHasDate && !bHasDate) return b.timestamp - a.timestamp;
+
+        if (activeTab === 'archived') {
+            // Archivados: Las citas que pasaron más recientemente van arriba (Orden Descendente)
+            return b.hoursUntil - a.hoursUntil; 
+        } else {
+            // Resto de pestañas: La cita que esté más próxima en el tiempo va arriba (Orden Ascendente)
+            return a.hoursUntil - b.hoursUntil;
+        }
+    });
+
     const displayAgents = getFilteredAgents();
 
     const toggleSelectAll = () => { if (selectedLeads.length === sortedLeads.length && sortedLeads.length > 0) setSelectedLeads([]); else setSelectedLeads(sortedLeads.map(l => l.id)); };
