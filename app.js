@@ -2554,6 +2554,49 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); 
     };
 
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+    const handleCheckout = async () => {
+        if (cart.length === 0) return;
+        setIsCheckingOut(true);
+        try {
+            // 1. Empaquetamos los prospectos del carrito
+            const items = cart.map(leadId => {
+                const lead = availableLeads.find(l => l.id === leadId);
+                const isFireSale = lead.hoursUntil <= 3;
+                return {
+                    name: `Prospecto en ${lead.state || 'US'}`,
+                    price: isFireSale ? 10 : 40 // Mantenemos tu regla de precios
+                };
+            });
+
+            // 2. Llamamos a tu Bóveda en Google Cloud
+            const response = await fetch("https://createstripecheckout-685007300356.us-central1.run.app", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: items,
+                    agentId: agent.id,
+                    leadIds: cart
+                })
+            });
+
+            const result = await response.json();
+            
+            // 3. Redirigimos a la pantalla segura de Stripe
+            if (result.url) {
+                window.location.href = result.url;
+            } else {
+                alert("Error al preparar la pasarela de pagos.");
+                setIsCheckingOut(false);
+            }
+        } catch (error) {
+            console.error("Error Stripe:", error);
+            alert("Error de conexión. Intenta de nuevo.");
+            setIsCheckingOut(false);
+        }
+    };
+
     return (
         <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24 overflow-x-hidden">
             {/* Header Minimalista */}
@@ -2897,8 +2940,8 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                             <div className="w-px h-4 bg-white/20"></div>
                             <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
                         </div>
-                        <button className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                            Pagar ${cartTotal} <ChevronRight size={14}/>
+                        <button onClick={handleCheckout} disabled={isCheckingOut} className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 disabled:opacity-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                            {isCheckingOut ? 'Conectando seguro...' : `Pagar $${cartTotal}`} <ChevronRight size={14}/>
                         </button>
                     </div>
                 </div>
