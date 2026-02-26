@@ -2025,7 +2025,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                         <div className="text-gray-500 text-xs font-medium">
                                             <span className="block text-gray-900 font-bold">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
                                             <span className="flex items-center gap-1 mt-0.5 text-blue-600 font-bold"><Clock size={10}/> {lead.localTime || lead.time}</span>
-                                            {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
+                                            
+                                            {/* NUEVO: Diseño elegante de zona horaria con flecha */}
+                                            {lead.localTime && lead.localTime !== lead.time && (
+                                                <span className="text-[9px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+                                                    ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-white border border-gray-100 px-1.5 py-0.5 rounded shadow-sm text-gray-500">en {lead.state}</span>
+                                                </span>
+                                            )}
                                         </div>
                                             <div>
                                             {/* ETIQUETA INTELIGENTE DE ESTADO (Con Oferta de Fuego Sutil) */}
