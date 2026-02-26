@@ -2100,6 +2100,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                                     <div className="flex flex-col text-xs items-end">
                                                         <span className="font-bold text-gray-900">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
                                                         <span className="font-bold text-blue-600 flex items-center gap-1 mt-0.5"><Clock size={10}/> {lead.localTime || lead.time}</span>
+                                                        
+                                                        {/* NUEVO: Muestra la hora del estado en celulares */}
+                                                        {lead.localTime && lead.localTime !== lead.time && (
+                                                            <span className="text-[9px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+                                                                ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">en {lead.state}</span>
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -2714,8 +2721,15 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                                 <span className="md:inline hidden"> • </span>
                                                 
                                                 <span className={`font-bold ${isBlocked ? 'text-gray-500' : 'text-gray-800'}`}>
-                                                    {lead.localTime || lead.time} <span className="text-[10px] font-medium text-gray-400">(Tu hora)</span>
+                                                    {lead.localTime || lead.time} <span className="text-[10px] font-bold text-blue-500">(Tu hora)</span>
                                                 </span>
+
+                                                {/* NUEVO: Muestra la hora original del estado del prospecto */}
+                                                {lead.localTime !== lead.time && (
+                                                    <span className="block mt-1.5 text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                                                        ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">en {lead.state}</span>
+                                                    </span>
+                                                )}
                                             </span>
 
                                             {isBlocked && (
