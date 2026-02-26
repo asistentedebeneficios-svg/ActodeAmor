@@ -1632,16 +1632,24 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         return () => window.removeEventListener('hashchange', handleHash);
     }, [viewingLead]);
 
-    // Función para calcular horas restantes
+    // Función para calcular horas restantes (Motor Blindado para AM/PM)
     const getHoursUntil = (dateStr, timeStr) => {
         if (!dateStr || !timeStr) return 999;
         try {
-            const [time, modifier] = timeStr.split(' ');
-            let [hours, minutes] = time.split(':');
-            if (hours === '12') hours = '00';
-            if (modifier && modifier.toUpperCase() === 'PM') hours = parseInt(hours, 10) + 12;
+            let clean = timeStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+            let isPM = clean.includes('p');
+            let isAM = clean.includes('a');
+            let nums = clean.replace(/[^0-9]/g, '');
             
-            const aptDate = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
+            if (nums.length < 3) return 999;
+            
+            let h = parseInt(nums.slice(0, -2), 10);
+            const m = nums.slice(-2);
+            
+            if (isPM && h < 12) h += 12;
+            if (isAM && h === 12) h = 0;
+            
+            const aptDate = new Date(`${dateStr}T${String(h).padStart(2, '0')}:${m}:00`);
             const now = new Date();
             return (aptDate - now) / (1000 * 60 * 60);
         } catch(e) {
@@ -1659,7 +1667,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         };
     });
 
-    const urgentLeadsCount = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).length;
+    // MÁGIA: Cuenta CUALQUIER prospecto activo sin agente al que le queden <= 2 hrs.
+    const urgentLeadsCount = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2).length;
 
     // --- MÁGIA: BUSCADOR OMNIDIRECCIONAL ---
     const getFilteredLeads = () => {
@@ -1679,8 +1688,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
-        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil <= 2).sort((a,b) => a.hoursUntil - b.hoursUntil);
-        else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
+        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2).sort((a,b) => a.hoursUntil - b.hoursUntil);        else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         
         return list;
@@ -1958,10 +1966,10 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                             <span className="flex items-center gap-1 mt-0.5 text-blue-600 font-bold"><Clock size={10}/> {lead.localTime || lead.time}</span>
                                             {lead.localTime && lead.localTime !== lead.time && <span className="text-[9px] text-gray-400 block mt-0.5">({lead.time} {lead.state})</span>}
                                         </div>
-                                        <div>
-                                            {/* ETIQUETA INTELIGENTE DE ESTADO */}
-                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
+                                            <div>
+                                            {/* ETIQUETA INTELIGENTE DE ESTADO (Atrapa todos los Urgentes) */}
+                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
@@ -1988,9 +1996,9 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
-                                            {/* ETIQUETA INTELIGENTE DE ESTADO (MÓVIL) */}
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' && lead.hoursUntil <= 2 ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
+                                            {/* ETIQUETA INTELIGENTE DE ESTADO (MÓVIL - Atrapa todos los Urgentes) */}
+                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                             <p className="font-bold text-gray-900 text-base leading-tight mb-1.5 truncate">{lead.name}</p>
                                             
