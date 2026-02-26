@@ -194,6 +194,7 @@ const useFirebaseDatabase = () => {
         });
 
         let unsubLeads = () => {};
+        let unsubAgents = () => {}; // ✅ ¡Aquí está la línea restaurada!
 
         if (!user.isAnonymous) {
             const leadsQuery = collection(db, 'leads'); 
@@ -211,7 +212,8 @@ const useFirebaseDatabase = () => {
             });
         }
 
-        return () => { unsubLeads(); unsubAgents(); unsubSchedule(); unsubWebhooks(); };
+        // ✅ También agregamos unsubGeneral() a la limpieza para que Firebase cierre los procesos limpios
+        return () => { unsubLeads(); unsubAgents(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
     }, [user]);
 
     const addLead = async (lead) => {
