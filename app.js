@@ -2698,8 +2698,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
-                                                <span className={`font-bold uppercase text-sm tracking-wide truncate ${isBlocked ? 'text-gray-500' : 'text-gray-900'}`}>{lead.state || 'ESTADO'} {isFireSale && !isBlocked && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest font-extrabold">Urgente</span>}</span>
-                                                
+                                            <span className={`font-bold uppercase text-sm tracking-wide truncate ${isBlocked ? 'text-gray-500' : 'text-gray-900'}`}>{lead.state || 'ESTADO'} {isFireSale && !isBlocked && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest font-extrabold">Oferta</span>}</span>                                                
                                                 {/* PRECIO DINÁMICO */}
                                                 {!isBlocked && (
                                                     <div className="text-right">
