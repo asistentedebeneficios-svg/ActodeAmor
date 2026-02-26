@@ -2414,10 +2414,13 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         };
     });
 
-    // --- 4. ORDENAMOS Y FILTRAMOS ---
+    // --- 4. ORDENAMOS Y FILTRAMOS (Sincronizado con Admin) ---
     const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
-    const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.sortMs - b.sortMs);
-    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.sortMs - a.sortMs);
+    
+    // Citas activas: La más próxima va arriba
+    const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.hoursUntil - b.hoursUntil);
+    // Citas archivadas: La que pasó más recientemente va arriba
+    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.hoursUntil - a.hoursUntil);
     
     // Buscador Inteligente Universal de Clientes
     let currentClientsList = [];
@@ -2427,12 +2430,12 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
             (l.name && l.name.toLowerCase().includes(term)) || 
             (l.phone && l.phone.includes(term)) || 
             (l.state && l.state.toLowerCase().includes(term))
-        ).sort((a, b) => b.sortMs - a.sortMs); 
+        ).sort((a, b) => a.hoursUntil - b.hoursUntil); 
     } else {
         currentClientsList = showArchived ? archivedClients : activeClients;
     }
     
-    // Filtro Inteligente del Marketplace (Soporta Múltiples Estados y Contadores)
+    // Filtro Inteligente del Marketplace
     const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
     
     // Motor matemático: Cuenta cuántos leads hay por cada estado
@@ -2443,9 +2446,10 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     
     const availableMarketplaceStates = Object.keys(stateCounts).sort();
     
+    // Marketplace: Citas más próximas a vencer (Ofertas Relámpago) aparecen siempre de primero
     const availableLeads = allAvailableLeads
         .filter(l => marketplaceStateFilters.length > 0 ? marketplaceStateFilters.includes(l.state) : true)
-        .sort((a, b) => a.sortMs - b.sortMs);
+        .sort((a, b) => a.hoursUntil - b.hoursUntil);
 
     const toggleStateFilter = (st) => {
         setMarketplaceStateFilters(prev => prev.includes(st) ? prev.filter(s => s !== st) : [...prev, st]);
