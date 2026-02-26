@@ -1617,6 +1617,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
     const [dialog, setDialog] = useState(null); // NUEVO: Para las alertas de choques
 
+    // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
+    const [timeTick, setTimeTick] = useState(0);
+    useEffect(() => {
+        const timer = setInterval(() => setTimeTick(t => t + 1), 60000); // 60000ms = 1 minuto
+        return () => clearInterval(timer);
+    }, []);
+
     // 1. Recuperar la ficha automáticamente si el usuario refresca la página (F5)
     useEffect(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
@@ -2360,6 +2367,13 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
     const TABS = ['marketplace', 'clientes', 'agenda', 'historial'];
     const [viewingLead, setViewingLead] = useState(null);
     
+    // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
+    const [timeTick, setTimeTick] = useState(0);
+    useEffect(() => {
+        const timer = setInterval(() => setTimeTick(t => t + 1), 60000); // 60000ms = 1 minuto
+        return () => clearInterval(timer);
+    }, []);
+
     // --- 1. ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
