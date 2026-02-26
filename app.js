@@ -1820,20 +1820,18 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                             <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
                         </div>
-                        
-                        {/* INTERRUPTOR MODO AUTOMÁTICO (Auto-Tienda) */}
-                        <button 
-                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                            className={`ml-1 md:ml-3 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full border text-[9px] md:text-xs font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'}`}
-                            title="Modo Automático: Si está activo, los prospectos van directo a la Tienda (Marketplace)."
-                        >
-                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                            <span className="hidden md:inline">Auto-Tienda</span>
-                            <span className="md:hidden">Auto</span>
-                        </button>
                     </div>
                     {/* Botones Móvil */}
-                    <div className="flex gap-2 md:hidden">
+                    <div className="flex items-center gap-2 md:hidden">
+                        {/* INTERRUPTOR MODO AUTOMÁTICO (Móvil) justo antes del engranaje */}
+                        <button 
+                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
+                            title="Auto-Marketplace"
+                        >
+                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                            <span>Auto</span>
+                        </button>
                         <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
                         <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Salir"><LogOut size={16}/></button>
                     </div>
@@ -1847,7 +1845,18 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                 )}
                 
                 {/* Botones Desktop */}
-                <div className="hidden md:flex gap-2">
+                <div className="hidden md:flex items-center gap-2">
+                     {/* INTERRUPTOR MODO AUTOMÁTICO (Desktop) justo antes del engranaje */}
+                     <button 
+                         onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                         title="Modo Automático: Si está activo, los prospectos van directo a la Tienda."
+                     >
+                         <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                         <span>Auto-Marketplace</span>
+                     </button>
+                     <div className="w-px h-6 bg-gray-200 mx-1"></div> {/* Separador visual sutil */}
+                     
                      <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
