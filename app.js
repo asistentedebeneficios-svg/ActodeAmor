@@ -144,6 +144,7 @@ const useFirebaseDatabase = () => {
     const [agents, setAgents] = useState([]);
     const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
+    const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false }); // NUEVO MODO
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -181,8 +182,18 @@ const useFirebaseDatabase = () => {
             if(err.code !== 'permission-denied') console.error("Webhooks error:", err);
         });
 
+        const generalDoc = doc(db, 'settings', 'general');
+        const unsubGeneral = onSnapshot(generalDoc, (snapshot) => {
+            if (snapshot.exists()) {
+                setGeneralSettings(snapshot.data());
+            } else if (!user.isAnonymous) {
+                setDoc(generalDoc, { marketplaceMode: false }).catch(e => console.log("General auto-creation skipped"));
+            }
+        }, (err) => {
+            if(err.code !== 'permission-denied') console.error("General error:", err);
+        });
+
         let unsubLeads = () => {};
-        let unsubAgents = () => {};
 
         if (!user.isAnonymous) {
             const leadsQuery = collection(db, 'leads'); 
@@ -205,7 +216,9 @@ const useFirebaseDatabase = () => {
 
     const addLead = async (lead) => {
         try {
-            const newLead = { ...lead, timestamp: Date.now(), status: 'new', notes: '' };
+            // MÁGIA: Si el modo Marketplace está activo, el prospecto entra como 'marketplace' directamente
+            const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
+            const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
             await addDoc(collection(db, 'leads'), newLead);
         } catch (error) {
             alert("Hubo un error de conexión al guardar.");
@@ -240,11 +253,12 @@ const useFirebaseDatabase = () => {
     const deleteAgent = async (id) => { if (user) await deleteDoc(doc(db, 'agents', id)); };
     const updateSchedule = async (newSchedule) => { if (user) await setDoc(doc(db, 'settings', 'schedule'), newSchedule); };
     const updateWebhooks = async (newWebhooks) => { if (user) await setDoc(doc(db, 'settings', 'webhooks'), newWebhooks); };
+    const updateGeneralSettings = async (newSettings) => { if (user) await setDoc(doc(db, 'settings', 'general'), newSettings); };
 
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout };
+    return { leads, agents, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -1582,8 +1596,7 @@ const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
     );
 };
 
-const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onClose, onLogout }) => {
-    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
+const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
@@ -1805,6 +1818,17 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, onUpdateLead, bulkU
                             <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
                         </div>
+                        
+                        {/* INTERRUPTOR MODO AUTOMÁTICO (Auto-Tienda) */}
+                        <button 
+                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                            className={`ml-1 md:ml-3 flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full border text-[9px] md:text-xs font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'}`}
+                            title="Modo Automático: Si está activo, los prospectos van directo a la Tienda (Marketplace)."
+                        >
+                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                            <span className="hidden md:inline">Auto-Tienda</span>
+                            <span className="md:hidden">Auto</span>
+                        </button>
                     </div>
                     {/* Botones Móvil */}
                     <div className="flex gap-2 md:hidden">
@@ -2866,7 +2890,7 @@ const App = () => {
     });
     
     const [showLogin, setShowLogin] = useState(false);
-    const { leads, agents, schedule, webhooks, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, adminLogin, adminLogout } = useFirebaseDatabase();
+    const { leads, agents, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
     // --- AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas) ---
@@ -3078,6 +3102,7 @@ const App = () => {
                 agents={agents} 
                 schedule={schedule}
                 webhooks={webhooks}
+                generalSettings={generalSettings}
                 onUpdateLead={updateLead}
                 bulkUpdateLeads={bulkUpdateLeads}
                 bulkDeleteLeads={bulkDeleteLeads}
@@ -3086,6 +3111,7 @@ const App = () => {
                 onDeleteAgent={deleteAgent}
                 onUpdateSchedule={updateSchedule}
                 onUpdateWebhooks={updateWebhooks}
+                onUpdateGeneralSettings={updateGeneralSettings}
                 onClose={() => setShowAdmin(false)}
                 onLogout={handleLogout}
             />
