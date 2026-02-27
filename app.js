@@ -3224,6 +3224,13 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [resetMsg, setResetMsg] = useState('');
+    
+    // Referencia para el auto-enfoque en móviles
+    const loginRef = useRef(null);
+
+    const scrollToLogin = () => {
+        loginRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -3231,129 +3238,129 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
         try {
             await onLogin(email, password);
         } catch (err) {
-            setError('Credenciales incorrectas o acceso denegado.');
+            setError('Credenciales incorrectas.');
         } finally {
             setLoading(false);
         }
     };
 
     const handleResetPassword = async () => {
-        if (!email) {
-            setError('Ingresa tu correo arriba y presiona "Olvidé mi contraseña".');
-            setResetMsg('');
-            return;
-        }
+        if (!email) { setError('Ingresa tu correo primero.'); return; }
         try {
             await sendPasswordResetEmail(auth, email);
-            setResetMsg('Correo de recuperación enviado. Revisa tu bandeja.');
-            setError('');
-        } catch (err) {
-            setError('Error al enviar correo o el usuario no existe.');
-            setResetMsg('');
-        }
+            setResetMsg('Recuperación enviada.');
+        } catch (err) { setError('Error al enviar correo.'); }
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans animate-fade-in overflow-hidden">
+        <div className="min-h-screen bg-[#0B0F19] flex flex-col font-sans animate-fade-in selection:bg-rose-500 selection:text-white">
             
-            {/* LADO IZQUIERDO: Beneficios (SaaS Landing) */}
-            <div className="md:w-[55%] lg:w-[60%] bg-[#0B0F19] text-white p-8 md:p-12 lg:p-20 flex flex-col justify-center relative">
-                {/* Efectos de luz de fondo (Gradients) */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[120px]"></div>
+            {/* CABECERA PREMIUM */}
+            <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                            <ShieldCheck size={24} className="text-white" />
+                        </div>
+                        <span className="text-white font-bold tracking-tight hidden sm:inline">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
+                    </div>
+                    <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full text-sm font-bold border border-white/10 transition-all active:scale-95">
+                        Iniciar Sesión
+                    </button>
+                </div>
+            </header>
+
+            <div className="flex flex-col md:flex-row flex-1 pt-20">
+                
+                {/* LADO IZQUIERDO: Beneficios */}
+                <div className="md:w-[55%] lg:w-[60%] p-8 md:p-12 lg:p-20 flex flex-col justify-center relative overflow-hidden">
+                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/10 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px]"></div>
+
+                    <div className="relative z-10 max-w-2xl mx-auto md:mx-0">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold uppercase tracking-widest text-rose-400 mb-6 backdrop-blur-sm">
+                            <Star size={12}/> Únete a los mejores
+                        </div>
+                        
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-[1.1]">
+                            Impulsa tu carrera al <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">siguiente nivel.</span>
+                        </h1>
+                        
+                        <p className="text-lg md:text-xl text-gray-400 mb-12 font-medium leading-relaxed">
+                            Una plataforma diseñada exclusivamente para agentes de élite. Todo lo que necesitas en un solo lugar.
+                        </p>
+
+                        <div className="grid sm:grid-cols-2 gap-8">
+                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><Briefcase size={24}/></div>
+                                <div><h3 className="text-white font-bold text-base mb-1">Leads Exclusivos</h3><p className="text-xs text-gray-400 leading-relaxed">Acceso a Marketplace en tiempo real con clientes de alta intención.</p></div>
+                            </div>
+                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-400 group-hover:scale-110 transition-transform"><CalendarDays size={24}/></div>
+                                <div><h3 className="text-white font-bold text-base mb-1">Agenda Inteligente</h3><p className="text-xs text-gray-400 leading-relaxed">Toma el control absoluto de tu tiempo. Tú decides cuándo vender.</p></div>
+                            </div>
+                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 text-green-400 group-hover:scale-110 transition-transform"><Activity size={24}/></div>
+                                <div><h3 className="text-white font-bold text-base mb-1">CRM Integrado</h3><p className="text-xs text-gray-400 leading-relaxed">Gestiona tu cartera, notas e historial sin pagar softwares externos.</p></div>
+                            </div>
+                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform"><ShieldCheck size={24}/></div>
+                                <div><h3 className="text-white font-bold text-base mb-1">Soporte Corporativo</h3><p className="text-xs text-gray-400 leading-relaxed">Respaldo total de una agencia sólida para que solo te enfoques en vender.</p></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="relative z-10 max-w-2xl mx-auto md:mx-0">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-gray-300 mb-6 backdrop-blur-sm">
-                        <Star size={12} className="text-rose-400"/> Únete a los mejores
-                    </div>
-                    
-                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight leading-[1.15]">
-                        Impulsa tu carrera al <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">siguiente nivel.</span>
-                    </h1>
-                    
-                    <p className="text-base md:text-xl text-gray-400 mb-10 md:mb-16 font-medium leading-relaxed">
-                        Una plataforma diseñada exclusivamente para agentes de élite. Todo lo que necesitas para vender más y gestionar tus clientes, en un solo lugar.
-                    </p>
+                {/* LADO DERECHO: Login Integrado */}
+                <div ref={loginRef} className="md:w-[45%] lg:w-[40%] flex flex-col justify-center items-center p-6 md:p-12 relative">
+                    <div className="w-full max-w-[420px] bg-white/5 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
+                        {/* Brillo interno del cuadro */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[40px] pointer-events-none"></div>
+                        
+                        <div className="text-center mb-10">
+                            <div className="w-20 h-20 bg-gradient-to-b from-white/10 to-white/5 rounded-[2rem] mx-auto flex items-center justify-center mb-6 border border-white/10 shadow-inner">
+                                <Lock size={32} className="text-rose-400 shadow-rose-400/50" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-white tracking-tight">Acceso al Portal</h2>
+                            <p className="text-gray-400 text-sm mt-3 font-medium">Gestiona tu equipo y escala tus ventas.</p>
+                        </div>
 
-                    <div className="grid sm:grid-cols-2 gap-8">
-                        {/* Beneficio 1 */}
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-rose-400 shadow-inner"><Briefcase size={24}/></div>
-                            <div>
-                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Leads Exclusivos</h3>
-                                <p className="text-sm text-gray-400 leading-relaxed">Accede a un Marketplace en tiempo real con clientes de alta intención de compra.</p>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1">Tu Correo</label>
+                                <input type="email" placeholder="agente@empresa.com" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" value={email} onChange={e=>setEmail(e.target.value)} required/>
                             </div>
-                        </div>
-                        {/* Beneficio 2 */}
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-blue-400 shadow-inner"><CalendarDays size={24}/></div>
-                            <div>
-                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Agenda Inteligente</h3>
-                                <p className="text-sm text-gray-400 leading-relaxed">Toma control absoluto de tu tiempo. Los clientes se adaptan a tu disponibilidad.</p>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between ml-1 pr-1">
+                                    <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">Contraseña</label>
+                                    <button type="button" onClick={handleResetPassword} className="text-[10px] font-bold text-gray-500 hover:text-rose-400 transition-colors uppercase tracking-widest">¿Olvidaste tu clave?</button>
+                                </div>
+                                <input type="password" placeholder="••••••••" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" value={password} onChange={e=>setPassword(e.target.value)} required/>
                             </div>
-                        </div>
-                        {/* Beneficio 3 */}
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-green-400 shadow-inner"><Activity size={24}/></div>
-                            <div>
-                                <h3 className="text-base font-bold mb-1.5 text-gray-100">CRM Integrado</h3>
-                                <p className="text-sm text-gray-400 leading-relaxed">Gestiona tu cartera, toma notas y lleva el historial de cada prospecto sin pagar extra.</p>
-                            </div>
-                        </div>
-                        {/* Beneficio 4 */}
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-amber-400 shadow-inner"><ShieldCheck size={24}/></div>
-                            <div>
-                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Respaldo Corporativo</h3>
-                                <p className="text-sm text-gray-400 leading-relaxed">Forma parte de una agencia sólida con soporte continuo para que solo te enfoques en vender.</p>
-                            </div>
+
+                            {error && <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold text-center animate-pulse flex items-center justify-center gap-2"><AlertTriangle size={14}/> {error}</div>}
+                            {resetMsg && <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-400 text-xs font-bold text-center animate-fade-in flex items-center justify-center gap-2"><Check size={14}/> {resetMsg}</div>}
+
+                            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 mt-4 overflow-hidden relative group">
+                                <span className="relative z-10">{loading ? 'Verificando...' : 'Iniciar Sesión'}</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                            </button>
+                        </form>
+
+                        <div className="mt-10 pt-8 border-t border-white/5 text-center">
+                            <p className="text-xs text-gray-500 font-medium mb-4">¿Deseas formar parte de la agencia?</p>
+                            <button type="button" onClick={onOpenRegister} className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-bold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
+                                <UserPlus size={18} className="text-gray-500 group-hover:text-rose-500 transition-colors"/> Quiero unirme al Equipo
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* LADO DERECHO: Formulario de Login */}
-            <div className="md:w-[45%] lg:w-[40%] bg-[#F5F5F7] flex flex-col justify-center items-center p-6 md:p-12 relative shadow-[-20px_0_40px_rgba(0,0,0,0.05)]">
-                <div className="w-full max-w-[420px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-gray-100">
-                    <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-black rounded-3xl mx-auto flex items-center justify-center mb-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-                            <Lock size={28} className="text-white"/>
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Acceso al Portal</h2>
-                        <p className="text-sm text-gray-500 mt-2 font-medium">Ingresa tus credenciales para continuar.</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tu Correo</label>
-                            <input type="email" placeholder="agente@empresa.com" className="w-full p-4 bg-gray-50/80 border border-gray-200 rounded-2xl outline-none focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5 transition-all text-sm font-medium" value={email} onChange={e=>setEmail(e.target.value)} required/>
-                        </div>
-                        <div>
-                            <div className="flex items-center justify-between mb-1.5 ml-1 pr-1">
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contraseña</label>
-                                <button type="button" onClick={handleResetPassword} className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">¿Olvidaste tu clave?</button>
-                            </div>
-                            <input type="password" placeholder="••••••••" className="w-full p-4 bg-gray-50/80 border border-gray-200 rounded-2xl outline-none focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5 transition-all text-sm font-medium" value={password} onChange={e=>setPassword(e.target.value)} required/>
-                        </div>
-
-                        {error && <p className="text-red-500 text-xs text-center font-bold bg-red-50 p-3 rounded-xl border border-red-100 mt-2">{error}</p>}
-                        {resetMsg && <p className="text-green-600 text-xs text-center font-bold bg-green-50 p-3 rounded-xl border border-green-100 mt-2">{resetMsg}</p>}
-
-                        <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 mt-4">
-                            {loading ? 'Verificando...' : 'Iniciar Sesión'}
-                        </button>
-                    </form>
-
-                    <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                        <p className="text-sm text-gray-500 font-medium mb-3">¿Aún no formas parte de la agencia?</p>
-                        <button type="button" onClick={onOpenRegister} className="w-full bg-white border-2 border-gray-200 text-gray-800 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group">
-                            <UserPlus size={18} className="text-gray-400 group-hover:text-rose-500 transition-colors"/> Quiero unirme al Equipo
-                        </button>
-                    </div>
-                </div>
-            </div>
+            
+            {/* Footer Minimalista */}
+            <footer className="p-8 text-center text-[10px] text-gray-600 font-medium uppercase tracking-[0.3em]">
+                © {new Date().getFullYear()} asistente de beneficios • sistema seguro y encriptado
+            </footer>
         </div>
     );
 };
