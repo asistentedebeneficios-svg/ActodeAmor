@@ -7,8 +7,8 @@ import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 // --- CONSTANTS ---
-const US_STATES = [
-    "Arizona", "California", "Colorado", "Florida", "Hawaii", "Idaho", "Illinois", "Montana", "Nevada", "New Mexico", "Oregon", "Texas", "Utah", "Virginia", "Wisconsin"
+const FULL_US_STATES = [
+    { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' }, { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' }, { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'Florida', abbr: 'FL' }, { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' }, { name: 'Idaho', abbr: 'ID' }, { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' }, { name: 'Iowa', abbr: 'IA' }, { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' }, { name: 'Louisiana', abbr: 'LA' }, { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' }, { name: 'Massachusetts', abbr: 'MA' }, { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' }, { name: 'Mississippi', abbr: 'MS' }, { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' }, { name: 'Nebraska', abbr: 'NE' }, { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' }, { name: 'New Jersey', abbr: 'NJ' }, { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' }, { name: 'North Carolina', abbr: 'NC' }, { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' }, { name: 'Oklahoma', abbr: 'OK' }, { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' }, { name: 'Rhode Island', abbr: 'RI' }, { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' }, { name: 'Tennessee', abbr: 'TN' }, { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' }, { name: 'Vermont', abbr: 'VT' }, { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' }, { name: 'West Virginia', abbr: 'WV' }, { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }
 ];
 const ALL_US_STATES = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
@@ -345,35 +345,71 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white rounded-3xl w-full max-w-2xl relative shadow-2xl animate-slide-up my-8">
                     <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
-                    <div className="p-6 md:p-8 border-b border-gray-100"><h2 className="text-2xl font-bold text-gray-900">Únete al Equipo</h2><p className="text-gray-500 text-sm mt-1">Completa tu perfil para acceder al Marketplace.</p></div>
+                    
+                    {/* CAMBIO 2: Subtítulo corregido */}
+                    <div className="p-6 md:p-8 border-b border-gray-100">
+                        <h2 className="text-2xl font-bold text-gray-900">Únete al Equipo</h2>
+                        <p className="text-gray-500 text-sm mt-1">Completa tu perfil profesional para enviar la solicitud.</p>
+                    </div>
+
                     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-                        <div className="flex flex-col items-center justify-center">
-                            <label className="w-24 h-24 bg-gray-100 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden mb-3 relative group cursor-pointer hover:border-blue-500 transition-colors">
-                                {profilePicStr ? <img src={profilePicStr} alt="Perfil" className="w-full h-full object-cover" /> : <User size={32} className="text-gray-400 group-hover:text-blue-500" />}
-                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res) => setProfilePicStr(res))} className="hidden" />
-                            </label>
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Subir Foto</span>
+                        
+                        {/* CAMBIO 1: Área de Foto Mejorada con Ejemplo */}
+                        <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                            <div className="flex items-end gap-6 mb-3">
+                                {/* Circulo principal para subir la foto */}
+                                <div className="relative">
+                                    <label className="w-24 h-24 bg-white rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative group cursor-pointer hover:border-blue-500 transition-colors shadow-sm z-10">
+                                        {profilePicStr ? <img src={profilePicStr} alt="Perfil" className="w-full h-full object-cover" /> : <User size={32} className="text-gray-400 group-hover:text-blue-500 transition-colors" />}
+                                        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res) => setProfilePicStr(res))} className="hidden" />
+                                    </label>
+                                    <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 shadow-md pointer-events-none"><Upload size={12} strokeWidth={3}/></div>
+                                </div>
+
+                                {/* Fotografía de Ejemplo (Desaparece cuando el usuario sube la suya) */}
+                                {!profilePicStr && (
+                                    <div className="flex flex-col items-center justify-center pb-2 opacity-60 hidden sm:flex">
+                                        <span className="text-[8px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Ejemplo Ideal</span>
+                                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&h=100&q=80" alt="Ejemplo" className="w-12 h-12 rounded-full border border-gray-200 object-cover" />
+                                    </div>
+                                )}
+                            </div>
+                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wider bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200 mb-2">Subir Foto de Perfil</span>
+                            <p className="text-[10px] text-gray-500 text-center max-w-[280px] leading-relaxed">Debe ser una foto ejecutiva, <strong className="text-gray-800">solo del rostro</strong> (tipo pasaporte). Por favor, evite fotos de cuerpo entero.</p>
                         </div>
+
+                        {/* Datos Básicos */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label><input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => setFormData({...formData, phone: formatPhoneNumber(e.target.value)})} maxLength="14" className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                         </div>
+
+                        {/* Bloque Dinámico de Licencias */}
                         <div className="bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100">
                             <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2"><FileText size={16}/> Licencias Estatales</h3>
                             <div className="space-y-4">
                                 {licenses.map((lic, index) => (
                                     <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
-                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label><select required value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400"><option value="">Seleccionar</option>{ALL_US_STATES.map(st => <option key={st} value={st}>{st}</option>)}</select></div>
+                                        
+                                        {/* CAMBIO 3: Selector de Estados con nombres completos */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label>
+                                            <select required value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
+                                                <option value="">Sel. Estado</option>
+                                                {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
+                                            </select>
+                                        </div>
+
                                         <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input required type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
-                                            <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden">
+                                            <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
                                                 {lic.fileName ? <span className="text-green-600 font-bold truncate">✅ {lic.fileName}</span> : <span>Subir foto</span>}
                                                 <input required={!lic.fileStr} type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
                                             </label>
                                         </div>
-                                        {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1 shadow-sm"><X size={12}/></button>}
+                                        {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-200 rounded-full p-1.5 shadow-sm transition-colors"><X size={12} strokeWidth={3}/></button>}
                                     </div>
                                 ))}
                             </div>
@@ -382,6 +418,8 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                                 {licenseSummary && <div className="text-xs font-mono bg-white px-3 py-1.5 rounded-md border border-gray-200 text-gray-500 shadow-sm text-center md:text-left">{licenseSummary}</div>}
                             </div>
                         </div>
+
+                        {/* Perfil Comercial */}
                         <div className="space-y-5">
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías para las que trabaja</label><input required type="text" placeholder="Ej: Lincoln Heritage, Mutual of Omaha..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
@@ -390,10 +428,16 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             </label>
                             <div>
                                 <div className="flex items-center justify-between mb-1.5 ml-1 pr-1"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bio Corta (Para prospectos)</label><span className={`text-[10px] font-bold ${formData.bio.length > 150 ? 'text-red-500' : 'text-gray-400'}`}>{formData.bio.length}/150</span></div>
-                                <textarea required maxLength="150" placeholder="Ej: Especialista ayudando a familias hispanas..." value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium resize-none h-24" />
+                                <textarea required maxLength="150" placeholder="Ej: Especialista en gastos finales con 5 años de experiencia ayudando a familias hispanas..." value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium resize-none h-24" />
                             </div>
                         </div>
-                        <div className="pt-4 border-t border-gray-100"><button type="submit" disabled={isSubmitting || formData.bio.length > 150} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl">{isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}</button></div>
+                        
+                        {/* Botón de Enviar */}
+                        <div className="pt-4 border-t border-gray-100">
+                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100">
+                                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
