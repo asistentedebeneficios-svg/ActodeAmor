@@ -3538,6 +3538,8 @@ const App = () => {
         await adminLogout();
         setShowAdmin(false);
         localStorage.removeItem('isAdminLoggedIn');
+        // Obligamos al navegador a quedarse en la ruta del portal al salir
+        window.location.hash = '#portal';
     };
 
    if (isPortalRoute && !showAdmin) {
@@ -3603,9 +3605,20 @@ const App = () => {
 
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
+            {/* CABECERA PÁGINA PRINCIPAL */}
+            <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-gray-50">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                            <ShieldCheck size={24} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight">asistente<span className="font-light text-gray-400">debeneficios.com</span></span>
+                    </div>
+                </div>
+            </header>
             
             {/* Hero Section con Imágenes */}
-            <div className="relative pt-24 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
+            <div className="relative pt-32 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
                     {/* Text Content */}
                     <div className="flex-1 w-full flex flex-col items-center lg:items-start text-center lg:text-left relative z-10 pt-4">
