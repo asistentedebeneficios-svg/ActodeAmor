@@ -1598,6 +1598,66 @@ const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
     );
 };
 
+const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
+    const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
+    const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await onSave({
+            ...generalSettings,
+            regularPrice: Number(regPrice),
+            offerPrice: Number(offPrice)
+        });
+        setIsSaving(false);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[80] p-4 animate-fade-in">
+            <div className="glass-card bg-white/95 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
+                
+                <div className="mb-6 pr-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-green-50 text-green-600 p-2.5 rounded-xl border border-green-100"><DollarSign size={20} strokeWidth={2.5}/></div>
+                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Precios de Citas</h3>
+                    </div>
+                    <p className="text-sm text-gray-500">Ajusta los valores para el Marketplace.</p>
+                </div>
+
+                <div className="space-y-5 animate-slide-up">
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Precio Regular ($)</label>
+                        <input 
+                            type="number" 
+                            value={regPrice} 
+                            onChange={e => setRegPrice(e.target.value)}
+                            className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-green-400 focus:ring-4 focus:ring-green-500/10 rounded-xl outline-none transition-all text-sm font-bold text-gray-900 shadow-inner"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Precio Oferta / Urgente ($)</label>
+                        <input 
+                            type="number" 
+                            value={offPrice} 
+                            onChange={e => setOffPrice(e.target.value)}
+                            className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-500/10 rounded-xl outline-none transition-all text-sm font-bold text-red-600 shadow-inner"
+                        />
+                    </div>
+
+                    <div className="pt-4 flex gap-3 border-t border-gray-100">
+                        <button onClick={onClose} className="flex-1 py-3.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">Cancelar</button>
+                        <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3.5 bg-black text-white rounded-xl font-bold text-sm hover:scale-[1.02] shadow-xl transition-transform flex items-center justify-center gap-2">
+                            {isSaving ? 'Guardando...' : <><Save size={16}/> Guardar</>}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
@@ -1615,20 +1675,8 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
+    const [showPriceSettings, setShowPriceSettings] = useState(false);
     const [dialog, setDialog] = useState(null); // NUEVO: Para las alertas de choques
-    const handleChangePrices = () => {
-        const reg = prompt("Ingresa el PRECIO REGULAR (Ejemplo: 45):", generalSettings?.regularPrice ?? 45);
-        if (reg === null || isNaN(reg)) return;
-        const off = prompt("Ingresa el PRECIO DE OFERTA/URGENTE (Ejemplo: 35):", generalSettings?.offerPrice ?? 35);
-        if (off === null || isNaN(off)) return;
-        
-        onUpdateGeneralSettings({
-            ...generalSettings,
-            regularPrice: Number(reg),
-            offerPrice: Number(off)
-        });
-        alert("✅ Precios actualizados en tiempo real para todos los agentes.");
-    };
 
     // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
     const [timeTick, setTimeTick] = useState(0);
@@ -1852,7 +1900,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                             <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                             <span>Auto</span>
                         </button>
-                        <button onClick={handleChangePrices} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cambiar Precios"><DollarSign size={16}/></button>
+                        <button onClick={() => setShowPriceSettings(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cambiar Precios"><DollarSign size={16}/></button>
                         <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
                         <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Salir"><LogOut size={16}/></button>
                     </div>
@@ -1878,7 +1926,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                      </button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div> {/* Separador visual sutil */}
                      
-                     <button onClick={handleChangePrices} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm" title="Cambiar Precios"><DollarSign size={18} /></button>
+                    <button onClick={() => setShowPriceSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm" title="Cambiar Precios"><DollarSign size={18} /></button>
                      <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
@@ -2286,6 +2334,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
             )}
             
             {showWebhookSettings && <WebhookSettingsModal webhooks={webhooks} onSave={onUpdateWebhooks} onClose={() => setShowWebhookSettings(false)} />}
+            {showPriceSettings && <PriceSettingsModal generalSettings={generalSettings} onSave={onUpdateGeneralSettings} onClose={() => setShowPriceSettings(false)} />}
         </div>
     );
 };
