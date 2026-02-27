@@ -3631,9 +3631,7 @@ const App = () => {
 
     return (
         <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
-            try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
-            }} />}
-            
+        
             {reinforcement && (<div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 bg-immediate-red text-white text-center"><div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30"><reinforcement.icon size={48} fill="currentColor" className="text-white" /></div><h2 className="text-3xl font-bold mb-4">{reinforcement.title}</h2><p className="text-lg leading-relaxed opacity-90 mb-10 max-w-sm">"{reinforcement.text}"</p><button onClick={next} className="bg-white text-rose-600 px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">Continuar <ChevronRight size={20} /></button></div>)}
             
             <div className={`pt-8 pb-4 px-6 flex flex-col items-center shrink-0 ${currentStep.isLetter || isSuccess ? 'opacity-0 h-0 overflow-hidden pt-0 pb-0' : ''} transition-all duration-500`}><HeartProgress percentage={fillPercent} isBeating={false} /></div>
