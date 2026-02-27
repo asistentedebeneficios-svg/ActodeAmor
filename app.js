@@ -1908,8 +1908,9 @@ const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
         </div>
     );
 };
-const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
-    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
+const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
+    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
+    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'requests', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
@@ -1926,16 +1927,11 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
     const [showPriceSettings, setShowPriceSettings] = useState(false);
-    const [dialog, setDialog] = useState(null); // NUEVO: Para las alertas de choques
+    const [dialog, setDialog] = useState(null);
 
-    // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
     const [timeTick, setTimeTick] = useState(0);
-    useEffect(() => {
-        const timer = setInterval(() => setTimeTick(t => t + 1), 60000); // 60000ms = 1 minuto
-        return () => clearInterval(timer);
-    }, []);
+    useEffect(() => { const timer = setInterval(() => setTimeTick(t => t + 1), 60000); return () => clearInterval(timer); }, []);
 
-    // 1. Recuperar la ficha automáticamente si el usuario refresca la página (F5)
     useEffect(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         if (hashParts.length > 1 && leads.length > 0 && !viewingLead) {
@@ -1944,28 +1940,21 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
         }
     }, [leads]); 
 
-    // 2. Actualizar la URL cuando cambia la pestaña o se abre/cierra una ficha
     useEffect(() => { 
         const hashLead = viewingLead ? `/${viewingLead.id}` : '';
         window.location.hash = `${activeTab}${hashLead}`; 
     }, [activeTab, viewingLead]);
 
-    // 3. Escuchar el botón "Atrás/Adelante" del navegador web
     useEffect(() => {
         const handleHash = () => {
             const hashParts = window.location.hash.replace('#', '').split('/');
             if (ADMIN_TABS.includes(hashParts[0])) setActiveTab(hashParts[0]);
-            
-            // Si el usuario presiona "Atrás" en el navegador para salir de la ficha, se cierra visualmente
-            if (hashParts.length === 1 && viewingLead) {
-                setViewingLead(null);
-            }
+            if (hashParts.length === 1 && viewingLead) setViewingLead(null);
         };
         window.addEventListener('hashchange', handleHash);
         return () => window.removeEventListener('hashchange', handleHash);
     }, [viewingLead]);
 
-    // Función para calcular horas restantes (Motor Blindado para AM/PM)
     const getHoursUntil = (dateStr, timeStr) => {
         if (!dateStr || !timeStr) return 999;
         try {
@@ -1973,37 +1962,24 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
             let isPM = clean.includes('p');
             let isAM = clean.includes('a');
             let nums = clean.replace(/[^0-9]/g, '');
-            
             if (nums.length < 3) return 999;
-            
             let h = parseInt(nums.slice(0, -2), 10);
             const m = nums.slice(-2);
-            
             if (isPM && h < 12) h += 12;
             if (isAM && h === 12) h = 0;
-            
             const aptDate = new Date(`${dateStr}T${String(h).padStart(2, '0')}:${m}:00`);
             const now = new Date();
             return (aptDate - now) / (1000 * 60 * 60);
-        } catch(e) {
-            return 999; 
-        }
+        } catch(e) { return 999; }
     };
 
-    // Procesamos todos los leads agregando la hora local y el tiempo restante
     const processedLeads = leads.map(l => {
         const localTime = getLocalTimeInfo(l.date, l.time, l.state);
-        return {
-            ...l,
-            localTime,
-            hoursUntil: getHoursUntil(l.date, localTime || l.time)
-        };
+        return { ...l, localTime, hoursUntil: getHoursUntil(l.date, localTime || l.time) };
     });
 
-    // MÁGIA: Cuenta CUALQUIER prospecto activo sin agente al que le queden <= 2 hrs.
     const urgentLeadsCount = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2).length;
 
-    // --- MÁGIA: BUSCADOR OMNIDIRECCIONAL ---
     const getFilteredLeads = () => {
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
@@ -2015,18 +1991,15 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                 (l.notes && l.notes.toLowerCase().includes(lower))
             );
         }
-
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
         else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
-        
         return list;
     };
 
-    // Buscador Inteligente de Agentes
     const getFilteredAgents = () => {
         let list = agents;
         if(searchTerm) { 
@@ -2041,26 +2014,16 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
         return list;
     };
 
-    const filteredLeads = activeTab !== 'agents' && activeTab !== 'schedule' ? getFilteredLeads() : [];
+    const filteredLeads = activeTab !== 'agents' && activeTab !== 'schedule' && activeTab !== 'requests' ? getFilteredLeads() : [];
     
-    // --- ORDENAMIENTO INTELIGENTE (Próxima Cita Arriba / Recientes Pasadas en Archivados) ---
     const sortedLeads = [...filteredLeads].sort((a, b) => {
         const aHasDate = a.hoursUntil !== 999;
         const bHasDate = b.hoursUntil !== 999;
-
-        // Si uno tiene fecha y el otro no, el que tiene fecha va arriba
         if (aHasDate && !bHasDate) return -1;
         if (!aHasDate && bHasDate) return 1;
-        // Si ninguno tiene fecha, se ordenan por el más nuevo creado
         if (!aHasDate && !bHasDate) return b.timestamp - a.timestamp;
-
-        if (activeTab === 'archived') {
-            // Archivados: Las citas que pasaron más recientemente van arriba (Orden Descendente)
-            return b.hoursUntil - a.hoursUntil; 
-        } else {
-            // Resto de pestañas: La cita que esté más próxima en el tiempo va arriba (Orden Ascendente)
-            return a.hoursUntil - b.hoursUntil;
-        }
+        if (activeTab === 'archived') return b.hoursUntil - a.hoursUntil; 
+        else return a.hoursUntil - b.hoursUntil;
     });
 
     const displayAgents = getFilteredAgents();
@@ -2070,7 +2033,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
 
     const triggerAssignmentWebhook = (leadObj, agentObj) => {
         if (!webhooks || !webhooks.assignment) return;
-        
         const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
         const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
         const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
@@ -2094,8 +2056,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
         };
 
         fetch(webhooks.assignment, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lead: translatedLead, agent: agentObj })
         }).catch(e => console.error("Error Webhook Correo:", e));
     };
@@ -2141,22 +2102,20 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                     </div>
                     {/* Botones Móvil */}
                     <div className="flex items-center gap-2 md:hidden">
-                        {/* INTERRUPTOR MODO AUTOMÁTICO (Móvil) justo antes del engranaje */}
                         <button 
                             onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
-                            title="Auto-Marketplace"
                         >
                             <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                             <span>Auto</span>
                         </button>
-                        <button onClick={() => setShowPriceSettings(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cambiar Precios"><DollarSign size={16}/></button>
-                        <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
-                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Salir"><LogOut size={16}/></button>
+                        <button onClick={() => setShowPriceSettings(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><DollarSign size={16}/></button>
+                        <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
+                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
                     </div>
                 </div>
                 
-                {activeTab !== 'schedule' && (
+                {activeTab !== 'schedule' && activeTab !== 'requests' && (
                     <div className="relative w-full md:w-[400px] group">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
                         <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
@@ -2165,26 +2124,23 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                 
                 {/* Botones Desktop */}
                 <div className="hidden md:flex items-center gap-2">
-                     {/* INTERRUPTOR MODO AUTOMÁTICO (Desktop) justo antes del engranaje */}
                      <button 
                          onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                         title="Modo Automático: Si está activo, los prospectos van directo a la Tienda."
                      >
                          <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                          <span>Auto-Marketplace</span>
                      </button>
-                     <div className="w-px h-6 bg-gray-200 mx-1"></div> {/* Separador visual sutil */}
-                     
-                    <button onClick={() => setShowPriceSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm" title="Cambiar Precios"><DollarSign size={18} /></button>
-                     <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
+                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                     <button onClick={() => setShowPriceSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm"><DollarSign size={18} /></button>
+                     <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
             </div>
 
-            {/* Pestañas de Navegación Admin (Estilo Elegante) */}
+            {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'requests', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
@@ -2199,51 +2155,39 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                         {tab === 'urgent' && (
                             <>
                                 Urgente
-                                {urgentLeadsCount > 0 && (
-                                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">
-                                        {urgentLeadsCount}
-                                    </span>
-                                )}
+                                {urgentLeadsCount > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{urgentLeadsCount}</span>}
                             </>
                         )}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
+                        {tab === 'requests' && (
+                            <span className="flex items-center gap-1.5">
+                                Solicitudes
+                                {agentRequests?.length > 0 && <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{agentRequests.length}</span>}
+                            </span>
+                        )}
                         {tab === 'agents' && 'Equipo'}
                         {tab === 'schedule' && 'Agenda'}
                     </button>
                 ))}
             </div>
 
-            {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
+            {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && activeTab !== 'requests' && (
                 <div className="fixed bottom-4 md:bottom-8 left-0 w-full flex justify-center px-4 z-[100] pointer-events-none">
                     <div className="bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-3xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up border border-gray-700 w-full max-w-[400px] md:max-w-none pointer-events-auto">
-                        <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0">
-                            <Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados
-                        </span>
-                        
+                        <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
                         <div className="hidden md:block h-5 w-px bg-gray-700"></div>
-                        
                         <div className="grid grid-cols-3 md:flex gap-2 w-full md:w-auto">
                             {activeTab !== 'archived' ? (
                                 <>
-                                    <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span>
-                                    </button>
-                                    <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <Briefcase size={18} className="md:w-4 md:h-4"/> <span>Vender</span>
-                                    </button>
-                                    <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                        <Archive size={18} className="md:w-4 md:h-4"/> <span>Archivar</span>
-                                    </button>
+                                    <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span></button>
+                                    <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Briefcase size={18} className="md:w-4 md:h-4"/> <span>Vender</span></button>
+                                    <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Archive size={18} className="md:w-4 md:h-4"/> <span>Archivar</span></button>
                                 </>
                             ) : (
-                                <button onClick={() => handleBulkAction('restore')} className="col-span-3 md:col-span-1 flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                    <RotateCcw size={18} className="md:w-4 md:h-4"/> <span>Restaurar</span>
-                                </button>
+                                <button onClick={() => handleBulkAction('restore')} className="col-span-3 md:col-span-1 flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><RotateCcw size={18} className="md:w-4 md:h-4"/> <span>Restaurar</span></button>
                             )}
-                            <button onClick={() => handleBulkAction('delete')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors">
-                                <Trash2 size={18} className="md:w-4 md:h-4"/> <span>Eliminar</span>
-                            </button>
+                            <button onClick={() => handleBulkAction('delete')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 text-red-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Trash2 size={18} className="md:w-4 md:h-4"/> <span>Eliminar</span></button>
                         </div>
                     </div>
                 </div>
@@ -2262,6 +2206,83 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                     ) : (
                         <AdminCalendar leads={processedLeads} agents={agents} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
                     )
+                 ) :
+                 activeTab === 'requests' ? (
+                    <div className="max-w-6xl mx-auto pb-20 animate-fade-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Nuevos Aspirantes</h3>
+                                <p className="text-sm text-gray-500 mt-1">Revisa y aprueba a los agentes que desean unirse al equipo.</p>
+                            </div>
+                        </div>
+
+                        {agentRequests.length === 0 ? (
+                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm mt-4">
+                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserPlus size={24} className="text-gray-300"/></div>
+                                <p className="text-gray-500 font-medium text-sm">No hay solicitudes pendientes en este momento.</p>
+                            </div>
+                        ) : (
+                            <div className="grid gap-6">
+                                {agentRequests.map(req => (
+                                    <div key={req.id} className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col md:flex-row gap-6">
+                                        <div className="flex flex-col items-center md:items-start md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6 shrink-0">
+                                            <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-sm overflow-hidden mb-4">
+                                                {req.photo ? <img src={req.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><User size={32}/></div>}
+                                            </div>
+                                            <h4 className="text-xl font-bold text-gray-900 text-center md:text-left">{req.fullName}</h4>
+                                            <p className="text-sm text-gray-500 mb-4 text-center md:text-left">{req.email}</p>
+                                            
+                                            <div className="w-full space-y-2 text-sm bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                                <div className="flex items-center gap-2 text-gray-700"><Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong></div>
+                                                <div className="flex items-center gap-2 text-gray-700"><Briefcase size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
+                                                {req.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 flex flex-col justify-center">
+                                            <div className="mb-6">
+                                                <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Biografía (Para prospectos)</h5>
+                                                <p className="text-sm text-gray-700 italic bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 leading-relaxed text-balance">"{req.bio}"</p>
+                                            </div>
+                                            
+                                            <div>
+                                                <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block flex items-center gap-1.5"><FileText size={14}/> Licencias Estatales</h5>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {req.licenses && req.licenses.map((lic, idx) => (
+                                                        <div key={idx} className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:border-rose-300 transition-colors">
+                                                            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => window.open(lic.fileStr, '_blank')}>
+                                                                {lic.fileStr ? <img src={lic.fileStr} className="w-full h-full object-cover group-hover:scale-110 transition-transform"/> : <span className="text-[8px] text-center p-1 text-gray-400 flex items-center justify-center h-full">Sin Foto</span>}
+                                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>
+                                                            </div>
+                                                            <div className="pr-3">
+                                                                <p className="text-sm font-bold text-gray-900">{lic.state}</p>
+                                                                <p className="text-[10px] text-gray-500 font-mono tracking-wider">{lic.number}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-row md:flex-col items-center justify-center gap-3 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 shrink-0 w-full md:w-32">
+                                            <button onClick={() => {
+                                                setDialog({ title: 'Aprobar Agente', message: `¿Convertir a ${req.fullName} en un agente oficial de tu equipo?`, type: 'info', onConfirm: () => { onApproveRequest(req); setDialog(null); }, onCancel: () => setDialog(null) });
+                                            }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-black text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:scale-105 transition-transform shadow-lg group">
+                                                <Check size={20} className="group-hover:text-green-400 transition-colors"/>
+                                                Aprobar
+                                            </button>
+                                            <button onClick={() => {
+                                                setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de eliminar y rechazar la solicitud de ${req.fullName}? Esta acción no se puede deshacer.`, type: 'danger', onConfirm: () => { onRejectRequest(req.id); setDialog(null); }, onCancel: () => setDialog(null) });
+                                            }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
+                                                <X size={20} />
+                                                Rechazar
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                  ) :
                  activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto">
@@ -2294,7 +2315,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                     </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
-                        {/* 1. CABECERA DE LA TABLA (Ahora con 7 columnas) */}
+                        {/* CABECERA DE LA TABLA */}
                         <div className="hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                             <div className="flex items-center justify-center"><input type="checkbox" className="custom-checkbox" checked={selectedLeads.length === sortedLeads.length && sortedLeads.length > 0} onChange={toggleSelectAll}/></div>
                             <div>Prospecto</div>
@@ -2317,7 +2338,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                 
                                 return (
                                 <React.Fragment key={lead.id}>
-                                    {/* 2. FILA DE COMPUTADORA (Adaptada a las 7 columnas) */}
+                                    {/* FILA DE COMPUTADORA */}
                                     <div onClick={() => setViewingLead(lead)} className={`hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 border-b border-gray-50 items-center hover:bg-gray-50/80 cursor-pointer transition-colors text-sm group ${isSelected ? 'bg-rose-50/50' : ''}`}>
                                         <div className="flex items-center justify-center" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
@@ -2329,25 +2350,20 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                                 {lead.state && <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded uppercase text-[9px] tracking-wider">{lead.state}</span>}
                                             </div>
                                         </div>
-                                        {/* COLUMNA: FECHA DE CREACIÓN HISTÓRICA */}
                                         <div className="text-gray-500 text-xs font-medium">
                                             <span className="block text-gray-900">{new Date(lead.timestamp).toLocaleDateString()}</span>
                                             <span className="text-[9px] text-gray-400 block mt-0.5">{new Date(lead.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                         </div>
-                                        {/* COLUMNA: CITA PROGRAMADA (DINÁMICA) */}
                                         <div className="text-gray-500 text-xs font-medium">
                                             <span className="block text-gray-900 font-bold">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
                                             <span className="flex items-center gap-1 mt-0.5 text-blue-600 font-bold"><Clock size={10}/> {lead.localTime || lead.time}</span>
-                                            
-                                            {/* NUEVO: Diseño elegante de zona horaria con flecha */}
                                             {lead.localTime && lead.localTime !== lead.time && (
                                                 <span className="text-[9px] text-gray-400 font-medium mt-1 flex items-center gap-1">
                                                     ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-white border border-gray-100 px-1.5 py-0.5 rounded shadow-sm text-gray-500">en {lead.state}</span>
                                                 </span>
                                             )}
                                         </div>
-                                            <div>
-                                            {/* ETIQUETA INTELIGENTE DE ESTADO (Con Oferta de Fuego Sutil) */}
+                                        <div>
                                             <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
@@ -2369,14 +2385,13 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                         </div>
                                     </div>
 
-                                    {/* 3. TARJETA MÓVIL (Separando Creación vs Cita Programada) */}
+                                    {/* TARJETA MÓVIL */}
                                     <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-4 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative ${isSelected ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-gray-100'}`}>
                                         <div className="absolute top-4 right-4 z-10" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
-                                            {/* ETIQUETA INTELIGENTE DE ESTADO (MÓVIL - Con Oferta de Fuego Sutil) */}
                                             <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest items-center gap-1 mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
@@ -2407,7 +2422,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                             </button>
                                         </div>
 
-                                        {/* SEPARACIÓN VISUAL EN MÓVIL (Creación vs Cita) */}
                                         <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
                                             <div className="flex justify-between items-start">
                                                 <div>
@@ -2419,8 +2433,6 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                                                     <div className="flex flex-col text-xs items-end">
                                                         <span className="font-bold text-gray-900">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
                                                         <span className="font-bold text-blue-600 flex items-center gap-1 mt-0.5"><Clock size={10}/> {lead.localTime || lead.time}</span>
-                                                        
-                                                        {/* NUEVO: Muestra la hora del estado en celulares */}
                                                         {lead.localTime && lead.localTime !== lead.time && (
                                                             <span className="text-[9px] text-gray-400 font-medium mt-1 flex items-center gap-1">
                                                                 ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">en {lead.state}</span>
@@ -3451,7 +3463,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
+    const { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
     // --- AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas) ---
@@ -3643,6 +3655,9 @@ const App = () => {
             <AdminDashboard 
                 leads={leads} 
                 agents={agents} 
+                agentRequests={agentRequests}
+                onApproveRequest={approveAgentRequest}
+                onRejectRequest={rejectAgentRequest}
                 schedule={schedule}
                 webhooks={webhooks}
                 generalSettings={generalSettings}
