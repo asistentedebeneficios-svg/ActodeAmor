@@ -1909,12 +1909,15 @@ const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
     );
 };
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
-    // --- ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
-    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'requests', 'agents', 'schedule'];
+    // --- ENRUTADOR WEB AVANZADO ---
+    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
     }); 
+
+    // --- NUEVO: ESTADO PARA LAS SUB-PESTAÑAS DE EQUIPO ---
+    const [agentSubTab, setAgentSubTab] = useState('activos'); // 'activos', 'inactivos', 'solicitudes'
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
@@ -2000,8 +2003,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         return list;
     };
 
-    const getFilteredAgents = () => {
-        let list = agents;
+    // Separamos a los agentes entre activos e inactivos
+    const displayAgents = agents;
+    const activeAgentsList = displayAgents.filter(a => a.status !== 'inactive');
+    const inactiveAgentsList = displayAgents.filter(a => a.status === 'inactive');
+
+    // Filtramos la vista según la sub-pestaña actual
+    const getFilteredAgentsView = () => {
+        let list = agentSubTab === 'activos' ? activeAgentsList : inactiveAgentsList;
         if(searchTerm) { 
             const lower = searchTerm.toLowerCase(); 
             list = list.filter(a => 
@@ -2013,8 +2022,9 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         }
         return list;
     };
+    const currentViewAgents = getFilteredAgentsView();
 
-    const filteredLeads = activeTab !== 'agents' && activeTab !== 'schedule' && activeTab !== 'requests' ? getFilteredLeads() : [];
+    const filteredLeads = activeTab !== 'agents' && activeTab !== 'schedule' ? getFilteredLeads() : [];
     
     const sortedLeads = [...filteredLeads].sort((a, b) => {
         const aHasDate = a.hoursUntil !== 999;
@@ -2025,8 +2035,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         if (activeTab === 'archived') return b.hoursUntil - a.hoursUntil; 
         else return a.hoursUntil - b.hoursUntil;
     });
-
-    const displayAgents = getFilteredAgents();
 
     const toggleSelectAll = () => { if (selectedLeads.length === sortedLeads.length && sortedLeads.length > 0) setSelectedLeads([]); else setSelectedLeads(sortedLeads.map(l => l.id)); };
     const toggleSelect = (id) => { setSelectedLeads(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
@@ -2081,12 +2089,19 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     };
 
     const handleDeleteLead = (e, id) => { e.stopPropagation(); if (window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar prospecto permanentemente?')) onDeleteLead(id); };
-    const handleDeleteAgent = (e, id) => { e.stopPropagation(); if(window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar agente? Se perderá la asignación de sus leads.')) onDeleteAgent(id); };
+    const handleDeleteAgent = (e, id) => { e.stopPropagation(); if(window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar agente permanentemente? Se perderá la asignación de sus leads.')) onDeleteAgent(id); };
 
     const handleSaveAgent = async (agentData) => {
         await onSaveAgent(agentData);
         setIsAgentModalOpen(false);
         setEditingAgent(null);
+    };
+
+    // Función para activar/inactivar
+    const toggleAgentStatus = async (e, agentObj) => {
+        e.stopPropagation();
+        const newStatus = agentObj.status === 'inactive' ? 'active' : 'inactive';
+        await onSaveAgent({ ...agentObj, status: newStatus });
     };
 
     return (
@@ -2115,7 +2130,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     </div>
                 </div>
                 
-                {activeTab !== 'schedule' && activeTab !== 'requests' && (
+                {activeTab !== 'schedule' && (
                     <div className="relative w-full md:w-[400px] group">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
                         <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
@@ -2140,7 +2155,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
             {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'requests', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
@@ -2160,19 +2175,19 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         )}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
-                        {tab === 'requests' && (
+                        {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
+                        {tab === 'agents' && (
                             <span className="flex items-center gap-1.5">
-                                Solicitudes
+                                Equipo
                                 {agentRequests?.length > 0 && <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{agentRequests.length}</span>}
                             </span>
                         )}
-                        {tab === 'agents' && 'Equipo'}
                         {tab === 'schedule' && 'Agenda'}
                     </button>
                 ))}
             </div>
 
-            {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && activeTab !== 'requests' && (
+            {selectedLeads.length > 0 && activeTab !== 'agents' && activeTab !== 'schedule' && (
                 <div className="fixed bottom-4 md:bottom-8 left-0 w-full flex justify-center px-4 z-[100] pointer-events-none">
                     <div className="bg-black/95 backdrop-blur-md text-white p-3 md:px-6 md:py-3 rounded-3xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center gap-3 md:gap-6 animate-slide-up border border-gray-700 w-full max-w-[400px] md:max-w-none pointer-events-auto">
                         <span className="text-xs md:text-sm font-bold flex items-center justify-center gap-2 shrink-0"><Check size={16} className="text-green-400"/> {selectedLeads.length} seleccionados</span>
@@ -2207,111 +2222,138 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         <AdminCalendar leads={processedLeads} agents={agents} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
                     )
                  ) :
-                 activeTab === 'requests' ? (
+                 activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto pb-20 animate-fade-in">
+                        {/* Cabecera y Botón Nuevo Agente */}
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Nuevos Aspirantes</h3>
-                                <p className="text-sm text-gray-500 mt-1">Revisa y aprueba a los agentes que desean unirse al equipo.</p>
+                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Gestión de Equipo</h3>
+                                <p className="text-sm text-gray-500 mt-1">Administra tu personal de ventas y evalúa solicitudes.</p>
                             </div>
+                            <button onClick={() => {setEditingAgent(null); setIsAgentModalOpen(true);}} className="bg-black text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium flex items-center gap-2 shadow-lg hover:scale-105 transition-transform text-xs md:text-sm shrink-0">
+                                <UserPlus size={16}/> <span className="hidden md:inline">Nuevo Agente</span><span className="md:hidden">Nuevo</span>
+                            </button>
                         </div>
 
-                        {agentRequests.length === 0 ? (
-                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm mt-4">
-                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserPlus size={24} className="text-gray-300"/></div>
-                                <p className="text-gray-500 font-medium text-sm">No hay solicitudes pendientes en este momento.</p>
-                            </div>
-                        ) : (
-                            <div className="grid gap-6">
-                                {agentRequests.map(req => (
-                                    <div key={req.id} className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col md:flex-row gap-6">
-                                        <div className="flex flex-col items-center md:items-start md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6 shrink-0">
-                                            <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-sm overflow-hidden mb-4">
-                                                {req.photo ? <img src={req.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><User size={32}/></div>}
-                                            </div>
-                                            <h4 className="text-xl font-bold text-gray-900 text-center md:text-left">{req.fullName}</h4>
-                                            <p className="text-sm text-gray-500 mb-4 text-center md:text-left">{req.email}</p>
-                                            
-                                            <div className="w-full space-y-2 text-sm bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                                                <div className="flex items-center gap-2 text-gray-700"><Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong></div>
-                                                <div className="flex items-center gap-2 text-gray-700"><Briefcase size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
-                                                {req.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
-                                            </div>
-                                        </div>
+                        {/* LAS 3 SUB-PESTAÑAS (Activos, Inactivos, Solicitudes) */}
+                        <div className="flex gap-4 md:gap-8 border-b border-gray-200 mb-6 overflow-x-auto scrollbar-hide">
+                            <button onClick={() => setAgentSubTab('activos')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${agentSubTab === 'activos' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                                Activos ({activeAgentsList.length})
+                            </button>
+                            <button onClick={() => setAgentSubTab('inactivos')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${agentSubTab === 'inactivos' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                                Inactivos ({inactiveAgentsList.length})
+                            </button>
+                            <button onClick={() => setAgentSubTab('solicitudes')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${agentSubTab === 'solicitudes' ? 'border-rose-500 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                                Solicitudes 
+                                {agentRequests?.length > 0 ? (
+                                    <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse">{agentRequests.length}</span>
+                                ) : (
+                                    <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                                )}
+                            </button>
+                        </div>
 
-                                        <div className="flex-1 flex flex-col justify-center">
-                                            <div className="mb-6">
-                                                <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Biografía (Para prospectos)</h5>
-                                                <p className="text-sm text-gray-700 italic bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 leading-relaxed text-balance">"{req.bio}"</p>
-                                            </div>
-                                            
-                                            <div>
-                                                <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block flex items-center gap-1.5"><FileText size={14}/> Licencias Estatales</h5>
-                                                <div className="flex flex-wrap gap-3">
-                                                    {req.licenses && req.licenses.map((lic, idx) => (
-                                                        <div key={idx} className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:border-rose-300 transition-colors">
-                                                            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => window.open(lic.fileStr, '_blank')}>
-                                                                {lic.fileStr ? <img src={lic.fileStr} className="w-full h-full object-cover group-hover:scale-110 transition-transform"/> : <span className="text-[8px] text-center p-1 text-gray-400 flex items-center justify-center h-full">Sin Foto</span>}
-                                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>
-                                                            </div>
-                                                            <div className="pr-3">
-                                                                <p className="text-sm font-bold text-gray-900">{lic.state}</p>
-                                                                <p className="text-[10px] text-gray-500 font-mono tracking-wider">{lic.number}</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                        {/* CONTENIDO 1: SOLICITUDES PENDIENTES */}
+                        {agentSubTab === 'solicitudes' && (
+                            agentRequests.length === 0 ? (
+                                <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm mt-4">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><UserPlus size={24} className="text-gray-300"/></div>
+                                    <p className="text-gray-500 font-medium text-sm">No hay solicitudes pendientes en este momento.</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-6">
+                                    {agentRequests.map(req => (
+                                        <div key={req.id} className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col md:flex-row gap-6">
+                                            <div className="flex flex-col items-center md:items-start md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6 shrink-0">
+                                                <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-sm overflow-hidden mb-4">
+                                                    {req.photo ? <img src={req.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><User size={32}/></div>}
+                                                </div>
+                                                <h4 className="text-xl font-bold text-gray-900 text-center md:text-left">{req.fullName}</h4>
+                                                <p className="text-sm text-gray-500 mb-4 text-center md:text-left">{req.email}</p>
+                                                
+                                                <div className="w-full space-y-2 text-sm bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                                    <div className="flex items-center gap-2 text-gray-700"><Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong></div>
+                                                    <div className="flex items-center gap-2 text-gray-700"><Briefcase size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
+                                                    {req.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex flex-row md:flex-col items-center justify-center gap-3 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 shrink-0 w-full md:w-32">
-                                            <button onClick={() => {
-                                                setDialog({ title: 'Aprobar Agente', message: `¿Convertir a ${req.fullName} en un agente oficial de tu equipo?`, type: 'info', onConfirm: () => { onApproveRequest(req); setDialog(null); }, onCancel: () => setDialog(null) });
-                                            }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-black text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:scale-105 transition-transform shadow-lg group">
-                                                <Check size={20} className="group-hover:text-green-400 transition-colors"/>
-                                                Aprobar
-                                            </button>
-                                            <button onClick={() => {
-                                                setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de eliminar y rechazar la solicitud de ${req.fullName}? Esta acción no se puede deshacer.`, type: 'danger', onConfirm: () => { onRejectRequest(req.id); setDialog(null); }, onCancel: () => setDialog(null) });
-                                            }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
-                                                <X size={20} />
-                                                Rechazar
-                                            </button>
+                                            <div className="flex-1 flex flex-col justify-center">
+                                                <div className="mb-6">
+                                                    <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Biografía (Para prospectos)</h5>
+                                                    <p className="text-sm text-gray-700 italic bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 leading-relaxed text-balance">"{req.bio}"</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block flex items-center gap-1.5"><FileText size={14}/> Licencias Estatales</h5>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        {req.licenses && req.licenses.map((lic, idx) => (
+                                                            <div key={idx} className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:border-rose-300 transition-colors">
+                                                                <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => window.open(lic.fileStr, '_blank')}>
+                                                                    {lic.fileStr ? <img src={lic.fileStr} className="w-full h-full object-cover group-hover:scale-110 transition-transform"/> : <span className="text-[8px] text-center p-1 text-gray-400 flex items-center justify-center h-full">Sin Foto</span>}
+                                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>
+                                                                </div>
+                                                                <div className="pr-3">
+                                                                    <p className="text-sm font-bold text-gray-900">{lic.state}</p>
+                                                                    <p className="text-[10px] text-gray-500 font-mono tracking-wider">{lic.number}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-row md:flex-col items-center justify-center gap-3 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 shrink-0 w-full md:w-32">
+                                                <button onClick={() => {
+                                                    setDialog({ title: 'Aprobar Agente', message: `¿Convertir a ${req.fullName} en un agente oficial de tu equipo?`, type: 'info', onConfirm: () => { onApproveRequest(req); setDialog(null); }, onCancel: () => setDialog(null) });
+                                                }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-black text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:scale-105 transition-transform shadow-lg group">
+                                                    <Check size={20} className="group-hover:text-green-400 transition-colors"/>
+                                                    Aprobar
+                                                </button>
+                                                <button onClick={() => {
+                                                    setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de eliminar y rechazar la solicitud de ${req.fullName}? Esta acción no se puede deshacer.`, type: 'danger', onConfirm: () => { onRejectRequest(req.id); setDialog(null); }, onCancel: () => setDialog(null) });
+                                                }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
+                                                    <X size={20} />
+                                                    Rechazar
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )
                         )}
-                    </div>
-                 ) :
-                 activeTab === 'agents' ? (
-                    <div className="max-w-6xl mx-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg md:text-2xl font-bold text-gray-900 tracking-tight">Equipo de Ventas</h3>
-                            <button onClick={() => {setEditingAgent(null); setIsAgentModalOpen(true);}} className="bg-black text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium flex items-center gap-2 shadow-lg hover:scale-105 transition-transform text-xs md:text-sm"><UserPlus size={16}/> <span className="hidden md:inline">Nuevo Agente</span><span className="md:hidden">Nuevo</span></button>
-                        </div>
-                        <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {displayAgents.map(agent => (
-                            <div key={agent.id} onClick={() => setViewingAgent(agent)} className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
-                                            {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
+
+                        {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS */}
+                        {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
+                            <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {currentViewAgents.map(agent => (
+                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
+                                                {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2">
+                                                    {agent.name}
+                                                    {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200">Inactivo</span>}
+                                                </h3>
+                                                <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 truncate">{agent.license || 'Agente'}</p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate">{agent.name}</h3>
-                                            <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 truncate">{agent.license || 'Agente'}</p>
+                                        <div className="flex flex-col md:flex-row gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-2 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Editar"><Edit2 size={14} /></button>
+                                            <button onClick={(e) => toggleAgentStatus(e, agent)} className="p-2 bg-gray-50 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-500 hover:text-amber-600 rounded-full transition-colors shadow-sm" title={agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}>
+                                                {agent.status === 'inactive' ? <RotateCcw size={14}/> : <MinusCircle size={14}/>}
+                                            </button>
+                                            <button onClick={(e) => handleDeleteAgent(e, agent.id)} className="p-2 bg-gray-50 border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors shadow-sm" title="Eliminar"><Trash2 size={14} /></button>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col md:flex-row gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-2 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm"><Edit2 size={14} /></button>
-                                        <button onClick={(e) => handleDeleteAgent(e, agent.id)} className="p-2 bg-gray-50 border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors shadow-sm"><Trash2 size={14} /></button>
                                     </div>
                                 </div>
+                                ))}
+                                {currentViewAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes {agentSubTab}.</div>}
                             </div>
-                            ))}
-                            {displayAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes.</div>}
-                        </div>
+                        )}
                     </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
