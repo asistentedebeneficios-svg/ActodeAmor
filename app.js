@@ -2243,12 +2243,12 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             <button onClick={() => setAgentSubTab('inactivos')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${agentSubTab === 'inactivos' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                                 Inactivos ({inactiveAgentsList.length})
                             </button>
-                            <button onClick={() => setAgentSubTab('solicitudes')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${agentSubTab === 'solicitudes' ? 'border-rose-500 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                            <button onClick={() => setAgentSubTab('solicitudes')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors flex items-center gap-1.5 ${agentSubTab === 'solicitudes' ? 'border-rose-500 text-rose-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                                 Solicitudes 
                                 {agentRequests?.length > 0 ? (
-                                    <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse">{agentRequests.length}</span>
+                                    <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse ml-0.5">({agentRequests.length})</span>
                                 ) : (
-                                    <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">0</span>
+                                    <span className="text-gray-400">({agentRequests.length})</span>
                                 )}
                             </button>
                         </div>
@@ -2327,27 +2327,30 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {currentViewAgents.map(agent => (
-                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
+                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 flex flex-col justify-center ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                                        
+                                        <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
                                                 {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
                                             </div>
-                                            <div className="min-w-0">
+                                            <div className="min-w-0 flex-1 pr-2">
                                                 <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2">
-                                                    {agent.name}
-                                                    {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200">Inactivo</span>}
+                                                    <span className="truncate">{agent.name}</span>
+                                                    {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
                                                 </h3>
-                                                <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 truncate">{agent.license || 'Agente'}</p>
+                                                <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-0.5 truncate">{agent.license || 'Agente'}</p>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col md:flex-row gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-2 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Editar"><Edit2 size={14} /></button>
-                                            <button onClick={(e) => toggleAgentStatus(e, agent)} className="p-2 bg-gray-50 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-500 hover:text-amber-600 rounded-full transition-colors shadow-sm" title={agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}>
+
+                                        <div className="flex flex-row gap-2 self-start sm:self-auto shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Editar"><Edit2 size={14} /></button>
+                                            <button onClick={(e) => toggleAgentStatus(e, agent)} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-500 hover:text-amber-600 rounded-full transition-colors shadow-sm" title={agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}>
                                                 {agent.status === 'inactive' ? <RotateCcw size={14}/> : <MinusCircle size={14}/>}
                                             </button>
-                                            <button onClick={(e) => handleDeleteAgent(e, agent.id)} className="p-2 bg-gray-50 border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors shadow-sm" title="Eliminar"><Trash2 size={14} /></button>
+                                            <button onClick={(e) => handleDeleteAgent(e, agent.id)} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors shadow-sm" title="Eliminar"><Trash2 size={14} /></button>
                                         </div>
+                                        
                                     </div>
                                 </div>
                                 ))}
