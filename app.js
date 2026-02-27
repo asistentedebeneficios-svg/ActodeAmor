@@ -3218,6 +3218,81 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
     );
 };
 
+const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [resetMsg, setResetMsg] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true); setError(''); setResetMsg('');
+        try {
+            await onLogin(email, password);
+        } catch (err) {
+            setError('Credenciales incorrectas o acceso denegado.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email) {
+            setError('Ingresa tu correo arriba y presiona "Olvidé mi contraseña".');
+            setResetMsg('');
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setResetMsg('Correo de recuperación enviado. Revisa tu bandeja.');
+            setError('');
+        } catch (err) {
+            setError('Error al enviar correo o el usuario no existe.');
+            setResetMsg('');
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans px-4 animate-fade-in relative">
+            <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-xl border border-gray-100 relative z-10">
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-black rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
+                        <Lock size={28} className="text-white"/>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Portal de Agentes</h1>
+                    <p className="text-sm text-gray-500 mt-2">Acceso exclusivo para el equipo.</p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div><input type="email" placeholder="Correo electrónico" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
+                    <div><input type="password" placeholder="Contraseña" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={password} onChange={e=>setPassword(e.target.value)} required/></div>
+
+                    {error && <p className="text-red-500 text-xs text-center font-bold bg-red-50 p-2 rounded-lg">{error}</p>}
+                    {resetMsg && <p className="text-green-600 text-xs text-center font-bold bg-green-50 p-2 rounded-lg">{resetMsg}</p>}
+
+                    <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50 mt-2">
+                        {loading ? 'Verificando...' : 'Iniciar Sesión'}
+                    </button>
+                </form>
+
+                <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-100">
+                    <button type="button" onClick={handleResetPassword} className="text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">¿Olvidaste tu contraseña?</button>
+                    <button type="button" onClick={onOpenRegister} className="w-full bg-white border border-gray-200 text-gray-800 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mt-1">
+                        <UserPlus size={16}/> Únete al Equipo
+                    </button>
+                </div>
+            </div>
+            
+            <div className="mt-8 text-center relative z-10">
+                <a href="#" onClick={() => window.location.hash = ''} className="text-xs text-gray-400 hover:text-gray-900 transition-colors font-bold flex items-center justify-center gap-1">
+                    <ArrowLeft size={14}/> Volver al inicio
+                </a>
+            </div>
+        </div>
+    );
+};
+                                    
 const App = () => {
     const [stepIndex, setStepIndex] = useState(0);
     const [leadData, setLeadData] = useState({});
@@ -3393,42 +3468,22 @@ const App = () => {
         localStorage.removeItem('isAdminLoggedIn');
     };
 
-    if (isPortalRoute && !showAdmin) {
-        return (
-            <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans px-4 animate-fade-in">
-                <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
-                    <div className="text-center mb-8">
-                        <div className="w-12 h-12 bg-black rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
-                            <Briefcase size={24} className="text-white"/>
-                        </div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Portal Corporativo</h1>
-                        <p className="text-sm text-gray-500 mt-2">Acceso exclusivo para agentes autorizados.</p>
-                    </div>
-
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        handleLogin(e.target.email.value, e.target.password.value);
-                    }} className="space-y-5">
-                        <div>
-                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
-                            <input type="email" name="email" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" placeholder="agente@empresa.com" />
-                        </div>
-                        <div>
-                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Contraseña</label>
-                            <input type="password" name="password" required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" placeholder="••••••••" />
-                        </div>
-                        <button type="submit" className="w-full bg-black text-white font-bold text-sm py-3.5 rounded-xl hover:bg-gray-800 transition-colors shadow-md mt-2">
-                            Iniciar Sesión
-                        </button>
-                    </form>
-                    <div className="mt-6 text-center">
-                        <a href="#" onClick={() => window.location.hash = ''} className="text-xs text-gray-400 hover:text-gray-900 transition-colors font-medium">
-                            ← Volver al inicio
-                        </a>
-                    </div>
+   if (isPortalRoute && !showAdmin) {
+        if (showRegister) {
+            return (
+                <div className="min-h-screen bg-[#F5F5F7]">
+                    <AgentRegistrationForm 
+                        onCancel={() => setShowRegister(false)} 
+                        onSubmit={async (data) => {
+                            try { 
+                                await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); 
+                            } catch (e) { console.error(e); }
+                        }} 
+                    />
                 </div>
-            </div>
-        );
+            );
+        }
+        return <PortalLoginScreen onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />;
     }
     
     if (showAdmin && user && !user.isAnonymous) {
@@ -3476,15 +3531,7 @@ const App = () => {
 
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
-            <div className="absolute top-4 right-4 z-50">
-                <button onClick={() => setShowLogin(true)} className="p-2 text-gray-300 hover:text-gray-500 transition-colors"><Lock size={16}/></button>
-            </div>
-
-            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />}
-            {showRegister && <AgentRegistrationForm onCancel={() => setShowRegister(false)} onSubmit={async (data) => {
-                try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
-            }} />}
-
+            
             {/* Hero Section con Imágenes */}
             <div className="relative pt-24 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
@@ -3584,9 +3631,7 @@ const App = () => {
 
     return (
         <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
-            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />}
-            {showRegister && <AgentRegistrationForm onCancel={() => setShowRegister(false)} onSubmit={async (data) => {
-                try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
+            try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
             }} />}
             
             {reinforcement && (<div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 bg-immediate-red text-white text-center"><div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30"><reinforcement.icon size={48} fill="currentColor" className="text-white" /></div><h2 className="text-3xl font-bold mb-4">{reinforcement.title}</h2><p className="text-lg leading-relaxed opacity-90 mb-10 max-w-sm">"{reinforcement.text}"</p><button onClick={next} className="bg-white text-rose-600 px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">Continuar <ChevronRight size={20} /></button></div>)}
