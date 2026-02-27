@@ -185,9 +185,9 @@ const useFirebaseDatabase = () => {
         const generalDoc = doc(db, 'settings', 'general');
         const unsubGeneral = onSnapshot(generalDoc, (snapshot) => {
             if (snapshot.exists()) {
-                setGeneralSettings(snapshot.data());
+                setGeneralSettings({ regularPrice: 45, offerPrice: 35, ...snapshot.data() });
             } else if (!user.isAnonymous) {
-                setDoc(generalDoc, { marketplaceMode: false }).catch(e => console.log("General auto-creation skipped"));
+                setDoc(generalDoc, { marketplaceMode: false, regularPrice: 45, offerPrice: 35 }).catch(e => console.log("General auto-creation skipped"));
             }
         }, (err) => {
             if(err.code !== 'permission-denied') console.error("General error:", err);
@@ -1616,6 +1616,19 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     const [showWebhookSettings, setShowWebhookSettings] = useState(false);
     const [dialog, setDialog] = useState(null); // NUEVO: Para las alertas de choques
+    const handleChangePrices = () => {
+        const reg = prompt("Ingresa el PRECIO REGULAR (Ejemplo: 45):", generalSettings?.regularPrice ?? 45);
+        if (reg === null || isNaN(reg)) return;
+        const off = prompt("Ingresa el PRECIO DE OFERTA/URGENTE (Ejemplo: 35):", generalSettings?.offerPrice ?? 35);
+        if (off === null || isNaN(off)) return;
+        
+        onUpdateGeneralSettings({
+            ...generalSettings,
+            regularPrice: Number(reg),
+            offerPrice: Number(off)
+        });
+        alert("✅ Precios actualizados en tiempo real para todos los agentes.");
+    };
 
     // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
     const [timeTick, setTimeTick] = useState(0);
@@ -1839,6 +1852,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                             <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                             <span>Auto</span>
                         </button>
+                        <button onClick={handleChangePrices} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Cambiar Precios"><DollarSign size={16}/></button>
                         <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Configurar Webhooks"><Settings size={16}/></button>
                         <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm" title="Salir"><LogOut size={16}/></button>
                     </div>
@@ -1864,6 +1878,7 @@ const AdminDashboard = ({ leads, agents, schedule, webhooks, generalSettings, on
                      </button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div> {/* Separador visual sutil */}
                      
+                     <button onClick={handleChangePrices} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm" title="Cambiar Precios"><DollarSign size={18} /></button>
                      <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm" title="Configurar Webhooks"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
@@ -2376,7 +2391,9 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
   };
 };
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
-const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
+const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
+    const regularPrice = generalSettings?.regularPrice ?? 45;
+    const offerPrice = generalSettings?.offerPrice ?? 35;
     const TABS = ['marketplace', 'clientes', 'agenda', 'historial'];
     const [viewingLead, setViewingLead] = useState(null);
     
@@ -2524,7 +2541,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
         const lead = availableLeads.find(l => l.id === leadId);
         if (!lead) return total;
         const isFireSale = lead.hoursUntil <= 3; 
-        return total + (isFireSale ? 10 : 40); 
+        return total + (isFireSale ? offerPrice : regularPrice); 
     }, 0);
 
     // Lógica del Temporizador
@@ -2566,7 +2583,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                 const isFireSale = lead.hoursUntil <= 3;
                 return {
                     name: `Prospecto en ${lead.state || 'US'}`,
-                    price: isFireSale ? 10 : 40 // Mantenemos tu regla de precios
+                    price: isFireSale ? offerPrice : regularPrice
                 };
             });
 
@@ -2753,11 +2770,11 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                                     <div className="text-right">
                                                         {isFireSale ? (
                                                             <div className="flex items-center gap-1.5">
-                                                                <span className="text-[10px] text-gray-400 line-through font-medium">$40</span>
-                                                                <span className="text-sm font-extrabold text-red-600">$10</span>
+                                                                <span className="text-[10px] text-gray-400 line-through font-medium">${regularPrice}</span>
+                                                                <span className="text-sm font-extrabold text-red-600">${offerPrice}</span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-sm font-semibold text-gray-400">$40</span>
+                                                            <span className="text-sm font-semibold text-gray-400">${regularPrice}</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -2889,7 +2906,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout }) => {
                                 // Generamos un ID de recibo falso pero constante basado en el ID del lead
                                 const receiptId = `REC-${lead.id.substring(0, 6).toUpperCase()}`;
                                 // Asumimos un precio base para el recibo (si es de hoy y urgente, $10, si no $40. Esto se afinará con Stripe)
-                                const paidAmount = lead.status === 'marketplace' && lead.hoursUntil <= 3 ? '$10.00' : '$40.00';
+                                const paidAmount = lead.status === 'marketplace' && lead.hoursUntil <= 3 ? `$${offerPrice}.00` : `$${regularPrice}.00`;
                                 
                                 return (
                                     <div key={`rec-${lead.id}`} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
@@ -3179,7 +3196,7 @@ const App = () => {
 
         // Si ES un agente, lo encerramos en su Portal SaaS
         if (currentAgent) {
-            return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} />;
+            return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
         }
 
         // Si NO es agente, asumimos que eres el Jefe y te mostramos TODO
