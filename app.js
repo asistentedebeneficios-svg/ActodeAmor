@@ -302,13 +302,18 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
     const [profilePicStr, setProfilePicStr] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [error, setError] = useState(''); // <-- NUEVO: Estado para errores elegantes
 
     const licenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
 
     const handleFileChange = (e, callback) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { alert("Archivo muy pesado. Máximo 2MB."); return; }
+        if (file.size > 2 * 1024 * 1024) { 
+            setError("La imagen es muy pesada. El tamaño máximo es 2MB."); 
+            return; 
+        }
+        setError(''); // Limpia el error si todo está bien
         const reader = new FileReader();
         reader.onloadend = () => callback(reader.result, file.name);
         reader.readAsDataURL(file);
@@ -318,10 +323,26 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
         const newLics = [...licenses];
         newLics[index][field] = value;
         setLicenses(newLics);
+        setError(''); // Limpia errores al corregir
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(''); // Limpiamos errores previos
+        
+        // --- 1. VALIDACIÓN BLINDADA (SIN ALERTAS FEAS) ---
+        if (formData.phone.length < 14) {
+            setError("Por favor, ingresa un número de teléfono válido (10 dígitos).");
+            return;
+        }
+
+        const incompleteLicense = licenses.find(l => !l.state || !l.number || !l.fileStr);
+        if (incompleteLicense) {
+            setError("Faltan datos en las licencias. Selecciona el estado, número y foto.");
+            return;
+        }
+
+        // --- 2. ENVÍO SEGURO ---
         setIsSubmitting(true);
         await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
         setIsSubmitting(false);
@@ -345,7 +366,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                 <div className="bg-white rounded-3xl w-full max-w-2xl relative shadow-2xl animate-slide-up my-8">
                     <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
                     
-                    {/* CAMBIO 2: Subtítulo corregido */}
                     <div className="p-6 md:p-8 border-b border-gray-100">
                         <h2 className="text-2xl font-bold text-gray-900">Únete al Equipo</h2>
                         <p className="text-gray-500 text-sm mt-1">Completa tu perfil profesional para enviar la solicitud.</p>
@@ -353,10 +373,8 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
                     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
                         
-                        {/* CAMBIO 1: Área de Foto Mejorada con Ejemplo */}
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
-                                {/* Circulo principal para subir la foto */}
                                 <div className="relative">
                                     <label className="w-24 h-24 bg-white rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative group cursor-pointer hover:border-blue-500 transition-colors shadow-sm z-10">
                                         {profilePicStr ? <img src={profilePicStr} alt="Perfil" className="w-full h-full object-cover" /> : <User size={32} className="text-gray-400 group-hover:text-blue-500 transition-colors" />}
@@ -365,7 +383,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                                     <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 shadow-md pointer-events-none"><Upload size={12} strokeWidth={3}/></div>
                                 </div>
 
-                                {/* Fotografía de Ejemplo (Desaparece cuando el usuario sube la suya) */}
                                 {!profilePicStr && (
                                     <div className="flex flex-col items-center justify-center pb-2 opacity-60 hidden sm:flex">
                                         <span className="text-[8px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Ejemplo Ideal</span>
@@ -377,35 +394,30 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             <p className="text-[10px] text-gray-500 text-center max-w-[280px] leading-relaxed">Debe ser una foto ejecutiva, <strong className="text-gray-800">solo del rostro</strong> (tipo pasaporte). Por favor, evite fotos de cuerpo entero.</p>
                         </div>
 
-                        {/* Datos Básicos */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label><input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => setFormData({...formData, phone: formatPhoneNumber(e.target.value)})} maxLength="14" className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                         </div>
 
-                        {/* Bloque Dinámico de Licencias */}
                         <div className="bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100">
                             <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2"><FileText size={16}/> Licencias Estatales</h3>
                             <div className="space-y-4">
                                 {licenses.map((lic, index) => (
                                     <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
-                                        
-                                        {/* CAMBIO 3: Selector de Estados con nombres completos */}
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label>
-                                            <select required value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
+                                            <select value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
                                                 <option value="">Sel. Estado</option>
                                                 {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
                                             </select>
                                         </div>
-
-                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input required type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
                                             <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
                                                 {lic.fileName ? <span className="text-green-600 font-bold truncate">✅ {lic.fileName}</span> : <span>Subir foto</span>}
-                                                <input required={!lic.fileStr} type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
+                                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
                                             </label>
                                         </div>
                                         {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-200 rounded-full p-1.5 shadow-sm transition-colors"><X size={12} strokeWidth={3}/></button>}
@@ -418,7 +430,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             </div>
                         </div>
 
-                        {/* Perfil Comercial */}
                         <div className="space-y-5">
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías para las que trabaja</label><input required type="text" placeholder="Ej: Lincoln Heritage, Mutual of Omaha..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
@@ -431,7 +442,14 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             </div>
                         </div>
                         
-                        {/* Botón de Enviar */}
+                        {/* CAMBIO 3: EL CUADRO DE ERROR ELEGANTE */}
+                        {error && (
+                            <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm">
+                                <AlertTriangle size={18} className="shrink-0" />
+                                <p>{error}</p>
+                            </div>
+                        )}
+
                         <div className="pt-4 border-t border-gray-100">
                             <button type="submit" disabled={isSubmitting || formData.bio.length > 150} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100">
                                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
