@@ -852,7 +852,7 @@ const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
         const term = search.toLowerCase();
         return (a.name && a.name.toLowerCase().includes(term)) || 
                (a.email && a.email.toLowerCase().includes(term)) ||
-               (a.license && a.license.toLowerCase().includes(term)); // MÁGIA: Busca estados en el modal también
+               (a.license && a.license.toLowerCase().includes(term));
     });
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4 animate-fade-in">
@@ -890,15 +890,44 @@ const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
     );
 };
 
-const AgentModal = ({ agent, onClose, onSave }) => {
+const AgentModal = ({ agent, onClose, onSave, onDelete, onToggleStatus }) => {
     const [formData, setFormData] = useState({ name: '', license: '', email: '', phone: '', bio: '', photo: '' });
-    useEffect(() => { if (agent) setFormData(agent); else setFormData({ name: '', license: '', email: '', phone: '', bio: '', photo: '' }); }, [agent]);
+    const [dialog, setDialog] = useState(null);
+
+    useEffect(() => { 
+        if (agent) setFormData(agent); 
+        else setFormData({ name: '', license: '', email: '', phone: '', bio: '', photo: '' }); 
+    }, [agent]);
+
     const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("La imagen es muy pesada. Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
     const handleSubmit = (e) => { e.preventDefault(); onSave({ ...formData, timestamp: agent ? agent.timestamp : Date.now() }); };
 
+    const handleDeleteClick = () => {
+        setDialog({
+            title: 'Eliminar Agente',
+            message: `¿Estás seguro de eliminar a ${agent.name}? Esta acción es irreversible y perderá el acceso al portal de inmediato.`,
+            type: 'danger',
+            onConfirm: () => { onDelete(agent.id); setDialog(null); onClose(); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
+    const handleToggleStatusClick = () => {
+        const isInactive = agent.status === 'inactive';
+        setDialog({
+            title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente',
+            message: isInactive ? `¿Deseas reactivar a ${agent.name}? Volverá a tener acceso y podrá recibir prospectos.` : `¿Deseas inactivar a ${agent.name}? No podrá acceder al portal ni recibir nuevos prospectos.`,
+            type: 'warning',
+            onConfirm: () => { onToggleStatus(agent); setDialog(null); onClose(); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[70] p-4 animate-fade-in">
+            <CustomDialog isOpen={!!dialog} {...dialog} />
+            
             <div className="glass-card bg-white/95 rounded-3xl w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide relative">
                 <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
                 <div className="mb-6 pr-10">
@@ -923,7 +952,6 @@ const AgentModal = ({ agent, onClose, onSave }) => {
                                 <div className="pl-3 text-gray-400"><LinkIcon size={14}/></div>
                                 <input type="text" name="photo" value={formData.photo && formData.photo.startsWith('data:') ? '' : formData.photo} onChange={handleChange} placeholder="https://..." className="w-full text-sm outline-none px-2 py-2.5 bg-transparent"/>
                             </div>
-                            {formData.photo && formData.photo.startsWith('data:') && <p className="text-[10px] text-green-600 mt-1.5 font-medium flex items-center gap-1"><Check size={10}/> Imagen local cargada</p>}
                         </div>
                     </div>
 
@@ -940,6 +968,18 @@ const AgentModal = ({ agent, onClose, onSave }) => {
                         <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform">{agent ? 'Guardar Cambios' : 'Crear Agente'}</button>
                     </div>
                 </form>
+
+                {agent && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 flex gap-3">
+                        <button type="button" onClick={handleToggleStatusClick} className="flex-1 py-3.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
+                            {agent.status === 'inactive' ? <RotateCcw size={16}/> : <MinusCircle size={16}/>}
+                            {agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}
+                        </button>
+                        <button type="button" onClick={handleDeleteClick} className="flex-1 py-3.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
+                            <Trash2 size={16}/> Eliminar
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -997,13 +1037,12 @@ const ScheduleSettings = ({ schedule, onUpdate }) => {
     );
 };
 
-// --- TIMEZONE HELPERS (MOTOR DE ZONA HORARIA BLINDADO ANTI-IOS) ---
 const STATE_TIMEZONES = {
-    "Arizona": "America/Phoenix", "California": "America/Los_Angeles", "Colorado": "America/Denver",
-    "Florida": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise",
-    "Illinois": "America/Chicago", "Montana": "America/Denver", "Nevada": "America/Los_Angeles",
-    "New Mexico": "America/Denver", "Oregon": "America/Los_Angeles", "Texas": "America/Chicago",
-    "Utah": "America/Denver", "Virginia": "America/New_York", "Wisconsin": "America/Chicago"
+    "Arizona": "America/Phoenix", "California": "America/Los_Angeles", "Colorado": "America/Denver",
+    "Florida": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise",
+    "Illinois": "America/Chicago", "Montana": "America/Denver", "Nevada": "America/Los_Angeles",
+    "New Mexico": "America/Denver", "Oregon": "America/Los_Angeles", "Texas": "America/Chicago",
+    "Utah": "America/Denver", "Virginia": "America/New_York", "Wisconsin": "America/Chicago"
 };
 
 const getLocalTimeInfo = (dateString, timeString, stateName) => {
@@ -1018,12 +1057,9 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
         if (mod.includes('p') && h < 12) h += 12;
         if (mod.includes('a') && h === 12) h = 0;
 
-        // 🔴 EL PARCHE PARA IPAD/SAFARI: Construimos la fecha número por número
-        // Así evitamos que iOS malinterprete la zona horaria al leer un texto ISO
         const [year, month, day] = dateString.split('-');
         const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), h, parseInt(m, 10), 0);
 
-        // Forzamos 'en-GB' para que siempre devuelva formato de 24 hrs matemáticamente perfecto
         const targetHourStr = d.toLocaleString('en-GB', { timeZone: tz, hour: 'numeric' });
         const localHourStr = d.toLocaleString('en-GB', { hour: 'numeric' });
 
@@ -1034,11 +1070,10 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
         if (diff > 12) diff -= 24;
         if (diff < -12) diff += 24;
 
-        if (diff === 0) return timeString; // Mismo huso horario
+        if (diff === 0) return timeString;
 
         const localDate = new Date(d.getTime() + diff * 60 * 60 * 1000);
 
-        // Construcción manual del texto para evitar que iOS inyecte espacios invisibles
         let outH = localDate.getHours();
         const outM = String(localDate.getMinutes()).padStart(2, '0');
         const ampm = outH >= 12 ? 'p.m.' : 'a.m.';
@@ -1055,13 +1090,11 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
     
-    // --- LÓGICA DE REAGENDAMIENTO INTELIGENTE ---
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
     const [dialog, setDialog] = useState(null);
 
-    // 1. HORAS COMPLETAS: Se agregaron las 24 horas del día
     const TIME_SLOTS = [
         "12:00 a.m.", "01:00 a.m.", "02:00 a.m.", "03:00 a.m.", "04:00 a.m.", "05:00 a.m.",
         "06:00 a.m.", "07:00 a.m.", "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.",
@@ -1071,15 +1104,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     
     const previewLocalTime = editDate && editTime ? getLocalTimeInfo(editDate, editTime, lead.state) : '';
 
-    // 2. BLOQUEO ESTRICTO DE FECHA: Calcula el día exacto en tu zona horaria local (Evita bugs de UTC)
     const localNow = new Date();
     const yyyy = localNow.getFullYear();
     const mm = String(localNow.getMonth() + 1).padStart(2, '0');
     const dd = String(localNow.getDate()).padStart(2, '0');
     const minDateLocal = `${yyyy}-${mm}-${dd}`;
 
-    // Liberamos el menú para que muestre las 24 horas, ya que la zona horaria 
-    // y el bloqueo de tiempo real se calculan en el botón "Guardar Cita".
     const getAvailableTimeSlots = () => TIME_SLOTS;
 
     const handleSaveNotes = async () => { 
@@ -1105,7 +1135,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
         const targetTime24h = getClean24h(previewLocalTime || editTime);
 
-        // --- 1. VALIDACIÓN ESTRICTA DE FECHA/HORA PASADA (Seguridad contra iPhone/iPad) ---
         if (targetTime24h && editDate) {
             const [year, month, day] = editDate.split('-').map(Number);
             const [hours, minutes] = targetTime24h.split(':').map(Number);
@@ -1118,11 +1147,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     type: 'warning', 
                     onConfirm: () => setDialog(null) 
                 });
-                return; // Bloquea el guardado inmediatamente
+                return;
             }
         }
 
-        // --- 2. VALIDACIÓN DE COLISIÓN CON OTRAS CITAS ---
         if (lead.assignedTo && allLeads && allLeads.length > 0) {
             const hasConflict = allLeads.some(l => {
                 if (l.id === lead.id || l.assignedTo !== lead.assignedTo || l.status === 'archived') return false;
@@ -1192,7 +1220,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         {isEditingDateTime ? (
                                             <div className="flex flex-col gap-3 mt-3 bg-blue-50/60 p-4 rounded-xl border border-blue-100 shadow-inner animate-fade-in w-full">
                                                 
-                                                {/* 3. ORDEN INVERTIDO: FECHA PRIMERO */}
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Seleccione el Día:</span>
                                                     <input 
@@ -1204,7 +1231,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                     />
                                                 </div>
 
-                                                {/* 4. ORDEN INVERTIDO: HORA DESPUÉS */}
                                                 <div className="bg-white p-3 rounded-lg border border-blue-100 flex flex-col gap-2">
                                                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Hora en {lead.state || 'Estado'}:</span>
                                                     <select 
@@ -1317,7 +1343,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </div>
                                 {!isAgentView && (
                                     <div className="grid grid-cols-2 gap-2 md:flex md:flex-col md:w-32 shrink-0 pt-4 md:pt-0 mt-4 md:mt-0 border-t border-gray-100 md:border-0">
-                                        <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                                        <button onClick={() => onUpdate(lead.id, { status: lead.status === 'archived' ? 'new' : 'archived' })} className={`flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${lead.status === 'archived' ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                             {lead.status === 'archived' ? <><RotateCcw size={14}/> Restaurar</> : <><Archive size={14}/> Archivar</>}
                                         </button>
                                         <button onClick={handleDelete} className="flex-1 md:flex-none py-3 px-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"><Trash2 size={14}/> Eliminar</button>
@@ -1347,7 +1373,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         return;
                     }
 
-                    // --- VALIDACIÓN DE CHOQUE DE HORARIO AL ASIGNAR ---
                     const getClean24h = (tStr) => {
                         if (!tStr) return null;
                         let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
@@ -1367,7 +1392,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         if (l.id === lead.id || l.assignedTo !== agentId || l.status === 'archived') return false;
                         if (l.date !== lead.date) return false;
                         
-                        // Calculamos la hora local del otro lead por si es de otro estado
                         const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
                         const otherTime24h = getClean24h(otherLocalTime); 
                         if(!targetTime24h || !otherTime24h) return false;
@@ -1384,7 +1408,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         }), 150);
                         return;
                     }
-                    // --- FIN DE LA VALIDACIÓN ---
 
                     setDialog({ title: 'Asignar Agente', message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`, type: 'info', onConfirm: () => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
                 }}/>
@@ -1396,7 +1419,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
     const [innerSearch, setInnerSearch] = useState('');
     
-    // Filtramos los leads asignados a este agente usando el buscador interno inteligente
     const assignedLeads = leads.filter(l => {
         if (l.assignedTo !== agent.id) return false;
         if (!innerSearch) return true;
@@ -1433,7 +1455,6 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
             <div className="p-4 md:p-8 flex-1 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-6">
                     
-                    {/* Buscador Interno Premium */}
                     <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={20}/>
                         <input 
@@ -1908,16 +1929,15 @@ const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
         </div>
     );
 };
+
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
-    // --- ENRUTADOR WEB AVANZADO ---
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
     }); 
 
-    // --- NUEVO: ESTADO PARA LAS SUB-PESTAÑAS DE EQUIPO ---
-    const [agentSubTab, setAgentSubTab] = useState('activos'); // 'activos', 'inactivos', 'solicitudes'
+    const [agentSubTab, setAgentSubTab] = useState('activos'); 
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
@@ -2003,12 +2023,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         return list;
     };
 
-    // Separamos a los agentes entre activos e inactivos
     const displayAgents = agents;
     const activeAgentsList = displayAgents.filter(a => a.status !== 'inactive');
     const inactiveAgentsList = displayAgents.filter(a => a.status === 'inactive');
 
-    // Filtramos la vista según la sub-pestaña actual
     const getFilteredAgentsView = () => {
         let list = agentSubTab === 'activos' ? activeAgentsList : inactiveAgentsList;
         if(searchTerm) { 
@@ -2089,19 +2107,11 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     };
 
     const handleDeleteLead = (e, id) => { e.stopPropagation(); if (window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar prospecto permanentemente?')) onDeleteLead(id); };
-    const handleDeleteAgent = (e, id) => { e.stopPropagation(); if(window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar agente permanentemente? Se perderá la asignación de sus leads.')) onDeleteAgent(id); };
-
+    
     const handleSaveAgent = async (agentData) => {
         await onSaveAgent(agentData);
         setIsAgentModalOpen(false);
         setEditingAgent(null);
-    };
-
-    // Función para activar/inactivar
-    const toggleAgentStatus = async (e, agentObj) => {
-        e.stopPropagation();
-        const newStatus = agentObj.status === 'inactive' ? 'active' : 'inactive';
-        await onSaveAgent({ ...agentObj, status: newStatus });
     };
 
     return (
@@ -2175,7 +2185,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         )}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
-                        {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
                         {tab === 'agents' && (
                             <span className="flex items-center gap-1.5">
                                 Equipo
@@ -2224,7 +2233,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                  ) :
                  activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto pb-20 animate-fade-in">
-                        {/* Cabecera y Botón Nuevo Agente */}
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Gestión de Equipo</h3>
@@ -2235,7 +2243,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             </button>
                         </div>
 
-                        {/* LAS 3 SUB-PESTAÑAS (Activos, Inactivos, Solicitudes) */}
+                        {/* LAS 3 SUB-PESTAÑAS (Activos, Inactivos, Solicitudes) CORREGIDAS */}
                         <div className="flex gap-4 md:gap-8 border-b border-gray-200 mb-6 overflow-x-auto scrollbar-hide">
                             <button onClick={() => setAgentSubTab('activos')} className={`pb-3 text-sm font-bold whitespace-nowrap border-b-2 transition-colors ${agentSubTab === 'activos' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                                 Activos ({activeAgentsList.length})
@@ -2253,7 +2261,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             </button>
                         </div>
 
-                        {/* CONTENIDO 1: SOLICITUDES PENDIENTES */}
                         {agentSubTab === 'solicitudes' && (
                             agentRequests.length === 0 ? (
                                 <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm mt-4">
@@ -2323,14 +2330,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             )
                         )}
 
-                        {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS */}
+                        {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS (NUEVO DISEÑO LIMPIO) */}
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {currentViewAgents.map(agent => (
-                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 flex flex-col justify-center ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-4 md:p-5 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 flex flex-col justify-center ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
+                                    <div className="flex items-center justify-between gap-4">
                                         
-                                        <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                                        <div className="flex items-center gap-4 min-w-0 flex-1">
                                             <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
                                                 {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
                                             </div>
@@ -2343,12 +2350,11 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-row gap-2 self-start sm:self-auto shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Editar"><Edit2 size={14} /></button>
-                                            <button onClick={(e) => toggleAgentStatus(e, agent)} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-500 hover:text-amber-600 rounded-full transition-colors shadow-sm" title={agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}>
-                                                {agent.status === 'inactive' ? <RotateCcw size={14}/> : <MinusCircle size={14}/>}
+                                        {/* SOLO EL BOTÓN DE EDITAR */}
+                                        <div className="shrink-0 transition-opacity" onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-3 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Gestionar Agente">
+                                                <Edit2 size={16} />
                                             </button>
-                                            <button onClick={(e) => handleDeleteAgent(e, agent.id)} className="p-2.5 bg-gray-50 border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors shadow-sm" title="Eliminar"><Trash2 size={14} /></button>
                                         </div>
                                         
                                     </div>
@@ -2360,7 +2366,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
-                        {/* CABECERA DE LA TABLA */}
                         <div className="hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                             <div className="flex items-center justify-center"><input type="checkbox" className="custom-checkbox" checked={selectedLeads.length === sortedLeads.length && sortedLeads.length > 0} onChange={toggleSelectAll}/></div>
                             <div>Prospecto</div>
@@ -2383,7 +2388,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                 
                                 return (
                                 <React.Fragment key={lead.id}>
-                                    {/* FILA DE COMPUTADORA */}
                                     <div onClick={() => setViewingLead(lead)} className={`hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 border-b border-gray-50 items-center hover:bg-gray-50/80 cursor-pointer transition-colors text-sm group ${isSelected ? 'bg-rose-50/50' : ''}`}>
                                         <div className="flex items-center justify-center" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
@@ -2430,7 +2434,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                         </div>
                                     </div>
 
-                                    {/* TARJETA MÓVIL */}
                                     <div onClick={() => setViewingLead(lead)} className={`md:hidden flex flex-col p-4 mb-3 bg-white rounded-3xl shadow-soft border cursor-pointer transition-all relative ${isSelected ? 'border-rose-300 ring-2 ring-rose-50/50' : 'border-gray-100'}`}>
                                         <div className="absolute top-4 right-4 z-10" onClick={e => e.stopPropagation()}>
                                             <input type="checkbox" className="custom-checkbox" checked={isSelected} onChange={() => toggleSelect(lead.id)}/>
@@ -2509,7 +2512,18 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     </div>
                 )}
             </div>
-            {isAgentModalOpen && <AgentModal agent={editingAgent} onClose={() => setIsAgentModalOpen(false)} onSave={handleSaveAgent} />}
+            {isAgentModalOpen && (
+                <AgentModal 
+                    agent={editingAgent} 
+                    onClose={() => setIsAgentModalOpen(false)} 
+                    onSave={handleSaveAgent} 
+                    onDelete={onDeleteAgent}
+                    onToggleStatus={async (agentObj) => {
+                        const newStatus = agentObj.status === 'inactive' ? 'active' : 'inactive';
+                        await onSaveAgent({ ...agentObj, status: newStatus });
+                    }}
+                />
+            )}
             {viewingLead && (
                 <LeadDetail 
                     lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} 
@@ -2528,10 +2542,8 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             )}
             {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
             
-            {/* ALERTA FLOTANTE EN EL DASHBOARD */}
             <CustomDialog isOpen={!!dialog} {...dialog} />
 
-            {/* MODAL 1: ASIGNACIÓN MASIVA (BULK) CON PROTECCIÓN */}
             {isBulkAgentSelectOpen && (
                 <AgentSelectionModal 
                     agents={agents} 
@@ -2583,7 +2595,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                 />
             )}
 
-            {/* MODAL 2: ASIGNACIÓN RÁPIDA (INDIVIDUAL) CON PROTECCIÓN Y WEBHOOKS */}
             {individualAgentSelectLeadId && (
                 <AgentSelectionModal 
                     agents={agents} 
