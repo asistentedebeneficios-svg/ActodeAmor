@@ -1416,92 +1416,181 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     );
 };
 
-const AgentDetailView = ({ agent, leads, onClose, onLeadClick }) => {
+const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDeleteAgent }) => {
     const [innerSearch, setInnerSearch] = useState('');
-    
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState(agent);
+    const [dialog, setDialog] = useState(null);
+
+    // Mantiene los datos actualizados si se edita
+    useEffect(() => { setFormData(agent); }, [agent]);
+
+    // Filtramos los leads asignados a este agente
     const assignedLeads = leads.filter(l => {
         if (l.assignedTo !== agent.id) return false;
         if (!innerSearch) return true;
-        
         const term = innerSearch.toLowerCase();
         return (l.name && l.name.toLowerCase().includes(term)) || 
                (l.phone && l.phone.includes(term)) ||
-               (l.state && l.state.toLowerCase().includes(term)) ||
-               (l.notes && l.notes.toLowerCase().includes(term)) ||
-               (l.date && l.date.includes(term));
+               (l.state && l.state.toLowerCase().includes(term));
     });
 
+    const handleToggleStatus = () => {
+        const isInactive = agent.status === 'inactive';
+        setDialog({
+            title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente',
+            message: isInactive ? `¿Deseas reactivar a ${agent.name}? Volverá a tener acceso y recibir prospectos.` : `¿Deseas inactivar a ${agent.name}? No podrá acceder al portal.`,
+            type: 'warning',
+            onConfirm: async () => { await onSaveAgent({ ...agent, status: isInactive ? 'active' : 'inactive' }); setDialog(null); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
+    const handleDelete = () => {
+        setDialog({
+            title: 'Eliminar Agente',
+            message: `¿Estás seguro de eliminar a ${agent.name}? Esta acción es irreversible.`,
+            type: 'danger',
+            onConfirm: async () => { await onDeleteAgent(agent.id); setDialog(null); onClose(); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
+    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
+    
+    const handleSaveProfile = async (e) => {
+        e.preventDefault();
+        await onSaveAgent({ ...formData, timestamp: agent.timestamp || Date.now() });
+        setIsEditing(false);
+    };
+
     return (
-        <div className="fixed inset-0 bg-apple-gray z-[60] flex flex-col animate-slide-up">
-            <div className="glass-panel px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-10 gap-4 md:gap-0 shadow-sm">
+        <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up">
+            <CustomDialog isOpen={!!dialog} {...dialog} />
+            
+            <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-rose-100 to-white text-rose-600 flex items-center justify-center overflow-hidden shadow-sm border border-rose-50 text-lg font-bold shrink-0">
-                            {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <h2 className="font-bold text-lg md:text-xl text-gray-900 tracking-tight leading-tight">{agent.name}</h2>
-                            <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-rose-600 mt-0.5">{agent.license || 'Agente'}</p>
-                        </div>
+                    <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
+                    <div>
+                        <h2 className="font-bold text-lg md:text-xl text-gray-900 tracking-tight leading-tight">Perfil de Equipo</h2>
+                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mt-0.5">Gestión de Agente</p>
                     </div>
-                </div>
-                <div className="flex gap-2 pl-14 md:pl-0">
-                    {agent.email && <a href={`mailto:${agent.email}`} className="text-[10px] md:text-xs font-bold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:text-blue-600 transition-colors shadow-sm"><Mail size={12}/> Correo</a>}
-                    {agent.phone && <a href={`tel:${agent.phone}`} className="text-[10px] md:text-xs font-bold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:text-green-600 transition-colors shadow-sm"><Phone size={12}/> Llamar</a>}
                 </div>
             </div>
             
-            <div className="p-4 md:p-8 flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
+                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto items-start">
                     
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={20}/>
-                        <input 
-                            type="text" 
-                            placeholder="Buscar en la cartera de este agente (nombre, teléfono, estado...)" 
-                            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-300 transition-all text-sm font-medium shadow-sm"
-                            value={innerSearch}
-                            onChange={(e) => setInnerSearch(e.target.value)}
-                        />
-                    </div>
+                    {/* COLUMNA IZQUIERDA: PERFIL DEL AGENTE / EDICIÓN */}
+                    <div className="md:col-span-4 space-y-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100">
+                            {!isEditing ? (
+                                <div className="flex flex-col items-center text-center animate-fade-in">
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-3xl border-4 border-gray-50 overflow-hidden shadow-sm text-gray-400 mb-4">
+                                        {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                        {agent.name}
+                                        {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded uppercase tracking-widest border border-gray-200">Inactivo</span>}
+                                    </h3>
+                                    {agent.bio && <p className="text-sm text-gray-500 italic mt-3 bg-gray-50 p-4 rounded-xl border border-gray-100 text-balance leading-relaxed">"{agent.bio}"</p>}
+                                    
+                                    <div className="w-full space-y-3 text-sm mt-6 text-left">
+                                        {agent.email && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Mail size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.email}</span></div>}
+                                        {agent.phone && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Phone size={16} className="text-gray-400 shrink-0"/> <span className="font-medium">{agent.phone}</span></div>}
+                                        <div className="flex items-start gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><MapPin size={16} className="text-gray-400 shrink-0 mt-0.5"/> <span className="leading-relaxed font-medium">{agent.license || 'Sin estados configurados'}</span></div>
+                                    </div>
 
-                    <div>
-                        <div className="flex items-center justify-between mb-4 px-2">
-                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2"><Briefcase size={16} className="text-gray-400"/> Prospectos Asignados</h3>
-                            <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-xs font-bold shadow-md">{assignedLeads.length}</span>
-                        </div>
-                        
-                        {assignedLeads.length > 0 ? (
-                            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                                {assignedLeads.map(lead => (
-                                    <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
-                                            <div>
-                                                <h4 className="font-bold text-gray-900 text-sm md:text-base group-hover:text-rose-600 transition-colors">{lead.name}</h4>
-                                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
-                                                    <span className="capitalize">{lead.date || 'Sin fecha'}</span>
-                                                    <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
-                                                    <span className="font-bold text-blue-600">{lead.localTime || lead.time}</span>
-                                                    <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider">{lead.state}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
-                                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:border-rose-300 group-hover:text-rose-500 transition-all shadow-sm"><ChevronRight size={16} /></div>
+                                    <div className="w-full mt-8 space-y-3 pt-6 border-t border-gray-100">
+                                        <button onClick={() => setIsEditing(true)} className="w-full py-3.5 bg-black text-white rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"><Edit2 size={16}/> Editar Ficha</button>
+                                        <div className="flex gap-3">
+                                            <button onClick={handleToggleStatus} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+                                                {agent.status === 'inactive' ? <RotateCcw size={14} className="text-blue-500"/> : <MinusCircle size={14} className="text-amber-500"/>} {agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}
+                                            </button>
+                                            <button onClick={handleDelete} className="flex-1 py-3 bg-white border border-red-100 hover:bg-red-50 text-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+                                                <Trash2 size={14}/> Eliminar
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center p-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 shadow-sm">
-                                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 opacity-30"><Briefcase size={24}/></div>
-                                <p className="font-medium text-gray-600">No se encontraron prospectos.</p>
-                                <p className="text-xs mt-1">Prueba con otro término de búsqueda.</p>
-                            </div>
-                        )}
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSaveProfile} className="space-y-4 animate-fade-in">
+                                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                                        <h4 className="font-bold text-gray-900 text-lg">Editando Perfil</h4>
+                                        <button type="button" onClick={() => setIsEditing(false)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={16}/></button>
+                                    </div>
+                                    <div className="flex flex-col items-center mb-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                        <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center overflow-hidden mb-3 border border-gray-200 relative group shadow-sm">
+                                            {formData.photo ? <img src={formData.photo} className="w-full h-full object-cover" /> : <User size={24} className="text-gray-300"/>}
+                                            <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-[10px] font-bold backdrop-blur-sm">Subir<input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} /></label>
+                                        </div>
+                                        <div className="w-full flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden pr-2 focus-within:border-blue-500 transition-colors">
+                                            <div className="pl-3 text-gray-400"><LinkIcon size={12}/></div>
+                                            <input type="text" name="photo" value={formData.photo && formData.photo.startsWith('data:') ? '' : formData.photo} onChange={handleChange} placeholder="O usa URL de la foto..." className="w-full text-xs outline-none px-2 py-2.5 bg-transparent font-medium"/>
+                                        </div>
+                                    </div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estados (Licencias)</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label><input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                    </div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Biografía</label><textarea name="bio" rows="3" value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm resize-none text-gray-900" /></div>
+                                    <div className="pt-4">
+                                        <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"><Save size={16}/> Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
+
+                    {/* COLUMNA DERECHA: PROSPECTOS ASIGNADOS */}
+                    <div className="md:col-span-8 space-y-6 flex flex-col h-full">
+                        <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
+                                <div>
+                                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><Briefcase size={22} className="text-gray-400"/> Cartera Asignada</h3>
+                                    <p className="text-sm text-gray-500 mt-1 font-medium">Gestionando <strong className="text-gray-900">{assignedLeads.length}</strong> prospectos</p>
+                                </div>
+                                <div className="relative w-full sm:w-72">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+                                    <input type="text" placeholder="Buscar prospecto..." className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-black focus:ring-2 focus:ring-black/5 transition-all text-sm font-medium" value={innerSearch} onChange={(e) => setInnerSearch(e.target.value)} />
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto pr-1 space-y-3 scrollbar-hide">
+                                {assignedLeads.length > 0 ? (
+                                    assignedLeads.map(lead => (
+                                        <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 hover:shadow-md cursor-pointer transition-all flex items-center justify-between group shadow-sm">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-2 h-10 rounded-full ${lead.status === 'new' ? 'bg-green-400' : lead.status === 'archived' ? 'bg-gray-300' : 'bg-blue-400'}`}></div>
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors">{lead.name}</h4>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] md:text-xs text-gray-500 font-medium">
+                                                        <span className="flex items-center gap-1 font-bold text-gray-700"><Clock size={12} className="text-blue-500"/> {lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', {day:'numeric', month:'short'}) : ''} {lead.localTime || lead.time}</span>
+                                                        <span className="hidden md:inline w-1 h-1 rounded-full bg-gray-300 mx-1"></span>
+                                                        <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
+                                                        <span className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider text-gray-600 ml-1">{lead.state}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-black group-hover:border-black transition-colors shrink-0">
+                                                <ChevronRight size={18} className="text-gray-400 group-hover:text-white transition-colors"/>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center p-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                                        <div className="bg-white w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><Briefcase size={24} className="text-gray-300"/></div>
+                                        <p className="font-bold text-gray-600 text-base">Cartera vacía</p>
+                                        <p className="text-sm text-gray-400 mt-1">Este agente aún no tiene prospectos asignados.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -2330,34 +2419,34 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             )
                         )}
 
-                        {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS (NUEVO DISEÑO LIMPIO) */}
+                        {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS (NUEVO DISEÑO APPLE) */}
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {currentViewAgents.map(agent => (
-                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-4 md:p-5 rounded-3xl shadow-soft border relative group cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 flex flex-col justify-center ${agent.status === 'inactive' ? 'border-gray-200 opacity-70 grayscale-[30%]' : 'border-gray-100'}`}>
-                                    <div className="flex items-center justify-between gap-4">
-                                        
-                                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400">
-                                                {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="min-w-0 flex-1 pr-2">
-                                                <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2">
-                                                    <span className="truncate">{agent.name}</span>
-                                                    {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
-                                                </h3>
-                                                <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-0.5 truncate">{agent.license || 'Agente'}</p>
+                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between gap-5 group ${agent.status === 'inactive' ? 'border-gray-200 opacity-60 grayscale-[50%]' : 'border-gray-100'}`}>
+                                    
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400 group-hover:border-rose-200 transition-colors">
+                                            {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
+                                                <span className="truncate">{agent.name}</span>
+                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
+                                            </h3>
+                                            
+                                            <div className="flex flex-col gap-1.5 mt-2">
+                                                {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
+                                                {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
                                             </div>
                                         </div>
-
-                                        {/* SOLO EL BOTÓN DE EDITAR */}
-                                        <div className="shrink-0 transition-opacity" onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => {setEditingAgent(agent); setIsAgentModalOpen(true);}} className="p-3 bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-full transition-colors shadow-sm" title="Gestionar Agente">
-                                                <Edit2 size={16} />
-                                            </button>
-                                        </div>
-                                        
                                     </div>
+
+                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
+                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
+                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{agent.license || 'Sin estados configurados'}</span>
+                                    </div>
+                                    
                                 </div>
                                 ))}
                                 {currentViewAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes {agentSubTab}.</div>}
@@ -2540,8 +2629,17 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     }}
                 />
             )}
-            {viewingAgent && <AgentDetailView agent={viewingAgent} leads={processedLeads} onClose={() => setViewingAgent(null)} onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} />}
-            
+
+            {viewingAgent && (
+                <AgentDetailView 
+                    agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
+                    leads={processedLeads} 
+                    onClose={() => setViewingAgent(null)} 
+                    onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} 
+                    onSaveAgent={handleSaveAgent}
+                    onDeleteAgent={onDeleteAgent}
+                />
+            )}                        
             <CustomDialog isOpen={!!dialog} {...dialog} />
 
             {isBulkAgentSelectOpen && (
