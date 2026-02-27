@@ -3377,11 +3377,21 @@ const App = () => {
     const [isVerifying, setIsVerifying] = useState(true); 
     
     // --- NUEVO: Detector de Enlace Exclusivo para Agentes ---
-    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal');
+    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
 
-    // Escuchar si la URL cambia manualmente
+    // Escuchar si la URL cambia o si entran por el subdominio
     useEffect(() => {
-        const handleHashChange = () => setIsPortalRoute(window.location.hash === '#portal');
+        // Verificación de seguridad inmediata
+        if (window.location.hostname.startsWith('portal.')) {
+            setIsPortalRoute(true);
+        }
+
+        const handleHashChange = () => {
+            // Se activa si tiene el #portal O si el subdominio es portal.
+            const isPortal = window.location.hash === '#portal' || window.location.hostname.startsWith('portal.');
+            setIsPortalRoute(isPortal);
+        };
+
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
