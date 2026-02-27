@@ -3254,40 +3254,105 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans px-4 animate-fade-in relative">
-            <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-xl border border-gray-100 relative z-10">
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-black rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
-                        <Lock size={28} className="text-white"/>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Portal de Agentes</h1>
-                    <p className="text-sm text-gray-500 mt-2">Acceso exclusivo para el equipo.</p>
+        <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans animate-fade-in overflow-hidden">
+            
+            {/* LADO IZQUIERDO: Beneficios (SaaS Landing) */}
+            <div className="md:w-[55%] lg:w-[60%] bg-[#0B0F19] text-white p-8 md:p-12 lg:p-20 flex flex-col justify-center relative">
+                {/* Efectos de luz de fondo (Gradients) */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[120px]"></div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div><input type="email" placeholder="Correo electrónico" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
-                    <div><input type="password" placeholder="Contraseña" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={password} onChange={e=>setPassword(e.target.value)} required/></div>
+                <div className="relative z-10 max-w-2xl mx-auto md:mx-0">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-gray-300 mb-6 backdrop-blur-sm">
+                        <Star size={12} className="text-rose-400"/> Únete a los mejores
+                    </div>
+                    
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight leading-[1.15]">
+                        Impulsa tu carrera al <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">siguiente nivel.</span>
+                    </h1>
+                    
+                    <p className="text-base md:text-xl text-gray-400 mb-10 md:mb-16 font-medium leading-relaxed">
+                        Una plataforma diseñada exclusivamente para agentes de élite. Todo lo que necesitas para vender más y gestionar tus clientes, en un solo lugar.
+                    </p>
 
-                    {error && <p className="text-red-500 text-xs text-center font-bold bg-red-50 p-2 rounded-lg">{error}</p>}
-                    {resetMsg && <p className="text-green-600 text-xs text-center font-bold bg-green-50 p-2 rounded-lg">{resetMsg}</p>}
-
-                    <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50 mt-2">
-                        {loading ? 'Verificando...' : 'Iniciar Sesión'}
-                    </button>
-                </form>
-
-                <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-100">
-                    <button type="button" onClick={handleResetPassword} className="text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">¿Olvidaste tu contraseña?</button>
-                    <button type="button" onClick={onOpenRegister} className="w-full bg-white border border-gray-200 text-gray-800 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mt-1">
-                        <UserPlus size={16}/> Únete al Equipo
-                    </button>
+                    <div className="grid sm:grid-cols-2 gap-8">
+                        {/* Beneficio 1 */}
+                        <div className="flex gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-rose-400 shadow-inner"><Briefcase size={24}/></div>
+                            <div>
+                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Leads Exclusivos</h3>
+                                <p className="text-sm text-gray-400 leading-relaxed">Accede a un Marketplace en tiempo real con clientes de alta intención de compra.</p>
+                            </div>
+                        </div>
+                        {/* Beneficio 2 */}
+                        <div className="flex gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-blue-400 shadow-inner"><CalendarDays size={24}/></div>
+                            <div>
+                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Agenda Inteligente</h3>
+                                <p className="text-sm text-gray-400 leading-relaxed">Toma control absoluto de tu tiempo. Los clientes se adaptan a tu disponibilidad.</p>
+                            </div>
+                        </div>
+                        {/* Beneficio 3 */}
+                        <div className="flex gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-green-400 shadow-inner"><Activity size={24}/></div>
+                            <div>
+                                <h3 className="text-base font-bold mb-1.5 text-gray-100">CRM Integrado</h3>
+                                <p className="text-sm text-gray-400 leading-relaxed">Gestiona tu cartera, toma notas y lleva el historial de cada prospecto sin pagar extra.</p>
+                            </div>
+                        </div>
+                        {/* Beneficio 4 */}
+                        <div className="flex gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-amber-400 shadow-inner"><ShieldCheck size={24}/></div>
+                            <div>
+                                <h3 className="text-base font-bold mb-1.5 text-gray-100">Respaldo Corporativo</h3>
+                                <p className="text-sm text-gray-400 leading-relaxed">Forma parte de una agencia sólida con soporte continuo para que solo te enfoques en vender.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div className="mt-8 text-center relative z-10">
-                <a href="#" onClick={() => window.location.hash = ''} className="text-xs text-gray-400 hover:text-gray-900 transition-colors font-bold flex items-center justify-center gap-1">
-                    <ArrowLeft size={14}/> Volver al inicio
-                </a>
+
+            {/* LADO DERECHO: Formulario de Login */}
+            <div className="md:w-[45%] lg:w-[40%] bg-[#F5F5F7] flex flex-col justify-center items-center p-6 md:p-12 relative shadow-[-20px_0_40px_rgba(0,0,0,0.05)]">
+                <div className="w-full max-w-[420px] bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-gray-100">
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-black rounded-3xl mx-auto flex items-center justify-center mb-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+                            <Lock size={28} className="text-white"/>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Acceso al Portal</h2>
+                        <p className="text-sm text-gray-500 mt-2 font-medium">Ingresa tus credenciales para continuar.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tu Correo</label>
+                            <input type="email" placeholder="agente@empresa.com" className="w-full p-4 bg-gray-50/80 border border-gray-200 rounded-2xl outline-none focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5 transition-all text-sm font-medium" value={email} onChange={e=>setEmail(e.target.value)} required/>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-between mb-1.5 ml-1 pr-1">
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contraseña</label>
+                                <button type="button" onClick={handleResetPassword} className="text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">¿Olvidaste tu clave?</button>
+                            </div>
+                            <input type="password" placeholder="••••••••" className="w-full p-4 bg-gray-50/80 border border-gray-200 rounded-2xl outline-none focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5 transition-all text-sm font-medium" value={password} onChange={e=>setPassword(e.target.value)} required/>
+                        </div>
+
+                        {error && <p className="text-red-500 text-xs text-center font-bold bg-red-50 p-3 rounded-xl border border-red-100 mt-2">{error}</p>}
+                        {resetMsg && <p className="text-green-600 text-xs text-center font-bold bg-green-50 p-3 rounded-xl border border-green-100 mt-2">{resetMsg}</p>}
+
+                        <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50 mt-4">
+                            {loading ? 'Verificando...' : 'Iniciar Sesión'}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+                        <p className="text-sm text-gray-500 font-medium mb-3">¿Aún no formas parte de la agencia?</p>
+                        <button type="button" onClick={onOpenRegister} className="w-full bg-white border-2 border-gray-200 text-gray-800 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 group">
+                            <UserPlus size={18} className="text-gray-400 group-hover:text-rose-500 transition-colors"/> Quiero unirme al Equipo
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
