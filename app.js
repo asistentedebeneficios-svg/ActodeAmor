@@ -153,9 +153,10 @@ const db = getFirestore(app);
 const useFirebaseDatabase = () => {
     const [leads, setLeads] = useState([]);
     const [agents, setAgents] = useState([]);
+    const [agentRequests, setAgentRequests] = useState([]); // NUEVO: Estado para las solicitudes
     const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
-    const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false }); // NUEVO MODO
+    const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false });
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -205,7 +206,8 @@ const useFirebaseDatabase = () => {
         });
 
         let unsubLeads = () => {};
-        let unsubAgents = () => {}; // ✅ ¡Aquí está la línea restaurada!
+        let unsubAgents = () => {};
+        let unsubRequests = () => {}; // NUEVO: Limpieza de solicitudes
 
         if (!user.isAnonymous) {
             const leadsQuery = collection(db, 'leads'); 
@@ -221,20 +223,31 @@ const useFirebaseDatabase = () => {
             }, (err) => {
                 if (err.code !== 'permission-denied') console.error("Agents error:", err);
             });
+
+            // NUEVO: Escuchador en tiempo real de las solicitudes de agentes
+            const requestsQuery = collection(db, 'agent_requests');
+            unsubRequests = onSnapshot(requestsQuery, (snapshot) => {
+                // Solo traemos los que están pendientes, los ordenamos del más nuevo al más viejo
+                const reqs = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(req => req.status === 'pending')
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                setAgentRequests(reqs);
+            }, (err) => {
+                if (err.code !== 'permission-denied') console.error("Requests error:", err);
+            });
         }
 
-        // ✅ También agregamos unsubGeneral() a la limpieza para que Firebase cierre los procesos limpios
-        return () => { unsubLeads(); unsubAgents(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
+        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
     }, [user]);
 
     const addLead = async (lead) => {
         try {
-            // MÁGIA: Si el modo Marketplace está activo, el prospecto entra como 'marketplace' directamente
             const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
             const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
             await addDoc(collection(db, 'leads'), newLead);
         } catch (error) {
-            alert("Hubo un error de conexión al guardar.");
+            console.error("Hubo un error de conexión al guardar.", error);
         }
     };
 
@@ -264,6 +277,41 @@ const useFirebaseDatabase = () => {
         }
     };
     const deleteAgent = async (id) => { if (user) await deleteDoc(doc(db, 'agents', id)); };
+
+    // --- NUEVAS FUNCIONES DE RECURSOS HUMANOS ---
+    const approveAgentRequest = async (request) => {
+        if (!user) return;
+        const batch = writeBatch(db);
+        
+        // 1. Formateamos los datos para que coincidan con la estructura de tus agentes actuales
+        const newAgentData = {
+            name: request.fullName,
+            email: request.email,
+            phone: request.phone,
+            bio: request.bio,
+            photo: request.photo || '',
+            license: request.licenseSummary || 'Agente Aprobado', // Guardamos el resumen de estados
+            timestamp: Date.now()
+        };
+
+        // 2. Lo creamos en la colección oficial de agentes
+        const newAgentRef = doc(collection(db, 'agents'));
+        batch.set(newAgentRef, newAgentData);
+        
+        // 3. Lo eliminamos de la bandeja de solicitudes
+        const requestRef = doc(db, 'agent_requests', request.id);
+        batch.delete(requestRef);
+        
+        await batch.commit();
+    };
+
+    const rejectAgentRequest = async (id) => {
+        if (!user) return;
+        // Simplemente lo borramos de la base de datos
+        await deleteDoc(doc(db, 'agent_requests', id));
+    };
+    // ---------------------------------------------
+
     const updateSchedule = async (newSchedule) => { if (user) await setDoc(doc(db, 'settings', 'schedule'), newSchedule); };
     const updateWebhooks = async (newWebhooks) => { if (user) await setDoc(doc(db, 'settings', 'webhooks'), newWebhooks); };
     const updateGeneralSettings = async (newSettings) => { if (user) await setDoc(doc(db, 'settings', 'general'), newSettings); };
@@ -271,7 +319,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
