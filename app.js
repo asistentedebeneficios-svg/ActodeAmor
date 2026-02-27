@@ -4,12 +4,24 @@ import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 // --- CONSTANTS ---
 const US_STATES = [
     "Arizona", "California", "Colorado", "Florida", "Hawaii", "Idaho", "Illinois", "Montana", "Nevada", "New Mexico", "Oregon", "Texas", "Utah", "Virginia", "Wisconsin"
 ];
+const ALL_US_STATES = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
+const formatPhoneNumber = (value) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+};
 
 const STEPS = [
     { id: 'intro', question: "Un Acto de Amor", subtext: "Llene este corazón paso a paso para descubrir si califica para proteger a su familia.", buttonStart: "Comenzar" },
@@ -285,16 +297,121 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
 };
 
 // --- COMPONENTS ---
-const AdminLogin = ({ onClose, onLogin }) => {
+const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
+    const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
+    const [licenses, setLicenses] = useState([{ state: '', number: '', fileStr: '', fileName: '' }]);
+    const [profilePicStr, setProfilePicStr] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    const licenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
+
+    const handleFileChange = (e, callback) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { alert("Archivo muy pesado. Máximo 2MB."); return; }
+        const reader = new FileReader();
+        reader.onloadend = () => callback(reader.result, file.name);
+        reader.readAsDataURL(file);
+    };
+
+    const handleLicenseChange = (index, field, value) => {
+        const newLics = [...licenses];
+        newLics[index][field] = value;
+        setLicenses(newLics);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
+        setIsSubmitting(false);
+        setShowSuccess(true);
+    };
+
+    if (showSuccess) return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
+            <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-slide-up">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><Check size={40} className="text-green-600" /></div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Solicitud Recibida!</h2>
+                <p className="text-gray-500 mb-8">Estamos verificando tu información. Te anunciaremos nuestra decisión por correo electrónico a la brevedad posible.</p>
+                <button onClick={onCancel} className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:scale-[1.02] shadow-lg transition-transform">Cerrar y volver</button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto z-[100] animate-fade-in">
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl w-full max-w-2xl relative shadow-2xl animate-slide-up my-8">
+                    <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
+                    <div className="p-6 md:p-8 border-b border-gray-100"><h2 className="text-2xl font-bold text-gray-900">Únete al Equipo</h2><p className="text-gray-500 text-sm mt-1">Completa tu perfil para acceder al Marketplace.</p></div>
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                        <div className="flex flex-col items-center justify-center">
+                            <label className="w-24 h-24 bg-gray-100 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden mb-3 relative group cursor-pointer hover:border-blue-500 transition-colors">
+                                {profilePicStr ? <img src={profilePicStr} alt="Perfil" className="w-full h-full object-cover" /> : <User size={32} className="text-gray-400 group-hover:text-blue-500" />}
+                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res) => setProfilePicStr(res))} className="hidden" />
+                            </label>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Subir Foto</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label><input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => setFormData({...formData, phone: formatPhoneNumber(e.target.value)})} maxLength="14" className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                        </div>
+                        <div className="bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100">
+                            <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2"><FileText size={16}/> Licencias Estatales</h3>
+                            <div className="space-y-4">
+                                {licenses.map((lic, index) => (
+                                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label><select required value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400"><option value="">Seleccionar</option>{ALL_US_STATES.map(st => <option key={st} value={st}>{st}</option>)}</select></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input required type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
+                                            <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden">
+                                                {lic.fileName ? <span className="text-green-600 font-bold truncate">✅ {lic.fileName}</span> : <span>Subir foto</span>}
+                                                <input required={!lic.fileStr} type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
+                                            </label>
+                                        </div>
+                                        {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-1 shadow-sm"><X size={12}/></button>}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"><Plus size={16}/> Agregar otro estado</button>
+                                {licenseSummary && <div className="text-xs font-mono bg-white px-3 py-1.5 rounded-md border border-gray-200 text-gray-500 shadow-sm text-center md:text-left">{licenseSummary}</div>}
+                            </div>
+                        </div>
+                        <div className="space-y-5">
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías para las que trabaja</label><input required type="text" placeholder="Ej: Lincoln Heritage, Mutual of Omaha..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div className="relative flex items-center justify-center"><input type="checkbox" checked={formData.isAgency} onChange={e => setFormData({...formData, isAgency: e.target.checked})} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-500 checked:border-blue-500 transition-all" /><Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} /></div>
+                                <span className="text-sm font-bold text-gray-700">Tengo una organización o agencia a mi cargo</span>
+                            </label>
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5 ml-1 pr-1"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bio Corta (Para prospectos)</label><span className={`text-[10px] font-bold ${formData.bio.length > 150 ? 'text-red-500' : 'text-gray-400'}`}>{formData.bio.length}/150</span></div>
+                                <textarea required maxLength="150" placeholder="Ej: Especialista ayudando a familias hispanas..." value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium resize-none h-24" />
+                            </div>
+                        </div>
+                        <div className="pt-4 border-t border-gray-100"><button type="submit" disabled={isSubmitting || formData.bio.length > 150} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl">{isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+const AdminLogin = ({ onClose, onLogin, onOpenRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [resetMsg, setResetMsg] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setResetMsg('');
         try {
             await onLogin(email, password);
             onClose();
@@ -303,6 +420,22 @@ const AdminLogin = ({ onClose, onLogin }) => {
             setError('Credenciales incorrectas o acceso denegado.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email) {
+            setError('Ingresa tu correo arriba y presiona "Olvidé mi contraseña".');
+            setResetMsg('');
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setResetMsg('Correo de recuperación enviado. Revisa tu bandeja.');
+            setError('');
+        } catch (err) {
+            setError('Error al enviar correo o el usuario no existe.');
+            setResetMsg('');
         }
     };
 
@@ -316,16 +449,24 @@ const AdminLogin = ({ onClose, onLogin }) => {
                     <p className="text-sm text-gray-500 mt-1">Solo personal autorizado</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <input type="email" placeholder="Correo electrónico" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={email} onChange={e=>setEmail(e.target.value)} required/>
-                    </div>
-                    <div>
-                        <input type="password" placeholder="Contraseña" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={password} onChange={e=>setPassword(e.target.value)} required/>
-                    </div>
+                    <div><input type="email" placeholder="Correo electrónico" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={email} onChange={e=>setEmail(e.target.value)} required/></div>
+                    <div><input type="password" placeholder="Contraseña" className="w-full p-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-black focus:bg-white transition-all text-sm" value={password} onChange={e=>setPassword(e.target.value)} required/></div>
+                    
                     {error && <p className="text-red-500 text-xs text-center font-medium bg-red-50 p-2 rounded-lg">{error}</p>}
+                    {resetMsg && <p className="text-green-600 text-xs text-center font-medium bg-green-50 p-2 rounded-lg">{resetMsg}</p>}
+                    
                     <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50 mt-2">
                         {loading ? 'Verificando...' : 'Iniciar Sesión'}
                     </button>
+                    
+                    <div className="flex flex-col gap-3 mt-4 pt-5 border-t border-gray-100">
+                        <button type="button" onClick={handleResetPassword} className="text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">¿Olvidaste tu contraseña?</button>
+                        {onOpenRegister && (
+                            <button type="button" onClick={() => { onClose(); onOpenRegister(); }} className="w-full bg-white border border-gray-200 text-gray-800 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mt-1">
+                                <UserPlus size={16}/> Únete al Equipo
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
         </div>
@@ -3043,6 +3184,7 @@ const App = () => {
     });
     
     const [showLogin, setShowLogin] = useState(false);
+    const [showRegister, setShowRegister] = useState(false);
     const { leads, agents, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
@@ -3277,7 +3419,10 @@ const App = () => {
                 <button onClick={() => setShowLogin(true)} className="p-2 text-gray-300 hover:text-gray-500 transition-colors"><Lock size={16}/></button>
             </div>
 
-            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin}/>}
+            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />}
+            {showRegister && <AgentRegistrationForm onCancel={() => setShowRegister(false)} onSubmit={async (data) => {
+                try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
+            }} />}
 
             {/* Hero Section con Imágenes */}
             <div className="relative pt-24 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
@@ -3378,7 +3523,10 @@ const App = () => {
 
     return (
         <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
-            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin}/>}
+            {showLogin && <AdminLogin onClose={() => setShowLogin(false)} onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />}
+            {showRegister && <AgentRegistrationForm onCancel={() => setShowRegister(false)} onSubmit={async (data) => {
+                try { await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); } catch (e) { console.error(e); }
+            }} />}
             
             {reinforcement && (<div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 bg-immediate-red text-white text-center"><div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30"><reinforcement.icon size={48} fill="currentColor" className="text-white" /></div><h2 className="text-3xl font-bold mb-4">{reinforcement.title}</h2><p className="text-lg leading-relaxed opacity-90 mb-10 max-w-sm">"{reinforcement.text}"</p><button onClick={next} className="bg-white text-rose-600 px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">Continuar <ChevronRight size={20} /></button></div>)}
             
