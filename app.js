@@ -2563,29 +2563,32 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
+                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors w-full overflow-hidden">
                                         <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
-                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2 flex-1 break-words">
+                                        <div className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed text-left w-full whitespace-normal">
                                             {(() => {
+                                                // 1. Si es un agente nuevo con la tabla de licencias bien armada:
                                                 if (agent.licensesArray && agent.licensesArray.length > 0) {
-                                                    return agent.licensesArray.map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name || lic.state).join(', ');
+                                                    return agent.licensesArray
+                                                        .filter(lic => lic.state)
+                                                        .map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name || lic.state)
+                                                        .join(', ');
                                                 }
+                                                // 2. Si es un agente viejo, lo rastreamos y limpiamos a la fuerza:
                                                 if (agent.license && typeof agent.license === 'string') {
-                                                    let textLimpio = agent.license.replace(/\s+/g, ' ').trim(); // Limpia los espacios fantasma
-                                                    if (textLimpio.includes('(')) {
-                                                        const matches = textLimpio.match(/\(([A-Z]{2})\)/g);
-                                                        if (matches) {
-                                                            return matches.map(m => {
-                                                                const abbr = m.replace(/[()]/g, '');
-                                                                return FULL_US_STATES.find(s => s.abbr === abbr)?.name || abbr;
-                                                            }).join(', ');
-                                                        }
+                                                    const cleanText = agent.license.replace(/[\n\r\t]+/g, ' ').trim(); // Quita espacios gigantes
+                                                    
+                                                    // Escanear si menciona algún estado oficial
+                                                    const foundStates = ALL_US_STATES.filter(st => cleanText.includes(st) || cleanText.includes(`(${st})`));
+                                                    
+                                                    if (foundStates.length > 0) {
+                                                        return foundStates.map(abbr => FULL_US_STATES.find(s => s.abbr === abbr)?.name || abbr).join(', ');
                                                     }
-                                                    return textLimpio || 'Sin estados configurados';
+                                                    return cleanText || 'Sin estados configurados';
                                                 }
                                                 return 'Sin estados configurados';
                                             })()}
-                                        </span>
+                                        </div>
                                     </div>
                                     
                                 </div>
