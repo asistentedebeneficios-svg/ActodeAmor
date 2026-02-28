@@ -400,17 +400,31 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
         if (!value) return false;
         if (initialData && initialData[field] === value) return false;
         
+        // 1. VERIFICACIÓN CRÍTICA: Buscar en agentes activos
+        // Como la tabla de agentes es pública por tus reglas, esto SIEMPRE funcionará.
         try {
             const agentsRef = collection(db, 'agents');
-            const requestsRef = collection(db, 'agent_requests');
             const q1 = query(agentsRef, where(field, '==', value));
-            const q2 = query(requestsRef, where(field, '==', value));
-            const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-            return !res1.empty || !res2.empty;
+            const res1 = await getDocs(q1);
+            if (!res1.empty) return true; // Bloqueo INMEDIATO si ya existe el agente
         } catch (error) {
-            console.warn("Firebase bloqueó la lectura, continuando registro:", error);
-            return false; // Permite que el registro continúe aunque las reglas de Firebase bloqueen la búsqueda
+            console.error("Error verificando agentes:", error);
         }
+
+        // 2. VERIFICACIÓN SECUNDARIA: Buscar en solicitudes pendientes
+        try {
+            const requestsRef = collection(db, 'agent_requests');
+            const q2 = query(requestsRef, where(field, '==', value));
+            const res2 = await getDocs(q2);
+            if (!res2.empty) return true;
+        } catch (error) {
+            // Si un invitado llena el formulario, esto fallará por seguridad y caerá aquí.
+            // Lo ignoramos. Si un aspirante manda la solicitud 2 veces, simplemente
+            // verás 2 solicitudes iguales en tu panel y rechazarás una. Lo crítico 
+            // era no duplicar agentes oficiales, y el Paso 1 ya lo resolvió.
+        }
+
+        return false;
     };
 
     const handleEmailBlur = async () => {
