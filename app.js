@@ -400,31 +400,17 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
         if (!value) return false;
         if (initialData && initialData[field] === value) return false;
         
-        // 1. VERIFICACIÓN CRÍTICA: Buscar en agentes activos
-        // Como la tabla de agentes es pública por tus reglas, esto SIEMPRE funcionará.
         try {
             const agentsRef = collection(db, 'agents');
-            const q1 = query(agentsRef, where(field, '==', value));
-            const res1 = await getDocs(q1);
-            if (!res1.empty) return true; // Bloqueo INMEDIATO si ya existe el agente
-        } catch (error) {
-            console.error("Error verificando agentes:", error);
-        }
-
-        // 2. VERIFICACIÓN SECUNDARIA: Buscar en solicitudes pendientes
-        try {
             const requestsRef = collection(db, 'agent_requests');
+            const q1 = query(agentsRef, where(field, '==', value));
             const q2 = query(requestsRef, where(field, '==', value));
-            const res2 = await getDocs(q2);
-            if (!res2.empty) return true;
+            const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+            return !res1.empty || !res2.empty;
         } catch (error) {
-            // Si un invitado llena el formulario, esto fallará por seguridad y caerá aquí.
-            // Lo ignoramos. Si un aspirante manda la solicitud 2 veces, simplemente
-            // verás 2 solicitudes iguales en tu panel y rechazarás una. Lo crítico 
-            // era no duplicar agentes oficiales, y el Paso 1 ya lo resolvió.
+            console.warn("Firebase bloqueó la lectura, continuando registro:", error);
+            return false; // Permite que el registro continúe aunque las reglas de Firebase bloqueen la búsqueda
         }
-
-        return false;
     };
 
     const handleEmailBlur = async () => {
@@ -2543,53 +2529,35 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS (NUEVO DISEÑO APPLE) */}
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {currentViewAgents.map(agent => (
-                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between gap-5 group ${agent.status === 'inactive' ? 'border-gray-200 opacity-60 grayscale-[50%]' : 'border-gray-100'}`}>
-                                    
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400 group-hover:border-rose-200 transition-colors">
-                                            {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0 flex-1 pr-2">
-                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
-                                                <span className="truncate">{agent.name}</span>
-                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
-                                            </h3>
-                                            
-                                            <div className="flex flex-col gap-1.5 mt-2">
-                                                {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
-                                                {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
-                                            </div>
-                                        </div>
-                                    </div>
+                                {currentViewAgents.map(agent => (
+                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between gap-5 group ${agent.status === 'inactive' ? 'border-gray-200 opacity-60 grayscale-[50%]' : 'border-gray-100'}`}>
+                                    
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400 group-hover:border-rose-200 transition-colors">
+                                            {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
+                                                <span className="truncate">{agent.name}</span>
+                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
+                                            </h3>
+                                            
+                                            <div className="flex flex-col gap-1.5 mt-2">
+                                                {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
+                                                {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors overflow-hidden">
-                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed break-words whitespace-normal text-left">
-                                                {(() => {
-                                                    if (agent.licensesArray && agent.licensesArray.length > 0) {
-                                                        return agent.licensesArray.filter(l => l.state).map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name || lic.state).join(', ');
-                                                    }
-                                                    if (agent.license && typeof agent.license === 'string') {
-                                                        const matches = agent.license.match(/\(([A-Z]{2})\)/g);
-                                                        if (matches) {
-                                                            return matches.map(m => {
-                                                                const abbr = m.replace(/[()]/g, '');
-                                                                return FULL_US_STATES.find(s => s.abbr === abbr)?.name || abbr;
-                                                            }).join(', ');
-                                                        }
-                                                        return agent.license.replace(/[\n\r\t]+/g, ' ').trim() || 'Sin estados configurados';
-                                                    }
-                                                    return 'Sin estados configurados';
-                                                })()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                ))}
-                                {currentViewAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes {agentSubTab}.</div>}
-                            </div>
+                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
+                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
+                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{agent.license || 'Sin estados configurados'}</span>
+                                    </div>
+                                    
+                                </div>
+                                ))}
+                                {currentViewAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes {agentSubTab}.</div>}
+                            </div>
                         )}
                     </div>
                 ) : (
