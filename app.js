@@ -1536,24 +1536,30 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                         {agent.phone && <a href={`tel:${agent.phone}`} className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100 hover:text-blue-600 transition-colors cursor-pointer"><Phone size={16} className="text-gray-400 shrink-0"/> <span className="font-medium">{agent.phone}</span></a>}
                                         
                                         {agent.companies && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Building size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.companies}</span></div>}
-                                        
-                                        <div className="flex items-start gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                                            <MapPin size={16} className="text-gray-400 shrink-0 mt-0.5"/> 
-                                            <div className="flex flex-col">
-                                                <span className="leading-relaxed font-medium">{agent.license || 'Sin estados configurados'}</span>
-                                                {/* Miniaturas de Licencias con Lightbox */}
-                                                {agent.licensesArray && agent.licensesArray.length > 0 && (
-                                                    <div className="flex flex-wrap gap-2 mt-2">
-                                                        {agent.licensesArray.map((lic, idx) => lic.fileStr && (
-                                                            <button key={idx} onClick={() => setPreviewImage(lic.fileStr)} className="text-[9px] font-bold text-blue-600 bg-blue-100/50 px-2 py-1 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors border border-blue-100">
-                                                                <Search size={10}/> Licencia {lic.state}
-                                                            </button>
-                                                        ))}
-                                                    </div>
+                                        {agent.isAgency && <div className="inline-flex mt-1 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
+
+                                        {/* NUEVO: BLOQUE ELEGANTE DE LICENCIAS CON MINIATURAS */}
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
+                                            <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><FileText size={14}/> Licencias Estatales</h5>
+                                            <div className="flex flex-col gap-3">
+                                                {agent.licensesArray && agent.licensesArray.length > 0 ? (
+                                                    agent.licensesArray.map((lic, idx) => (
+                                                        <div key={idx} className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:border-rose-300 transition-colors w-full">
+                                                            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => lic.fileStr && setPreviewImage(lic.fileStr)}>
+                                                                {lic.fileStr ? <img src={lic.fileStr} className="w-full h-full object-cover group-hover:scale-110 transition-transform"/> : <span className="text-[8px] text-center p-1 text-gray-400 flex items-center justify-center h-full">Sin Foto</span>}
+                                                                {lic.fileStr && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>}
+                                                            </div>
+                                                            <div className="pr-3">
+                                                                <p className="text-sm font-bold text-gray-900">{lic.state}</p>
+                                                                <p className="text-[10px] text-gray-500 font-mono tracking-wider">{lic.number}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-sm font-medium text-gray-500 flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {agent.license || 'Sin estados configurados'}</span>
                                                 )}
                                             </div>
                                         </div>
-                                        {agent.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
                                     </div>
 
                                     <div className="w-full mt-8 space-y-3 pt-6 border-t border-gray-100">
