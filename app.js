@@ -349,7 +349,7 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
 
 // --- COMPONENTS ---
 const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
-    const [formData, setFormData] = useState(initialData ? { fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
+    const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
     const [licenses, setLicenses] = useState(initialData && initialData.licenses ? initialData.licenses : [{ state: '', number: '', fileStr: '', fileName: '' }]);
     const [profilePicStr, setProfilePicStr] = useState(initialData ? initialData.photo : '');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -396,7 +396,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
 
     const checkDuplicate = async (field, value) => {
         if (!value) return false;
-        // Si estamos editando y el valor NO cambió, no es duplicado
         if (initialData && initialData[field] === value) return false;
         
         const agentsRef = collection(db, 'agents');
@@ -444,12 +443,10 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                 setIsSubmitting(false); return;
             }
 
-            await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr, id: initialData?.id });
+            await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr, id: formData.id });
             setIsSubmitting(false);
-            
-            // Si es edición, cerramos. Si es nuevo registro, mostramos éxito.
-            if (initialData) onCancel(); 
-            else setShowSuccess(true); 
+            if (initialData) onCancel();
+            else setShowSuccess(true);
         } catch (err) {
             setIsSubmitting(false);
             setError("Error de conexión. Intenta nuevamente.");
@@ -461,7 +458,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
             <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-slide-up">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><Check size={40} className="text-green-600" /></div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Solicitud Recibida!</h2>
-                <p className="text-gray-500 mb-8">Estamos verificando tu información. Te anunciaremos nuestra decisión a la brevedad.</p>
+                <p className="text-gray-500 mb-8">Estamos verificando tu información. Te anunciaremos nuestra decisión por correo electrónico a la brevedad posible.</p>
                 <button onClick={onCancel} className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:scale-[1.02] shadow-lg transition-transform">Cerrar y volver</button>
             </div>
         </div>
@@ -475,7 +472,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                     
                     <div className="p-6 md:p-8 border-b border-gray-100">
                         <h2 className="text-2xl font-bold text-gray-900">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
-                        <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
+                        <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
@@ -496,12 +493,18 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                             <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
-                                <input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(''); setError('');}} onBlur={handleEmailBlur} className={`w-full p-3.5 bg-gray-50 border ${emailError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                <div className="relative">
+                                    <input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(''); setError('');}} onBlur={handleEmailBlur} className={`w-full p-3.5 bg-gray-50 border ${emailError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                    {isCheckingEmail && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
+                                </div>
                                 {emailError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {emailError}</p>}
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
-                                <input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => {setFormData({...formData, phone: formatPhoneNumber(e.target.value)}); setPhoneError(''); setError('');}} onBlur={handlePhoneBlur} maxLength="14" className={`w-full p-3.5 bg-gray-50 border ${phoneError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                <div className="relative">
+                                    <input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => {setFormData({...formData, phone: formatPhoneNumber(e.target.value)}); setPhoneError(''); setError('');}} onBlur={handlePhoneBlur} maxLength="14" className={`w-full p-3.5 bg-gray-50 border ${phoneError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                    {isCheckingPhone && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
+                                </div>
                                 {phoneError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {phoneError}</p>}
                             </div>
                         </div>
@@ -536,7 +539,14 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                         </div>
 
                         <div className="space-y-5">
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías</label><input required type="text" placeholder="Ej: Lincoln Heritage..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            {/* AQUÍ ESTÁ EL CAMBIO DE ICONO: Maletín por Edificio */}
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5">
+                                    <Building size={14} className="text-gray-400"/> Compañías con las que trabaja
+                                </label>
+                                <input required type="text" placeholder="Ej: Lincoln Heritage, Mutual of Omaha..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" />
+                            </div>
+                            
                             <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
                                 <div className="relative flex items-center justify-center"><input type="checkbox" checked={formData.isAgency} onChange={e => setFormData({...formData, isAgency: e.target.checked})} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-500 checked:border-blue-500 transition-all" /><Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} /></div>
                                 <span className="text-sm font-bold text-gray-700">Tengo una organización o agencia a mi cargo</span>
