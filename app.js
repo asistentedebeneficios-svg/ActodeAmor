@@ -2565,21 +2565,25 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
                                     <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
                                         <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
-                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">
+                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2 flex-1 break-words">
                                             {(() => {
                                                 if (agent.licensesArray && agent.licensesArray.length > 0) {
                                                     return agent.licensesArray.map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name || lic.state).join(', ');
                                                 }
-                                                if (agent.license && agent.license.includes('(')) {
-                                                    const matches = agent.license.match(/\(([A-Z]{2})\)/g);
-                                                    if (matches) {
-                                                        return matches.map(m => {
-                                                            const abbr = m.replace(/[()]/g, '');
-                                                            return FULL_US_STATES.find(s => s.abbr === abbr)?.name || abbr;
-                                                        }).join(', ');
+                                                if (agent.license && typeof agent.license === 'string') {
+                                                    let textLimpio = agent.license.replace(/\s+/g, ' ').trim(); // Limpia los espacios fantasma
+                                                    if (textLimpio.includes('(')) {
+                                                        const matches = textLimpio.match(/\(([A-Z]{2})\)/g);
+                                                        if (matches) {
+                                                            return matches.map(m => {
+                                                                const abbr = m.replace(/[()]/g, '');
+                                                                return FULL_US_STATES.find(s => s.abbr === abbr)?.name || abbr;
+                                                            }).join(', ');
+                                                        }
                                                     }
+                                                    return textLimpio || 'Sin estados configurados';
                                                 }
-                                                return agent.license || 'Sin estados configurados';
+                                                return 'Sin estados configurados';
                                             })()}
                                         </span>
                                     </div>
