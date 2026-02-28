@@ -310,6 +310,10 @@ const useFirebaseDatabase = () => {
         // Simplemente lo borramos de la base de datos
         await deleteDoc(doc(db, 'agent_requests', id));
     };
+
+    const updateAgentRequest = async (id, data) => { 
+        if (user) await updateDoc(doc(db, 'agent_requests', id), data); 
+    };
     // ---------------------------------------------
 
     const updateSchedule = async (newSchedule) => { if (user) await setDoc(doc(db, 'settings', 'schedule'), newSchedule); };
@@ -319,7 +323,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -344,15 +348,14 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
 };
 
 // --- COMPONENTS ---
-const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
-    const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
-    const [licenses, setLicenses] = useState([{ state: '', number: '', fileStr: '', fileName: '' }]);
-    const [profilePicStr, setProfilePicStr] = useState('');
+const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
+    const [formData, setFormData] = useState(initialData ? { fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
+    const [licenses, setLicenses] = useState(initialData && initialData.licenses ? initialData.licenses : [{ state: '', number: '', fileStr: '', fileName: '' }]);
+    const [profilePicStr, setProfilePicStr] = useState(initialData ? initialData.photo : '');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState('');
 
-    // --- NUEVOS ESTADOS PARA VALIDACIÓN EN TIEMPO REAL ---
     const [emailError, setEmailError] = useState('');
     const [phoneError, setPhoneError] = useState('');
     const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -360,7 +363,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
     const licenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
 
-    // MOTOR DE AUTO-COMPRESIÓN DE IMÁGENES
     const handleFileChange = (e, callback) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -372,17 +374,11 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
             img.src = event.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; 
-                const MAX_HEIGHT = 800;
-                let width = img.width;
-                let height = img.height;
-                if (width > height) {
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                } else {
-                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                }
-                canvas.width = width;
-                canvas.height = height;
+                const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
+                let width = img.width; let height = img.height;
+                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
@@ -398,15 +394,15 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
         setError(''); 
     };
 
-    // --- MOTOR DE VALIDACIÓN EN TIEMPO REAL ---
     const checkDuplicate = async (field, value) => {
         if (!value) return false;
+        // Si estamos editando y el valor NO cambió, no es duplicado
+        if (initialData && initialData[field] === value) return false;
+        
         const agentsRef = collection(db, 'agents');
         const requestsRef = collection(db, 'agent_requests');
-        
         const q1 = query(agentsRef, where(field, '==', value));
         const q2 = query(requestsRef, where(field, '==', value));
-        
         const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
         return !res1.empty || !res2.empty;
     };
@@ -432,53 +428,40 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(''); 
-        
-        if (formData.phone.length < 14) {
-            setError("Por favor, ingresa un número de teléfono válido (10 dígitos).");
-            return;
-        }
-
-        if (emailError || phoneError) {
-            setError("Por favor, corrige los errores marcados en rojo antes de continuar.");
-            return;
-        }
-
+        if (formData.phone.length < 14) { setError("Ingresa un teléfono válido de 10 dígitos."); return; }
+        if (emailError || phoneError) { setError("Corrige los errores en rojo antes de continuar."); return; }
         const incompleteLicense = licenses.find(l => !l.state || !l.number || !l.fileStr);
-        if (incompleteLicense) {
-            setError("Faltan datos en las licencias. Selecciona el estado, número y sube la foto.");
-            return;
-        }
+        if (incompleteLicense) { setError("Faltan datos o fotos en las licencias."); return; }
 
         setIsSubmitting(true);
         try {
-            // Última verificación por seguridad (por si le dieron click muy rápido)
             const isEmailDup = await checkDuplicate('email', formData.email);
             const isPhoneDup = await checkDuplicate('phone', formData.phone);
-            
             if (isEmailDup || isPhoneDup) {
-                if (isEmailDup) setEmailError('Este correo ya está registrado o en revisión.');
-                if (isPhoneDup) setPhoneError('Este teléfono ya está registrado o en revisión.');
-                setError("Detectamos datos duplicados. Por favor, revisa los campos en rojo.");
-                setIsSubmitting(false);
-                return;
+                if (isEmailDup) setEmailError('Correo en uso.');
+                if (isPhoneDup) setPhoneError('Teléfono en uso.');
+                setError("Datos duplicados encontrados.");
+                setIsSubmitting(false); return;
             }
 
-            await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
+            await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr, id: initialData?.id });
             setIsSubmitting(false);
-            setShowSuccess(true); 
+            
+            // Si es edición, cerramos. Si es nuevo registro, mostramos éxito.
+            if (initialData) onCancel(); 
+            else setShowSuccess(true); 
         } catch (err) {
             setIsSubmitting(false);
             setError("Error de conexión. Intenta nuevamente.");
-            console.error(err);
         }
     };
 
-    if (showSuccess) return (
+    if (showSuccess && !initialData) return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
             <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl animate-slide-up">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><Check size={40} className="text-green-600" /></div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Solicitud Recibida!</h2>
-                <p className="text-gray-500 mb-8">Estamos verificando tu información. Te anunciaremos nuestra decisión por correo electrónico a la brevedad posible.</p>
+                <p className="text-gray-500 mb-8">Estamos verificando tu información. Te anunciaremos nuestra decisión a la brevedad.</p>
                 <button onClick={onCancel} className="w-full py-3.5 bg-black text-white font-bold rounded-xl hover:scale-[1.02] shadow-lg transition-transform">Cerrar y volver</button>
             </div>
         </div>
@@ -491,12 +474,11 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                     <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
                     
                     <div className="p-6 md:p-8 border-b border-gray-100">
-                        <h2 className="text-2xl font-bold text-gray-900">Únete al Equipo</h2>
-                        <p className="text-gray-500 text-sm mt-1">Completa tu perfil profesional para enviar la solicitud.</p>
+                        <h2 className="text-2xl font-bold text-gray-900">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
+                        <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-                        
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
                                 <div className="relative">
@@ -506,37 +488,20 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                                     </label>
                                     <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 shadow-md pointer-events-none"><Upload size={12} strokeWidth={3}/></div>
                                 </div>
-
-                                {!profilePicStr && (
-                                    <div className="flex flex-col items-center justify-center pb-2 opacity-60 hidden sm:flex">
-                                        <span className="text-[8px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Ejemplo Ideal</span>
-                                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&h=100&q=80" alt="Ejemplo" className="w-12 h-12 rounded-full border border-gray-200 object-cover" />
-                                    </div>
-                                )}
                             </div>
                             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200 mb-2">Subir Foto de Perfil</span>
-                            <p className="text-[10px] text-gray-500 text-center max-w-[280px] leading-relaxed">Debe ser una foto ejecutiva, <strong className="text-gray-800">solo del rostro</strong> (tipo pasaporte).</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label>
-                                <input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" />
-                            </div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
-                                <div className="relative">
-                                    <input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(''); setError('');}} onBlur={handleEmailBlur} className={`w-full p-3.5 bg-gray-50 border ${emailError ? 'border-red-400 focus:bg-red-50 focus:ring-red-500/10 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-blue-500/10'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
-                                    {isCheckingEmail && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
-                                </div>
+                                <input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(''); setError('');}} onBlur={handleEmailBlur} className={`w-full p-3.5 bg-gray-50 border ${emailError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
                                 {emailError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {emailError}</p>}
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
-                                <div className="relative">
-                                    <input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => {setFormData({...formData, phone: formatPhoneNumber(e.target.value)}); setPhoneError(''); setError('');}} onBlur={handlePhoneBlur} maxLength="14" className={`w-full p-3.5 bg-gray-50 border ${phoneError ? 'border-red-400 focus:bg-red-50 focus:ring-red-500/10 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-blue-500/10'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
-                                    {isCheckingPhone && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
-                                </div>
+                                <input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => {setFormData({...formData, phone: formatPhoneNumber(e.target.value)}); setPhoneError(''); setError('');}} onBlur={handlePhoneBlur} maxLength="14" className={`w-full p-3.5 bg-gray-50 border ${phoneError ? 'border-red-400 focus:bg-red-50 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
                                 {phoneError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {phoneError}</p>}
                             </div>
                         </div>
@@ -557,7 +522,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
                                             <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
-                                                {lic.fileName ? <span className="text-green-600 font-bold truncate">✅ {lic.fileName}</span> : <span>Subir foto</span>}
+                                                {lic.fileName || lic.fileStr ? <span className="text-green-600 font-bold truncate">✅ Foto lista</span> : <span>Subir foto</span>}
                                                 <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
                                             </label>
                                         </div>
@@ -567,32 +532,26 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             </div>
                             <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
                                 <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"><Plus size={16}/> Agregar otro estado</button>
-                                {licenseSummary && <div className="text-xs font-mono bg-white px-3 py-1.5 rounded-md border border-gray-200 text-gray-500 shadow-sm text-center md:text-left">{licenseSummary}</div>}
                             </div>
                         </div>
 
                         <div className="space-y-5">
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías para las que trabaja</label><input required type="text" placeholder="Ej: Lincoln Heritage, Mutual of Omaha..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Compañías</label><input required type="text" placeholder="Ej: Lincoln Heritage..." value={formData.companies} onChange={e => setFormData({...formData, companies: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium" /></div>
                             <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
                                 <div className="relative flex items-center justify-center"><input type="checkbox" checked={formData.isAgency} onChange={e => setFormData({...formData, isAgency: e.target.checked})} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-500 checked:border-blue-500 transition-all" /><Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} /></div>
                                 <span className="text-sm font-bold text-gray-700">Tengo una organización o agencia a mi cargo</span>
                             </label>
                             <div>
-                                <div className="flex items-center justify-between mb-1.5 ml-1 pr-1"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bio Corta (Para prospectos)</label><span className={`text-[10px] font-bold ${formData.bio.length > 150 ? 'text-red-500' : 'text-gray-400'}`}>{formData.bio.length}/150</span></div>
-                                <textarea required maxLength="150" placeholder="Ej: Especialista en gastos finales con 5 años de experiencia ayudando a familias hispanas..." value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium resize-none h-24" />
+                                <div className="flex items-center justify-between mb-1.5 ml-1 pr-1"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bio Corta</label><span className={`text-[10px] font-bold ${formData.bio.length > 150 ? 'text-red-500' : 'text-gray-400'}`}>{formData.bio.length}/150</span></div>
+                                <textarea required maxLength="150" placeholder="Ej: Especialista en gastos finales..." value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 rounded-xl outline-none transition-all text-sm font-medium resize-none h-24" />
                             </div>
                         </div>
                         
-                        {error && (
-                            <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm">
-                                <AlertTriangle size={18} className="shrink-0" />
-                                <p>{error}</p>
-                            </div>
-                        )}
+                        {error && <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm"><AlertTriangle size={18} className="shrink-0" /><p>{error}</p></div>}
 
                         <div className="pt-4 border-t border-gray-100">
                             <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
-                                {isSubmitting ? 'Verificando y Enviando...' : 'Enviar Solicitud'}
+                                {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
                             </button>
                         </div>
                     </form>
@@ -2112,7 +2071,7 @@ const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
     );
 };
 
-const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
+const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
@@ -2120,6 +2079,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     }); 
 
     const [agentSubTab, setAgentSubTab] = useState('activos'); 
+
+    // --- NUEVOS ESTADOS ---
+    const [editingRequest, setEditingRequest] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
     const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState(null);
@@ -2296,8 +2259,36 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         setEditingAgent(null);
     };
 
+    // Función para activar/inactivar
+    const toggleAgentStatus = async (e, agentObj) => {
+        e.stopPropagation();
+        const newStatus = agentObj.status === 'inactive' ? 'active' : 'inactive';
+        await onSaveAgent({ ...agentObj, status: newStatus });
+    };
+
     return (
         <div className="fixed inset-0 bg-apple-gray z-50 flex flex-col animate-fade-in font-sans">
+            
+            {/* VISOR DE IMÁGENES EN PANTALLA COMPLETA (LIGHTBOX) */}
+            {previewImage && (
+                <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
+                    <button className="absolute top-6 right-6 text-white/50 hover:text-white bg-black/50 p-3 rounded-full backdrop-blur-md transition-colors"><X size={24}/></button>
+                    <img src={previewImage} className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" onClick={e => e.stopPropagation()} />
+                </div>
+            )}
+
+            {/* FORMULARIO MODAL PARA EDITAR SOLICITUDES PENDIENTES */}
+            {editingRequest && (
+                <AgentRegistrationForm 
+                    initialData={editingRequest}
+                    onCancel={() => setEditingRequest(null)}
+                    onSubmit={async (data) => {
+                        await onUpdateAgentRequest(data.id, data);
+                        setEditingRequest(null);
+                    }}
+                />
+            )}
+
             <div className="glass-panel px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row justify-between items-center z-20 gap-3 shadow-sm">
                 <div className="flex items-center justify-between w-full md:w-auto">
                     <div className="flex items-center gap-3">
@@ -2367,6 +2358,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         )}
                         {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
+                        {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
                         {tab === 'agents' && (
                             <span className="flex items-center gap-1.5">
                                 Equipo
@@ -2454,14 +2446,20 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                     {agentRequests.map(req => (
                                         <div key={req.id} className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 flex flex-col md:flex-row gap-6">
                                             <div className="flex flex-col items-center md:items-start md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6 shrink-0">
-                                                <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-sm overflow-hidden mb-4">
+                                                <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-sm overflow-hidden mb-4 relative group cursor-pointer" onClick={() => req.photo && setPreviewImage(req.photo)}>
                                                     {req.photo ? <img src={req.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400"><User size={32}/></div>}
+                                                    {req.photo && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={16} className="text-white"/></div>}
                                                 </div>
                                                 <h4 className="text-xl font-bold text-gray-900 text-center md:text-left">{req.fullName}</h4>
-                                                <p className="text-sm text-gray-500 mb-4 text-center md:text-left">{req.email}</p>
+                                                
+                                                <a href={`mailto:${req.email}`} className="text-sm text-blue-600 hover:text-blue-800 transition-colors mb-4 text-center md:text-left flex items-center justify-center md:justify-start gap-1.5 font-medium mt-1">
+                                                    <Mail size={14}/> {req.email}
+                                                </a>
                                                 
                                                 <div className="w-full space-y-2 text-sm bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                                                    <div className="flex items-center gap-2 text-gray-700"><Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong></div>
+                                                    <a href={`tel:${req.phone}`} className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors cursor-pointer w-full">
+                                                        <Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong>
+                                                    </a>
                                                     <div className="flex items-center gap-2 text-gray-700"><Briefcase size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
                                                     {req.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
                                                 </div>
@@ -2478,9 +2476,9 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                                     <div className="flex flex-wrap gap-3">
                                                         {req.licenses && req.licenses.map((lic, idx) => (
                                                             <div key={idx} className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:border-rose-300 transition-colors">
-                                                                <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => window.open(lic.fileStr, '_blank')}>
+                                                                <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer group relative border border-gray-200 shrink-0" onClick={() => lic.fileStr && setPreviewImage(lic.fileStr)}>
                                                                     {lic.fileStr ? <img src={lic.fileStr} className="w-full h-full object-cover group-hover:scale-110 transition-transform"/> : <span className="text-[8px] text-center p-1 text-gray-400 flex items-center justify-center h-full">Sin Foto</span>}
-                                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>
+                                                                    {lic.fileStr && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>}
                                                                 </div>
                                                                 <div className="pr-3">
                                                                     <p className="text-sm font-bold text-gray-900">{lic.state}</p>
@@ -2492,18 +2490,19 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-row md:flex-col items-center justify-center gap-3 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 shrink-0 w-full md:w-32">
+                                            <div className="flex flex-row md:flex-col items-center justify-center gap-2 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 shrink-0 w-full md:w-32">
+                                                <button onClick={() => setEditingRequest(req)} className="flex-1 md:flex-none md:w-full py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+                                                    <Edit2 size={16} /> Editar
+                                                </button>
                                                 <button onClick={() => {
                                                     setDialog({ title: 'Aprobar Agente', message: `¿Convertir a ${req.fullName} en un agente oficial de tu equipo?`, type: 'info', onConfirm: () => { onApproveRequest(req); setDialog(null); }, onCancel: () => setDialog(null) });
-                                                }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-black text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:scale-105 transition-transform shadow-lg group">
-                                                    <Check size={20} className="group-hover:text-green-400 transition-colors"/>
-                                                    Aprobar
+                                                }} className="flex-1 md:flex-none md:w-full py-2.5 bg-black text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:scale-105 transition-transform shadow-md group">
+                                                    <Check size={16} className="group-hover:text-green-400 transition-colors"/> Aprobar
                                                 </button>
                                                 <button onClick={() => {
                                                     setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de eliminar y rechazar la solicitud de ${req.fullName}? Esta acción no se puede deshacer.`, type: 'danger', onConfirm: () => { onRejectRequest(req.id); setDialog(null); }, onCancel: () => setDialog(null) });
-                                                }} className="flex-1 md:flex-none md:w-full py-3 md:py-4 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
-                                                    <X size={20} />
-                                                    Rechazar
+                                                }} className="flex-1 md:flex-none md:w-full py-2.5 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
+                                                    <X size={16} /> Rechazar
                                                 </button>
                                             </div>
                                         </div>
@@ -3710,7 +3709,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
+    const { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
     const currentStep = STEPS[stepIndex];
 
     // --- AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas) ---
@@ -3905,6 +3904,7 @@ const App = () => {
                 agentRequests={agentRequests}
                 onApproveRequest={approveAgentRequest}
                 onRejectRequest={rejectAgentRequest}
+                onUpdateAgentRequest={updateAgentRequest}
                 schedule={schedule}
                 webhooks={webhooks}
                 generalSettings={generalSettings}
