@@ -357,11 +357,12 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
     const handleFileChange = (e, callback) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { 
-            setError("La imagen es muy pesada. El tamaño máximo es 2MB."); 
+        // Bajamos el límite a 800KB para evitar chocar con el límite de Firebase
+        if (file.size > 800 * 1024) { 
+            setError("La imagen es muy pesada. El tamaño máximo es 800KB. Por favor recórtala o usa otra."); 
             return; 
         }
-        setError(''); // Limpia el error si todo está bien
+        setError('');
         const reader = new FileReader();
         reader.onloadend = () => callback(reader.result, file.name);
         reader.readAsDataURL(file);
@@ -376,9 +377,8 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Limpiamos errores previos
+        setError(''); 
         
-        // --- 1. VALIDACIÓN BLINDADA (SIN ALERTAS FEAS) ---
         if (formData.phone.length < 14) {
             setError("Por favor, ingresa un número de teléfono válido (10 dígitos).");
             return;
@@ -386,15 +386,20 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
         const incompleteLicense = licenses.find(l => !l.state || !l.number || !l.fileStr);
         if (incompleteLicense) {
-            setError("Faltan datos en las licencias. Selecciona el estado, número y foto.");
+            setError("Faltan datos en las licencias. Selecciona el estado, número y sube la foto.");
             return;
         }
 
-        // --- 2. ENVÍO SEGURO ---
         setIsSubmitting(true);
-        await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
-        setIsSubmitting(false);
-        setShowSuccess(true);
+        try {
+            // Intentamos enviar a Firebase
+            await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
+            setIsSubmitting(false);
+            setShowSuccess(true); // Solo mostramos éxito si Firebase aceptó el dato
+        } catch (err) {
+            setIsSubmitting(false);
+            setError("Error al guardar: Las imágenes son demasiado pesadas. Por favor, sube fotos de menor resolución.");
+        }
     };
 
     if (showSuccess) return (
