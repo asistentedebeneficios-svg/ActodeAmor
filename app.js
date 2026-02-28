@@ -354,18 +354,52 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
     const licenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
 
+    // MOTOR DE AUTO-COMPRESIÓN DE IMÁGENES
     const handleFileChange = (e, callback) => {
         const file = e.target.files[0];
         if (!file) return;
-        // Bajamos el límite a 800KB para evitar chocar con el límite de Firebase
-        if (file.size > 800 * 1024) { 
-            setError("La imagen es muy pesada. El tamaño máximo es 800KB. Por favor recórtala o usa otra."); 
-            return; 
-        }
-        setError('');
+
+        setError(''); // Limpiamos cualquier error previo
+
         const reader = new FileReader();
-        reader.onloadend = () => callback(reader.result, file.name);
         reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                // 1. Creamos un lienzo virtual para redimensionar
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Tamaño perfecto para leer textos en web
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                // 2. Calculamos las proporciones para no deformar la imagen
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                // 3. Dibujamos la imagen en el nuevo tamaño
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 4. Comprimimos a formato JPEG con 70% de calidad (pesará aprox. 40kb - 80kb)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // 5. Devolvemos la imagen optimizada
+                callback(compressedBase64, file.name);
+            };
+        };
     };
 
     const handleLicenseChange = (index, field, value) => {
