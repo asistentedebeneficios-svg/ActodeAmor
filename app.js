@@ -3881,13 +3881,15 @@ const App = () => {
                         <AgentRegistrationForm 
                             onCancel={() => setShowRegister(false)} 
                             onSubmit={async (data) => {
-                                try { 
-                                    await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); 
+                                try {
+                                    // Quitamos el ID vacío para que Firebase no se moleste y cree uno nuevo
+                                    const { id, ...datosLimpios } = data;
+                                    await addDoc(collection(db, 'agent_requests'), { ...datosLimpios, status: 'pending', timestamp: Date.now() }); 
                                 } catch (e) { 
                                     console.error("Error crítico de guardado:", e); 
                                     throw e; 
                                 }
-                            }} 
+                            }}
                         />
                     </div>
             );
