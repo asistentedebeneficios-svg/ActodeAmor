@@ -456,7 +456,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
             else setShowSuccess(true);
         } catch (err) {
             setIsSubmitting(false);
-            setError("Error de conexión. Intenta nuevamente.");
+            setError("Error técnico: " + (err.message || err));
         }
     };
 
