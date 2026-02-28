@@ -3885,7 +3885,7 @@ const App = () => {
                                     await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); 
                                 } catch (e) { 
                                     console.error("Error crítico de guardado:", e); 
-                                    throw new Error("Firebase bloqueó la escritura. Revisa tus Reglas (Rules)."); 
+                                    throw e; 
                                 }
                             }} 
                         />
