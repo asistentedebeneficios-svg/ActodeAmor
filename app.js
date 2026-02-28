@@ -2564,9 +2564,13 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                     </div>
 
                                     <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
-                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
-                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{agent.license || 'Sin estados configurados'}</span>
-                                    </div>
+                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
+                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">
+                                            {agent.licensesArray && agent.licensesArray.length > 0 
+                                                ? agent.licensesArray.map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name || lic.state).join(', ') 
+                                                : agent.license || 'Sin estados configurados'}
+                                        </span>
+                                    </div>
                                     
                                 </div>
                                 ))}
