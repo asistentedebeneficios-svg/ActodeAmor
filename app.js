@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -2470,7 +2470,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                                     <a href={`tel:${req.phone}`} className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors cursor-pointer w-full">
                                                         <Phone size={14} className="text-rose-500 shrink-0"/> <strong className="truncate">{req.phone}</strong>
                                                     </a>
-                                                    <div className="flex items-center gap-2 text-gray-700"><Briefcase size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
+                                                    <div className="flex items-center gap-2 text-gray-700"><Building size={14} className="text-rose-500 shrink-0"/> <span className="truncate">{req.companies || 'Independiente'}</span></div>
                                                     {req.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
                                                 </div>
                                             </div>
