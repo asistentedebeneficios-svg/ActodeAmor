@@ -283,22 +283,24 @@ const useFirebaseDatabase = () => {
         if (!user) return;
         const batch = writeBatch(db);
         
-        // 1. Formateamos los datos para que coincidan con la estructura de tus agentes actuales
+        // ¡Magia aquí! Pasamos ABSOLUTAMENTE TODOS los datos de la solicitud al perfil oficial
         const newAgentData = {
-            name: request.fullName,
-            email: request.email,
-            phone: request.phone,
-            bio: request.bio,
-            photo: request.photo || '',
-            license: request.licenseSummary || 'Agente Aprobado', // Guardamos el resumen de estados
-            timestamp: Date.now()
+            name: request.fullName || '', 
+            email: request.email || '', 
+            phone: request.phone || '',
+            bio: request.bio || '', 
+            photo: request.photo || '', 
+            license: request.licenseSummary || 'Sin estados configurados',
+            companies: request.companies || 'Independiente', 
+            isAgency: request.isAgency || false, 
+            licensesArray: request.licenses || [], // Guardamos las fotos de las licencias
+            timestamp: Date.now(), 
+            status: 'active'
         };
 
-        // 2. Lo creamos en la colección oficial de agentes
         const newAgentRef = doc(collection(db, 'agents'));
         batch.set(newAgentRef, newAgentData);
         
-        // 3. Lo eliminamos de la bandeja de solicitudes
         const requestRef = doc(db, 'agent_requests', request.id);
         batch.delete(requestRef);
         
@@ -953,37 +955,25 @@ const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
 };
 
 const AgentModal = ({ agent, onClose, onSave, onDelete, onToggleStatus }) => {
-    const [formData, setFormData] = useState({ name: '', license: '', email: '', phone: '', bio: '', photo: '' });
+    const [formData, setFormData] = useState({ name: '', license: '', email: '', phone: '', bio: '', photo: '', companies: '', isAgency: false });
     const [dialog, setDialog] = useState(null);
 
     useEffect(() => { 
         if (agent) setFormData(agent); 
-        else setFormData({ name: '', license: '', email: '', phone: '', bio: '', photo: '' }); 
+        else setFormData({ name: '', license: '', email: '', phone: '', bio: '', photo: '', companies: '', isAgency: false }); 
     }, [agent]);
 
-    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("La imagen es muy pesada. Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
+    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+    const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
     const handleSubmit = (e) => { e.preventDefault(); onSave({ ...formData, timestamp: agent ? agent.timestamp : Date.now() }); };
 
     const handleDeleteClick = () => {
-        setDialog({
-            title: 'Eliminar Agente',
-            message: `¿Estás seguro de eliminar a ${agent.name}? Esta acción es irreversible y perderá el acceso al portal de inmediato.`,
-            type: 'danger',
-            onConfirm: () => { onDelete(agent.id); setDialog(null); onClose(); },
-            onCancel: () => setDialog(null)
-        });
+        setDialog({ title: 'Eliminar Agente', message: `¿Estás seguro de eliminar a ${agent.name}?`, type: 'danger', onConfirm: () => { onDelete(agent.id); setDialog(null); onClose(); }, onCancel: () => setDialog(null) });
     };
 
     const handleToggleStatusClick = () => {
         const isInactive = agent.status === 'inactive';
-        setDialog({
-            title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente',
-            message: isInactive ? `¿Deseas reactivar a ${agent.name}? Volverá a tener acceso y podrá recibir prospectos.` : `¿Deseas inactivar a ${agent.name}? No podrá acceder al portal ni recibir nuevos prospectos.`,
-            type: 'warning',
-            onConfirm: () => { onToggleStatus(agent); setDialog(null); onClose(); },
-            onCancel: () => setDialog(null)
-        });
+        setDialog({ title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente', message: isInactive ? `¿Deseas reactivar a ${agent.name}?` : `¿Deseas inactivar a ${agent.name}?`, type: 'warning', onConfirm: () => { onToggleStatus(agent); setDialog(null); onClose(); }, onCancel: () => setDialog(null) });
     };
 
     return (
@@ -1008,40 +998,29 @@ const AgentModal = ({ agent, onClose, onSave, onDelete, onToggleStatus }) => {
                             {formData.photo ? 'Actualizar Foto' : 'Subir Foto'}
                             <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                         </label>
-                        <div className="w-full mt-4 border-t border-gray-200 pt-4">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">O usar un enlace web (URL)</label>
-                            <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-rose-500/20 focus-within:border-rose-500 transition-all">
-                                <div className="pl-3 text-gray-400"><LinkIcon size={14}/></div>
-                                <input type="text" name="photo" value={formData.photo && formData.photo.startsWith('data:') ? '' : formData.photo} onChange={handleChange} placeholder="https://..." className="w-full text-sm outline-none px-2 py-2.5 bg-transparent"/>
-                            </div>
-                        </div>
                     </div>
 
                     <div className="space-y-4">
-                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm font-medium" placeholder="Ej. Juan Pérez" /></div>
-                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Licencia / ID</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm font-medium" placeholder="Ej. LIC-123456" /></div>
+                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
+                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estados (Licencias)</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
+                        
+                        {/* Agregado Compañías y Agencia al formulario de Edición */}
+                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5"><Building size={14}/> Compañías</label><input name="companies" value={formData.companies} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
+                        <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" name="isAgency" checked={formData.isAgency} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                            <span className="text-sm font-bold text-gray-700">Tengo una agencia a mi cargo</span>
+                        </label>
+
                         <div className="grid grid-cols-2 gap-3">
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label><input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm font-medium" placeholder="correo@..." /></div>
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm font-medium" placeholder="555..." /></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label><input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
                         </div>
-                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Bio Breve</label><textarea name="bio" rows="2" value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm resize-none" placeholder="Especialista en..." /></div>
+                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Bio Breve</label><textarea name="bio" rows="2" value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm resize-none" /></div>
                     </div>
                     <div className="pt-4">
                         <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] transition-transform">{agent ? 'Guardar Cambios' : 'Crear Agente'}</button>
                     </div>
                 </form>
-
-                {agent && (
-                    <div className="mt-6 pt-6 border-t border-gray-100 flex gap-3">
-                        <button type="button" onClick={handleToggleStatusClick} className="flex-1 py-3.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
-                            {agent.status === 'inactive' ? <RotateCcw size={16}/> : <MinusCircle size={16}/>}
-                            {agent.status === 'inactive' ? 'Reactivar' : 'Inactivar'}
-                        </button>
-                        <button type="button" onClick={handleDeleteClick} className="flex-1 py-3.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm">
-                            <Trash2 size={16}/> Eliminar
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -1483,42 +1462,27 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState(agent);
     const [dialog, setDialog] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null); // LIGHTBOX PARA LA FICHA
 
-    // Mantiene los datos actualizados si se edita
     useEffect(() => { setFormData(agent); }, [agent]);
 
-    // Filtramos los leads asignados a este agente
     const assignedLeads = leads.filter(l => {
         if (l.assignedTo !== agent.id) return false;
         if (!innerSearch) return true;
         const term = innerSearch.toLowerCase();
-        return (l.name && l.name.toLowerCase().includes(term)) || 
-               (l.phone && l.phone.includes(term)) ||
-               (l.state && l.state.toLowerCase().includes(term));
+        return (l.name && l.name.toLowerCase().includes(term)) || (l.phone && l.phone.includes(term)) || (l.state && l.state.toLowerCase().includes(term));
     });
 
     const handleToggleStatus = () => {
         const isInactive = agent.status === 'inactive';
-        setDialog({
-            title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente',
-            message: isInactive ? `¿Deseas reactivar a ${agent.name}? Volverá a tener acceso y recibir prospectos.` : `¿Deseas inactivar a ${agent.name}? No podrá acceder al portal.`,
-            type: 'warning',
-            onConfirm: async () => { await onSaveAgent({ ...agent, status: isInactive ? 'active' : 'inactive' }); setDialog(null); },
-            onCancel: () => setDialog(null)
-        });
+        setDialog({ title: isInactive ? 'Reactivar Agente' : 'Inactivar Agente', message: isInactive ? `¿Deseas reactivar a ${agent.name}?` : `¿Deseas inactivar a ${agent.name}?`, type: 'warning', onConfirm: async () => { await onSaveAgent({ ...agent, status: isInactive ? 'active' : 'inactive' }); setDialog(null); }, onCancel: () => setDialog(null) });
     };
 
     const handleDelete = () => {
-        setDialog({
-            title: 'Eliminar Agente',
-            message: `¿Estás seguro de eliminar a ${agent.name}? Esta acción es irreversible.`,
-            type: 'danger',
-            onConfirm: async () => { await onDeleteAgent(agent.id); setDialog(null); onClose(); },
-            onCancel: () => setDialog(null)
-        });
+        setDialog({ title: 'Eliminar Agente', message: `¿Estás seguro de eliminar a ${agent.name}?`, type: 'danger', onConfirm: async () => { await onDeleteAgent(agent.id); setDialog(null); onClose(); }, onCancel: () => setDialog(null) });
     };
 
-    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
     const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
     
     const handleSaveProfile = async (e) => {
@@ -1530,6 +1494,14 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
     return (
         <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up">
             <CustomDialog isOpen={!!dialog} {...dialog} />
+
+            {/* LIGHTBOX DE LICENCIAS */}
+            {previewImage && (
+                <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
+                    <button className="absolute top-6 right-6 text-white/50 hover:text-white bg-black/50 p-3 rounded-full backdrop-blur-md transition-colors"><X size={24}/></button>
+                    <img src={previewImage} className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" onClick={e => e.stopPropagation()} />
+                </div>
+            )}
             
             <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
                 <div className="flex items-center gap-4">
@@ -1544,13 +1516,14 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
                 <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto items-start">
                     
-                    {/* COLUMNA IZQUIERDA: PERFIL DEL AGENTE / EDICIÓN */}
+                    {/* COLUMNA IZQUIERDA: PERFIL DEL AGENTE */}
                     <div className="md:col-span-4 space-y-6">
                         <div className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100">
                             {!isEditing ? (
                                 <div className="flex flex-col items-center text-center animate-fade-in">
-                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-3xl border-4 border-gray-50 overflow-hidden shadow-sm text-gray-400 mb-4">
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-3xl border-4 border-gray-50 overflow-hidden shadow-sm text-gray-400 mb-4 relative group cursor-pointer" onClick={() => agent.photo && setPreviewImage(agent.photo)}>
                                         {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0).toUpperCase()}
+                                        {agent.photo && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>}
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                         {agent.name}
@@ -1559,9 +1532,28 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                     {agent.bio && <p className="text-sm text-gray-500 italic mt-3 bg-gray-50 p-4 rounded-xl border border-gray-100 text-balance leading-relaxed">"{agent.bio}"</p>}
                                     
                                     <div className="w-full space-y-3 text-sm mt-6 text-left">
-                                        {agent.email && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Mail size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.email}</span></div>}
-                                        {agent.phone && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Phone size={16} className="text-gray-400 shrink-0"/> <span className="font-medium">{agent.phone}</span></div>}
-                                        <div className="flex items-start gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><MapPin size={16} className="text-gray-400 shrink-0 mt-0.5"/> <span className="leading-relaxed font-medium">{agent.license || 'Sin estados configurados'}</span></div>
+                                        {agent.email && <a href={`mailto:${agent.email}`} className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100 hover:text-blue-600 transition-colors cursor-pointer"><Mail size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.email}</span></a>}
+                                        {agent.phone && <a href={`tel:${agent.phone}`} className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100 hover:text-blue-600 transition-colors cursor-pointer"><Phone size={16} className="text-gray-400 shrink-0"/> <span className="font-medium">{agent.phone}</span></a>}
+                                        
+                                        {agent.companies && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Building size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.companies}</span></div>}
+                                        
+                                        <div className="flex items-start gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                                            <MapPin size={16} className="text-gray-400 shrink-0 mt-0.5"/> 
+                                            <div className="flex flex-col">
+                                                <span className="leading-relaxed font-medium">{agent.license || 'Sin estados configurados'}</span>
+                                                {/* Miniaturas de Licencias con Lightbox */}
+                                                {agent.licensesArray && agent.licensesArray.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {agent.licensesArray.map((lic, idx) => lic.fileStr && (
+                                                            <button key={idx} onClick={() => setPreviewImage(lic.fileStr)} className="text-[9px] font-bold text-blue-600 bg-blue-100/50 px-2 py-1 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors border border-blue-100">
+                                                                <Search size={10}/> Licencia {lic.state}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {agent.isAgency && <div className="inline-flex mt-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
                                     </div>
 
                                     <div className="w-full mt-8 space-y-3 pt-6 border-t border-gray-100">
@@ -1587,18 +1579,21 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                             {formData.photo ? <img src={formData.photo} className="w-full h-full object-cover" /> : <User size={24} className="text-gray-300"/>}
                                             <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-[10px] font-bold backdrop-blur-sm">Subir<input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} /></label>
                                         </div>
-                                        <div className="w-full flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden pr-2 focus-within:border-blue-500 transition-colors">
-                                            <div className="pl-3 text-gray-400"><LinkIcon size={12}/></div>
-                                            <input type="text" name="photo" value={formData.photo && formData.photo.startsWith('data:') ? '' : formData.photo} onChange={handleChange} placeholder="O usa URL de la foto..." className="w-full text-xs outline-none px-2 py-2.5 bg-transparent font-medium"/>
-                                        </div>
                                     </div>
-                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
-                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estados (Licencias)</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estados (Resumen)</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
+                                    
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5"><Building size={14}/> Compañías</label><input name="companies" value={formData.companies || ''} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
+                                    <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <input type="checkbox" name="isAgency" checked={formData.isAgency || false} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                                        <span className="text-sm font-bold text-gray-700">Tengo una agencia a mi cargo</span>
+                                    </label>
+
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label><input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
-                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm font-medium text-gray-900" /></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label><input name="email" type="email" value={formData.email} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
                                     </div>
-                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Biografía</label><textarea name="bio" rows="3" value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm resize-none text-gray-900" /></div>
+                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Biografía</label><textarea name="bio" rows="3" value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm resize-none text-gray-900" /></div>
                                     <div className="pt-4">
                                         <button type="submit" className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"><Save size={16}/> Guardar Cambios</button>
                                     </div>
@@ -1652,7 +1647,6 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
