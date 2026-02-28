@@ -3569,7 +3569,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] flex flex-col font-sans animate-fade-in selection:bg-rose-500 selection:text-white">
+        <div className="min-h-screen bg-[#0B0F19] flex flex-col font-sans animate-fade-in selection:bg-rose-500 selection:text-white overflow-x-hidden">
             
             {/* CABECERA PREMIUM */}
             <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
@@ -3586,40 +3586,41 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                 </div>
             </header>
 
-            <div className="flex flex-col md:flex-row flex-1 pt-20">
+            {/* CAMBIO CLAVE AQUÍ: flex-col lg:flex-row (Antes era md:flex-row) */}
+            <div className="flex flex-col lg:flex-row flex-1 pt-20">
                 
-                {/* LADO IZQUIERDO: Beneficios */}
-                <div className="md:w-[55%] lg:w-[60%] p-8 md:p-12 lg:p-20 flex flex-col justify-center relative overflow-hidden">
+                {/* LADO IZQUIERDO: Beneficios (En iPad ocupará el 100% del ancho elegantemente) */}
+                <div className="w-full lg:w-[55%] xl:w-[60%] p-8 md:p-16 lg:p-20 flex flex-col justify-center relative overflow-hidden">
                     <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/10 rounded-full blur-[120px]"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px]"></div>
 
-                    <div className="relative z-10 max-w-2xl mx-auto md:mx-0">
+                    <div className="relative z-10 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] font-bold uppercase tracking-widest text-rose-400 mb-6 backdrop-blur-sm">
                             <Star size={12}/> Únete a los mejores
                         </div>
                         
-                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-[1.1]">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 tracking-tight leading-[1.1]">
                             Impulsa tu carrera al <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">siguiente nivel.</span>
                         </h1>
                         
-                        <p className="text-lg md:text-xl text-gray-400 mb-12 font-medium leading-relaxed">
+                        <p className="text-lg md:text-xl text-gray-400 mb-12 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                             Una plataforma diseñada exclusivamente para agentes de élite. Todo lo que necesitas en un solo lugar.
                         </p>
 
-                        <div className="grid sm:grid-cols-2 gap-8">
-                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                        <div className="grid sm:grid-cols-2 gap-6 md:gap-8 text-left">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
                                 <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><Briefcase size={24}/></div>
                                 <div><h3 className="text-white font-bold text-base mb-1">Leads Exclusivos</h3><p className="text-xs text-gray-400 leading-relaxed">Acceso a Marketplace en tiempo real con clientes de alta intención.</p></div>
                             </div>
-                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
                                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-400 group-hover:scale-110 transition-transform"><CalendarDays size={24}/></div>
                                 <div><h3 className="text-white font-bold text-base mb-1">Agenda Inteligente</h3><p className="text-xs text-gray-400 leading-relaxed">Toma el control absoluto de tu tiempo. Tú decides cuándo vender.</p></div>
                             </div>
-                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
                                 <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 text-green-400 group-hover:scale-110 transition-transform"><Activity size={24}/></div>
                                 <div><h3 className="text-white font-bold text-base mb-1">CRM Integrado</h3><p className="text-xs text-gray-400 leading-relaxed">Gestiona tu cartera, notas e historial sin pagar softwares externos.</p></div>
                             </div>
-                            <div className="flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
                                 <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform"><ShieldCheck size={24}/></div>
                                 <div><h3 className="text-white font-bold text-base mb-1">Soporte Corporativo</h3><p className="text-xs text-gray-400 leading-relaxed">Respaldo total de una agencia sólida para que solo te enfoques en vender.</p></div>
                             </div>
@@ -3627,9 +3628,9 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                     </div>
                 </div>
 
-                {/* LADO DERECHO: Login Integrado */}
-                <div ref={loginRef} className="md:w-[45%] lg:w-[40%] flex flex-col justify-center items-center p-6 md:p-12 relative">
-                    <div className="w-full max-w-[420px] bg-white/5 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
+                {/* LADO DERECHO: Login Integrado (En iPad se colocará abajo, centrado y amplio) */}
+                <div ref={loginRef} className="w-full lg:w-[45%] xl:w-[40%] flex flex-col justify-center items-center p-6 md:p-12 lg:p-12 relative pb-20 lg:pb-12">
+                    <div className="w-full max-w-[450px] bg-white/5 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
                         {/* Brillo interno del cuadro */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[40px] pointer-events-none"></div>
                         
@@ -3674,7 +3675,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
             </div>
             
             {/* Footer Minimalista */}
-            <footer className="p-8 text-center text-[10px] text-gray-600 font-medium uppercase tracking-[0.3em]">
+            <footer className="p-8 text-center text-[10px] text-gray-600 font-medium uppercase tracking-[0.3em] bg-[#0B0F19]">
                 © {new Date().getFullYear()} asistente de beneficios • sistema seguro y encriptado
             </footer>
         </div>
