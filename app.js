@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0'
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 // --- CONSTANTS ---
@@ -350,7 +350,13 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
     const [profilePicStr, setProfilePicStr] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [error, setError] = useState(''); // <-- NUEVO: Estado para errores elegantes
+    const [error, setError] = useState('');
+
+    // --- NUEVOS ESTADOS PARA VALIDACIÓN EN TIEMPO REAL ---
+    const [emailError, setEmailError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+    const [isCheckingPhone, setIsCheckingPhone] = useState(false);
 
     const licenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
 
@@ -358,45 +364,28 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
     const handleFileChange = (e, callback) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        setError(''); // Limpiamos cualquier error previo
-
+        setError(''); 
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                // 1. Creamos un lienzo virtual para redimensionar
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Tamaño perfecto para leer textos en web
+                const MAX_WIDTH = 800; 
                 const MAX_HEIGHT = 800;
                 let width = img.width;
                 let height = img.height;
-
-                // 2. Calculamos las proporciones para no deformar la imagen
                 if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                 } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                 }
-
-                // 3. Dibujamos la imagen en el nuevo tamaño
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-
-                // 4. Comprimimos a formato JPEG con 70% de calidad (pesará aprox. 40kb - 80kb)
                 const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                
-                // 5. Devolvemos la imagen optimizada
                 callback(compressedBase64, file.name);
             };
         };
@@ -406,7 +395,38 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
         const newLics = [...licenses];
         newLics[index][field] = value;
         setLicenses(newLics);
-        setError(''); // Limpia errores al corregir
+        setError(''); 
+    };
+
+    // --- MOTOR DE VALIDACIÓN EN TIEMPO REAL ---
+    const checkDuplicate = async (field, value) => {
+        if (!value) return false;
+        const agentsRef = collection(db, 'agents');
+        const requestsRef = collection(db, 'agent_requests');
+        
+        const q1 = query(agentsRef, where(field, '==', value));
+        const q2 = query(requestsRef, where(field, '==', value));
+        
+        const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        return !res1.empty || !res2.empty;
+    };
+
+    const handleEmailBlur = async () => {
+        if (!formData.email) { setEmailError(''); return; }
+        setIsCheckingEmail(true);
+        const isDup = await checkDuplicate('email', formData.email);
+        setIsCheckingEmail(false);
+        if (isDup) setEmailError('Este correo ya está registrado o en revisión.');
+        else setEmailError('');
+    };
+
+    const handlePhoneBlur = async () => {
+        if (formData.phone.length < 14) { setPhoneError(''); return; }
+        setIsCheckingPhone(true);
+        const isDup = await checkDuplicate('phone', formData.phone);
+        setIsCheckingPhone(false);
+        if (isDup) setPhoneError('Este teléfono ya está registrado o en revisión.');
+        else setPhoneError('');
     };
 
     const handleSubmit = async (e) => {
@@ -418,6 +438,11 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
             return;
         }
 
+        if (emailError || phoneError) {
+            setError("Por favor, corrige los errores marcados en rojo antes de continuar.");
+            return;
+        }
+
         const incompleteLicense = licenses.find(l => !l.state || !l.number || !l.fileStr);
         if (incompleteLicense) {
             setError("Faltan datos en las licencias. Selecciona el estado, número y sube la foto.");
@@ -426,13 +451,25 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
 
         setIsSubmitting(true);
         try {
-            // Intentamos enviar a Firebase
+            // Última verificación por seguridad (por si le dieron click muy rápido)
+            const isEmailDup = await checkDuplicate('email', formData.email);
+            const isPhoneDup = await checkDuplicate('phone', formData.phone);
+            
+            if (isEmailDup || isPhoneDup) {
+                if (isEmailDup) setEmailError('Este correo ya está registrado o en revisión.');
+                if (isPhoneDup) setPhoneError('Este teléfono ya está registrado o en revisión.');
+                setError("Detectamos datos duplicados. Por favor, revisa los campos en rojo.");
+                setIsSubmitting(false);
+                return;
+            }
+
             await onSubmit({ ...formData, licenses, licenseSummary, photo: profilePicStr });
             setIsSubmitting(false);
-            setShowSuccess(true); // Solo mostramos éxito si Firebase aceptó el dato
+            setShowSuccess(true); 
         } catch (err) {
             setIsSubmitting(false);
-            setError("Error al guardar: Las imágenes son demasiado pesadas. Por favor, sube fotos de menor resolución.");
+            setError("Error de conexión. Intenta nuevamente.");
+            console.error(err);
         }
     };
 
@@ -478,13 +515,30 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                                 )}
                             </div>
                             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200 mb-2">Subir Foto de Perfil</span>
-                            <p className="text-[10px] text-gray-500 text-center max-w-[280px] leading-relaxed">Debe ser una foto ejecutiva, <strong className="text-gray-800">solo del rostro</strong> (tipo pasaporte). Por favor, evite fotos de cuerpo entero.</p>
+                            <p className="text-[10px] text-gray-500 text-center max-w-[280px] leading-relaxed">Debe ser una foto ejecutiva, <strong className="text-gray-800">solo del rostro</strong> (tipo pasaporte).</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label><input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label><input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
-                            <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label><input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => setFormData({...formData, phone: formatPhoneNumber(e.target.value)})} maxLength="14" className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" /></div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label>
+                                <input required type="text" placeholder="Ej: Juan Pérez" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all text-sm font-medium" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
+                                <div className="relative">
+                                    <input required type="email" placeholder="Ej: juan@email.com" value={formData.email} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(''); setError('');}} onBlur={handleEmailBlur} className={`w-full p-3.5 bg-gray-50 border ${emailError ? 'border-red-400 focus:bg-red-50 focus:ring-red-500/10 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-blue-500/10'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                    {isCheckingEmail && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
+                                </div>
+                                {emailError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {emailError}</p>}
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
+                                <div className="relative">
+                                    <input required type="text" placeholder="Ej: (407) 555-1234" value={formData.phone} onChange={e => {setFormData({...formData, phone: formatPhoneNumber(e.target.value)}); setPhoneError(''); setError('');}} onBlur={handlePhoneBlur} maxLength="14" className={`w-full p-3.5 bg-gray-50 border ${phoneError ? 'border-red-400 focus:bg-red-50 focus:ring-red-500/10 text-red-700' : 'border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-blue-500/10'} focus:ring-4 rounded-xl outline-none transition-all text-sm font-medium`} />
+                                    {isCheckingPhone && <div className="absolute right-4 top-1/2 -translate-y-1/2"><div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div></div>}
+                                </div>
+                                {phoneError && <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 flex items-center gap-1 animate-fade-in"><AlertTriangle size={10} strokeWidth={3}/> {phoneError}</p>}
+                            </div>
                         </div>
 
                         <div className="bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100">
@@ -529,7 +583,6 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                             </div>
                         </div>
                         
-                        {/* CAMBIO 3: EL CUADRO DE ERROR ELEGANTE */}
                         {error && (
                             <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm">
                                 <AlertTriangle size={18} className="shrink-0" />
@@ -538,8 +591,8 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
                         )}
 
                         <div className="pt-4 border-t border-gray-100">
-                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100">
-                                {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                                {isSubmitting ? 'Verificando y Enviando...' : 'Enviar Solicitud'}
                             </button>
                         </div>
                     </form>
@@ -548,6 +601,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit }) => {
         </div>
     );
 };
+
 const AdminLogin = ({ onClose, onLogin, onOpenRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
