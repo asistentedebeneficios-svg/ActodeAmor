@@ -397,16 +397,21 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
     };
 
     const checkDuplicate = async (field, value) => {
-        if (!value) return false;
-        if (initialData && initialData[field] === value) return false;
-        
-        const agentsRef = collection(db, 'agents');
-        const requestsRef = collection(db, 'agent_requests');
-        const q1 = query(agentsRef, where(field, '==', value));
-        const q2 = query(requestsRef, where(field, '==', value));
-        const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-        return !res1.empty || !res2.empty;
-    };
+        if (!value) return false;
+        if (initialData && initialData[field] === value) return false;
+        
+        try {
+            const agentsRef = collection(db, 'agents');
+            const requestsRef = collection(db, 'agent_requests');
+            const q1 = query(agentsRef, where(field, '==', value));
+            const q2 = query(requestsRef, where(field, '==', value));
+            const [res1, res2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+            return !res1.empty || !res2.empty;
+        } catch (error) {
+            console.warn("Firebase bloqueó la lectura, continuando registro:", error);
+            return false; // Permite que el registro continúe aunque las reglas de Firebase bloqueen la búsqueda
+        }
+    };
 
     const handleEmailBlur = async () => {
         if (!formData.email) { setEmailError(''); return; }
@@ -3873,15 +3878,18 @@ const App = () => {
         if (showRegister) {
             return (
                 <div className="min-h-screen bg-[#F5F5F7]">
-                    <AgentRegistrationForm 
-                        onCancel={() => setShowRegister(false)} 
-                        onSubmit={async (data) => {
-                            try { 
-                                await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); 
-                            } catch (e) { console.error(e); }
-                        }} 
-                    />
-                </div>
+                        <AgentRegistrationForm 
+                            onCancel={() => setShowRegister(false)} 
+                            onSubmit={async (data) => {
+                                try { 
+                                    await addDoc(collection(db, 'agent_requests'), { ...data, status: 'pending', timestamp: Date.now() }); 
+                                } catch (e) { 
+                                    console.error("Error crítico de guardado:", e); 
+                                    throw new Error("Firebase bloqueó la escritura. Revisa tus Reglas (Rules)."); 
+                                }
+                            }} 
+                        />
+                    </div>
             );
         }
         return <PortalLoginScreen onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />;
