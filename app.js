@@ -276,7 +276,42 @@ const useFirebaseDatabase = () => {
             await addDoc(col, { ...agent, timestamp: Date.now() });
         }
     };
-    const deleteAgent = async (id) => { if (user) await deleteDoc(doc(db, 'agents', id)); };
+    const deleteAgent = async (id) => { 
+        if (!user) return;
+        
+        try {
+            const batch = writeBatch(db);
+            const now = Date.now();
+
+            // 1. Buscamos todos los leads asignados a este agente
+            const leadsToRedirect = leads.filter(l => l.assignedTo === id);
+
+            leadsToRedirect.forEach(lead => {
+                const leadRef = doc(db, 'leads', lead.id);
+                
+                // Usamos la lógica de tiempo que ya tienes configurada en tu app
+                const timeInfo = getAgentLocalDateTime(lead.date, lead.time, lead.state);
+                const isFuture = timeInfo ? timeInfo.localMs > now : true; 
+
+                if (isFuture) {
+                    // SI ES FUTURO: Quitar agente y volver a Bandeja (new)
+                    batch.update(leadRef, { assignedTo: '', status: 'new' });
+                } else {
+                    // SI ES PASADO: Quitar agente y enviar a Archivados (archived)
+                    batch.update(leadRef, { assignedTo: '', status: 'archived' });
+                }
+            });
+
+            // 2. Borrar al agente
+            const agentRef = doc(db, 'agents', id);
+            batch.delete(agentRef);
+
+            // 3. Ejecutar todo en un solo proceso
+            await batch.commit();
+        } catch (error) {
+            console.error("Error al eliminar agente:", error);
+        }
+    };
 
     // --- NUEVAS FUNCIONES DE RECURSOS HUMANOS ---
     const approveAgentRequest = async (request) => {
