@@ -2832,11 +2832,27 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     agents={agents} 
                     allLeads={leads}
                     onAssignAgent={(leadId, agentId) => { 
-                        onUpdateLead(leadId, { assignedTo: agentId }); 
-                        const assignedLead = processedLeads.find(l => l.id === leadId);
+                    const now = Date.now();
+                    const assignedLead = processedLeads.find(l => l.id === leadId);
+                    
+                    // Si agentId está vacío, significa que estamos DESVINCULANDO
+                    if (!agentId) {
+                        const timeInfo = getAgentLocalDateTime(assignedLead.date, assignedLead.time, assignedLead.state);
+                        const isFuture = timeInfo ? timeInfo.localMs > now : true;
+                
+                        // Aplicamos tu lógica: Futuro -> Bandeja (new), Pasado -> Archivados (archived)
+                        onUpdateLead(leadId, { 
+                            assignedTo: '', 
+                            status: isFuture ? 'new' : 'archived' 
+                        });
+                    } else {
+                        // Si hay un agentId, es una ASIGNACIÓN normal
+                        onUpdateLead(leadId, { assignedTo: agentId, status: 'assigned' }); // Aseguramos que el status sea assigned
+                        
                         const assignedAgent = agents.find(a => a.id === agentId);
                         if (assignedLead && assignedAgent) triggerAssignmentWebhook(assignedLead, assignedAgent);
-                    }}
+                    }
+                }}
                 />
             )}
 
