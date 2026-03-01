@@ -2592,15 +2592,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                     <div className="mt-1">
                                         <div className="flex items-center gap-1.5 mb-2">
                                             <MapPin size={12} className="text-gray-400"/>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cobertura</span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estados Activos</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {agent.license ? agent.license.split(',').map((st, idx) => (
-                                                <span key={idx} className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-blue-100/50 shadow-sm transition-colors group-hover:bg-rose-50 group-hover:text-rose-600 group-hover:border-rose-100">
-                                                    {st.trim()}
+                                            {agent.license ? [...new Set(
+                                                agent.license.split(',').map(item => {
+                                                    const match = item.match(/\(([^)]+)\)/); // Busca lo que está entre paréntesis
+                                                    const abbr = match ? match[1] : item.trim();
+                                                    const stateObj = FULL_US_STATES.find(s => s.abbr === abbr);
+                                                    return stateObj ? stateObj.name : abbr;
+                                                })
+                                            )].map((stateName, idx) => (
+                                                <span key={idx} className="bg-white text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 shadow-sm transition-all group-hover:border-rose-300 group-hover:text-rose-600">
+                                                    {stateName}
                                                 </span>
                                             )) : (
-                                                <span className="text-[10px] text-gray-400 italic">Sin licencias</span>
+                                                <span className="text-[10px] text-gray-400 italic">Sin estados</span>
                                             )}
                                         </div>
                                     </div>
