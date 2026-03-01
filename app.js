@@ -2231,12 +2231,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         let list = agentSubTab === 'activos' ? activeAgentsList : inactiveAgentsList;
         if(searchTerm) { 
             const lower = searchTerm.toLowerCase(); 
-            list = list.filter(a => 
-                (a.name && a.name.toLowerCase().includes(lower)) || 
-                (a.email && a.email.toLowerCase().includes(lower)) ||
-                (a.license && a.license.toLowerCase().includes(lower)) ||
-                (a.phone && a.phone.includes(lower))
-            ); 
+            list = list.filter(a => {
+                // Generamos una lista de nombres de estados completos para este agente
+                const fullStateNames = a.license ? a.license.split(',').map(item => {
+                    const match = item.match(/\(([^)]+)\)/); // Extrae la sigla entre paréntesis (FL)
+                    const abbr = match ? match[1] : item.trim();
+                    const stateObj = FULL_US_STATES.find(s => s.abbr === abbr);
+                    return stateObj ? stateObj.name.toLowerCase() : '';
+                }).join(' ') : '';
+
+                return (
+                    (a.name && a.name.toLowerCase().includes(lower)) ||   // Busca por Nombre
+                    (a.email && a.email.toLowerCase().includes(lower)) || // Busca por Email
+                    (a.phone && a.phone.includes(lower)) ||               // Busca por Teléfono
+                    fullStateNames.includes(lower)                        // Busca por Estado (Ej: "florida")
+                );
+            }); 
         }
         return list;
     };
