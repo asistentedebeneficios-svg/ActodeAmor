@@ -1245,8 +1245,8 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
-                <div className="grid md:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
-                    <div className="md:col-span-5 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
+                    <div className="lg:col-span-5 space-y-6">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
                             <div className="space-y-5">
@@ -1370,7 +1370,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         </div>
                     </div>
                     
-                    <div className="md:col-span-7 space-y-6 flex flex-col">
+                    <div className="lg:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
