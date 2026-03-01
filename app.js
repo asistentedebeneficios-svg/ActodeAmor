@@ -2589,9 +2589,20 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 flex items-start gap-2 group-hover:bg-rose-50/50 transition-colors">
-                                        <MapPin size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-rose-400"/>
-                                        <span className="text-[11px] md:text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{agent.license || 'Sin estados configurados'}</span>
+                                    <div className="mt-1">
+                                        <div className="flex items-center gap-1.5 mb-2">
+                                            <MapPin size={12} className="text-gray-400"/>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cobertura</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {agent.license ? agent.license.split(',').map((st, idx) => (
+                                                <span key={idx} className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-blue-100/50 shadow-sm transition-colors group-hover:bg-rose-50 group-hover:text-rose-600 group-hover:border-rose-100">
+                                                    {st.trim()}
+                                                </span>
+                                            )) : (
+                                                <span className="text-[10px] text-gray-400 italic">Sin licencias</span>
+                                            )}
+                                        </div>
                                     </div>
                                     
                                 </div>
