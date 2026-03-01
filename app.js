@@ -2812,14 +2812,36 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                 )}
             </div>
             {isAgentModalOpen && (
-                <AgentModal 
-                    agent={editingAgent} 
-                    onClose={() => setIsAgentModalOpen(false)} 
-                    onSave={handleSaveAgent} 
-                    onDelete={onDeleteAgent}
-                    onToggleStatus={async (agentObj) => {
-                        const newStatus = agentObj.status === 'inactive' ? 'active' : 'inactive';
-                        await onSaveAgent({ ...agentObj, status: newStatus });
+                <AgentRegistrationForm 
+                    initialData={editingAgent ? {
+                        id: editingAgent.id,
+                        fullName: editingAgent.name,
+                        email: editingAgent.email,
+                        phone: editingAgent.phone,
+                        companies: editingAgent.companies,
+                        isAgency: editingAgent.isAgency,
+                        bio: editingAgent.bio,
+                        licenses: editingAgent.licensesArray,
+                        photo: editingAgent.photo
+                    } : null}
+                    onCancel={() => setIsAgentModalOpen(false)} 
+                    onSubmit={async (data) => {
+                        // Mapeamos los datos para que coincidan con tu estructura de base de datos de agentes
+                        const agentData = {
+                            name: data.fullName,
+                            email: data.email,
+                            phone: data.phone,
+                            bio: data.bio,
+                            photo: data.photo,
+                            license: data.licenseSummary,
+                            licensesArray: data.licenses,
+                            companies: data.companies,
+                            isAgency: data.isAgency,
+                            status: editingAgent?.status || 'active',
+                            id: data.id
+                        };
+                        await onSaveAgent(agentData);
+                        setIsAgentModalOpen(false);
                     }}
                 />
             )}
