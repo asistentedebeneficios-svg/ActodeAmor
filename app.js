@@ -531,41 +531,33 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                         </div>
 
                         <div className="bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100">
-                            <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2"><FileText size={16}/> Licencias Estatales</h3>
-                            <div className="space-y-4">
-                                {licenses.map((lic, index) => (
-                                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label>
-                                            <select value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
-                                                <option value="">Sel. Estado</option>
-                                                {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
-                                            <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
-                                                {lic.fileName || lic.fileStr ? <span className="text-green-600 font-bold truncate">✅ Foto lista</span> : <span>Subir foto</span>}
-                                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
-                                            </label>
-                                        </div>
-                                        {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-200 rounded-full p-1.5 shadow-sm transition-colors"><X size={12} strokeWidth={3}/></button>}
-                                    </div>
-                                ))}
-                            </div>
-                            
-                            {licenseSummary && (
-                                <div className="mt-5 p-4 bg-white rounded-xl border border-blue-200 shadow-inner flex flex-col gap-1.5 animate-fade-in">
-                                    <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center gap-1.5"><BadgeCheck size={12}/> Resumen de Licencias (Vista Previa)</span>
-                                    <p className="text-sm font-bold text-gray-800 break-words">{licenseSummary}</p>
-                                </div>
-                            )}
-
-                            <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                                <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"><Plus size={16}/> Agregar otro estado</button>
-                            </div>
-                        </div>
+                            <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2"><FileText size={16}/> Licencias Estatales</h3>
+                            <div className="space-y-4">
+                                {licenses.map((lic, index) => (
+                                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label>
+                                            <select value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
+                                                <option value="">Sel. Estado</option>
+                                                {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Foto Licencia</label>
+                                            <label className="w-full p-2.5 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-xs text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
+                                                {lic.fileName || lic.fileStr ? <span className="text-green-600 font-bold truncate">✅ Foto lista</span> : <span>Subir foto</span>}
+                                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, (res, name) => { handleLicenseChange(index, 'fileStr', res); handleLicenseChange(index, 'fileName', name); })} className="hidden" />
+                                            </label>
+                                        </div>
+                                        {licenses.length > 1 && <button type="button" onClick={() => setLicenses(licenses.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 bg-red-100 text-red-500 hover:bg-red-200 rounded-full p-1.5 shadow-sm transition-colors"><X size={12} strokeWidth={3}/></button>}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"><Plus size={16}/> Agregar otro estado</button>
+                            </div>
+                        </div>
 
                         <div className="space-y-5">
                             {/* AQUÍ ESTÁ EL CAMBIO DE ICONO: Maletín por Edificio */}
