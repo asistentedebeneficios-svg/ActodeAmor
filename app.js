@@ -555,8 +555,34 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                                 ))}
                             </div>
                             <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                                <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"><Plus size={16}/> Agregar otro estado</button>
+                                <button type="button" onClick={() => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }])} className="text-sm font-bold text-blue-600 flex items-center gap-1 bg-blue-100/50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-colors shadow-sm">
+                                    <Plus size={16}/> Agregar otro estado
+                                </button>
                             </div>
+
+                            {/* --- INICIO DEL CAMPO NUEVO --- */}
+                            <div className="mt-6 pt-5 border-t border-blue-200/60">
+                                <label className="block text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-2 flex items-center gap-1.5 ml-1">
+                                    <BadgeCheck size={14} className="text-blue-500"/> Verificación Automática
+                                </label>
+                                <div className="relative group">
+                                    <textarea 
+                                        readOnly 
+                                        disabled
+                                        rows="2"
+                                        placeholder="Tus licencias aparecerán aquí... Ej: 1234567 (FL), 9876543 (TX)"
+                                        value={licenseSummary} 
+                                        className="w-full p-4 pr-12 bg-white/80 border border-blue-200 rounded-xl outline-none text-sm font-bold text-blue-900 resize-none cursor-not-allowed shadow-inner transition-all placeholder:text-blue-300/70 placeholder:font-medium" 
+                                    />
+                                    {licenseSummary && (
+                                        <div className="absolute top-4 right-4 text-green-500 animate-fade-in bg-green-50 rounded-full p-1 shadow-sm">
+                                            <Check size={14} strokeWidth={3}/>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {/* --- FIN DEL CAMPO NUEVO --- */}
+
                         </div>
 
                         <div className="space-y-5">
