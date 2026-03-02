@@ -4072,29 +4072,32 @@ const App = () => {
         }
 
         if (isSuperAdmin) {
-            return <AdminDashboard
-                leads={leads} 
-                agents={agents} 
-                agentRequests={agentRequests}
-                onApproveRequest={approveAgentRequest}
-                onRejectRequest={rejectAgentRequest}
-                onUpdateAgentRequest={updateAgentRequest}
-                schedule={schedule}
-                webhooks={webhooks}
-                generalSettings={generalSettings}
-                onUpdateLead={updateLead}
-                bulkUpdateLeads={bulkUpdateLeads}
-                bulkDeleteLeads={bulkDeleteLeads}
-                onDeleteLead={deleteLead} 
-                onSaveAgent={saveAgent} 
-                onDeleteAgent={deleteAgent}
-                onUpdateSchedule={updateSchedule}
-                onUpdateWebhooks={updateWebhooks}
-                onUpdateGeneralSettings={updateGeneralSettings}
-                onClose={() => setShowAdmin(false)}
-                onLogout={handleLogout}
-            />
-        );
+            return (
+                <AdminDashboard 
+                    leads={leads} 
+                    agents={agents} 
+                    agentRequests={agentRequests}
+                    onApproveRequest={approveAgentRequest}
+                    onRejectRequest={rejectAgentRequest}
+                    onUpdateAgentRequest={updateAgentRequest}
+                    schedule={schedule}
+                    webhooks={webhooks}
+                    generalSettings={generalSettings}
+                    onUpdateLead={updateLead}
+                    bulkUpdateLeads={bulkUpdateLeads}
+                    bulkDeleteLeads={bulkDeleteLeads}
+                    onDeleteLead={deleteLead} 
+                    onSaveAgent={saveAgent} 
+                    onDeleteAgent={deleteAgent}
+                    onUpdateSchedule={updateSchedule}
+                    onUpdateWebhooks={updateWebhooks}
+                    onUpdateGeneralSettings={updateGeneralSettings}
+                    onClose={() => setShowAdmin(false)}
+                    onLogout={handleLogout}
+                />
+            );
+        } // <-- Aquí cerramos correctamente el if de isSuperAdmin
+
         // SI LLEGA AQUÍ: Es un agente eliminado intentando entrar
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in">
@@ -4108,8 +4111,8 @@ const App = () => {
                     <button onClick={handleLogout} className="bg-white text-black px-6 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors w-full shadow-lg">Cerrar Sesión Segura</button>
                 </div>
             </div>
-        );                                                           
-    }
+        );
+    } // <-- Aquí cerramos el if general de showAdmin
 
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
