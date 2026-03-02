@@ -940,7 +940,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                 <h3 className="font-bold text-slate-800 text-sm uppercase tracking-widest">Su Cita Confirmada</h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-5">
+                            <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fecha y Hora</span>
                                     <p className="font-bold text-slate-900 text-sm capitalize">{date ? new Date(date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}</p>
@@ -954,6 +954,11 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                         <p className="font-bold text-blue-600 text-sm flex items-center gap-1"><Phone size={14}/> Llamada</p>
                                     )}
                                 </div>
+                            </div>
+                            
+                            <div className="mb-5 bg-slate-100/50 p-3 rounded-xl border border-slate-200/50">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Teléfono de Contacto</span>
+                                <p className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Phone size={14} className="text-slate-400"/> {phone}</p>
                             </div>
 
                             <a href={(() => {
