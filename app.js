@@ -3708,15 +3708,18 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
             
             {/* CABECERA PREMIUM */}
             <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
-                            <ShieldCheck size={24} className="text-white" />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
+                            <ShieldCheck className="text-white w-4 h-4 sm:w-6 sm:h-6" />
                         </div>
-                        <span className="text-white font-bold tracking-tight hidden sm:inline">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
+                        {/* Aumentamos un poco el tamaño de la fuente en móvil (text-xs) gracias al espacio libre */}
+                        <span className="text-white font-bold tracking-tight text-xs sm:text-base truncate">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
                     </div>
-                    <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full text-sm font-bold border border-white/10 transition-all active:scale-95">
-                        Iniciar Sesión
+                    <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold border border-white/10 transition-all active:scale-95 shrink-0 whitespace-nowrap">
+                        {/* MAGIA AQUÍ: Muestra "Login" en móvil y "Iniciar Sesión" en PC/Tablet */}
+                        <span className="sm:hidden">Login</span>
+                        <span className="hidden sm:inline">Iniciar Sesión</span>
                     </button>
                 </div>
             </header>
