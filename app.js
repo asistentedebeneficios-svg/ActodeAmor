@@ -979,7 +979,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             </a>
 
                             <p className="text-xs text-slate-500 mt-4 text-center italic">
-                                Un especialista se pondrá en contacto puntualmente para su sesión.
+                                Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.
                             </p>
                         </div>
 
@@ -1036,7 +1036,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     </div>
                     
                     <div className="pt-6 pb-8">
-                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Confirmar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
+                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
                         {status === 'idle' && <p className="text-center text-[10px] md:text-xs text-gray-400 mt-4 px-2 md:px-4 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>}
                     </div>
                 </>
