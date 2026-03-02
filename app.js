@@ -920,20 +920,70 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             
             <div className="space-y-4 md:space-y-6">
                 {status === 'success' ? (
-                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-12 relative">
-                        <button onClick={onAdminTrigger} className="absolute top-4 right-4 text-gray-200 hover:text-gray-400 transition-colors p-2"><Lock size={16}/></button>
+                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-10 relative">
                         
-                        {/* AQUÍ ESTÁ EL CAMBIO: El corazón latiendo al 100% en lugar del check */}
                         <div className="mb-4 animate-[slide-up_0.5s_ease-out_0.2s_both]">
                             <HeartProgress percentage={100} isBeating={true} />
                         </div>
                         
                         <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">¡Misión Cumplida!</h2>
                         <p className="text-gray-500 mb-6 text-sm md:text-base">Has dado un paso gigante de amor.</p>
-                        <div className="bg-rose-50 p-5 md:p-6 rounded-2xl text-rose-800 italic text-sm md:text-base shadow-inner">
+                        
+                        <div className="bg-rose-50 p-5 md:p-6 rounded-2xl text-rose-800 italic text-sm md:text-base shadow-inner mb-6 w-full">
                             "No hay mayor tranquilidad que saber que, pase lo que pase, tu familia estará protegida. Gracias por cuidarlos hoy."
                         </div>
-                        <button onClick={() => window.location.reload()} className="mt-8 text-gray-400 font-medium hover:text-gray-600 text-xs md:text-sm underline">Volver al inicio</button>
+
+                        {/* --- TARJETA ELEGANTE DE CITA --- */}
+                        <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left shadow-sm mb-6 animate-[slide-up_0.5s_ease-out_0.4s_both]">
+                            <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3">
+                                <CalendarDays size={18} className="text-slate-600"/>
+                                <h3 className="font-bold text-slate-800 text-sm uppercase tracking-widest">Su Cita Confirmada</h3>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-5">
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fecha y Hora</span>
+                                    <p className="font-bold text-slate-900 text-sm capitalize">{date ? new Date(date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}</p>
+                                    <p className="text-blue-600 font-bold text-sm flex items-center gap-1 mt-0.5"><Clock size={12}/> {time}</p>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Método</span>
+                                    {callType === 'video' ? (
+                                        <p className="font-bold text-green-600 text-sm flex items-center gap-1"><Video size={14}/> Videollamada</p>
+                                    ) : (
+                                        <p className="font-bold text-blue-600 text-sm flex items-center gap-1"><Phone size={14}/> Llamada</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <a href={(() => {
+                                // Generador Inteligente del enlace para Google Calendar
+                                if (!date || !time) return '#';
+                                let cleanTime = time.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+                                let h = parseInt(cleanTime.replace(/[^0-9]/g, '').slice(0, -2), 10);
+                                const m = cleanTime.replace(/[^0-9]/g, '').slice(-2);
+                                if (cleanTime.includes('p') && h < 12) h += 12;
+                                if (cleanTime.includes('a') && h === 12) h = 0;
+                                
+                                const [Y, M, D] = date.split('-');
+                                const startDate = new Date(Y, M - 1, D, h, parseInt(m, 10));
+                                const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hora de duración
+                                
+                                const fmt = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
+                                const details = `Cita para Asesoría de Beneficios (Gastos Finales). Método: ${callType === 'video' ? 'Videollamada' : 'Llamada Telefónica'}.`;
+                                return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Asesoría+de+Beneficios&dates=${fmt(startDate)}/${fmt(endDate)}&details=${encodeURIComponent(details)}`;
+                            })()} 
+                            target="_blank" rel="noopener noreferrer" 
+                            className="w-full bg-white border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                <Calendar size={16}/> Guardar en Google Calendar
+                            </a>
+
+                            <p className="text-xs text-slate-500 mt-4 text-center italic">
+                                Un especialista se pondrá en contacto puntualmente para su sesión.
+                            </p>
+                        </div>
+
+                        <button onClick={() => window.location.reload()} className="mt-2 text-gray-400 font-medium hover:text-gray-600 text-xs md:text-sm underline transition-colors">Volver al inicio</button>
                     </div>
                 ) : (
                 <>
