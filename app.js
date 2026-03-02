@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, Briefcase, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1433,7 +1433,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     
                     <div className="lg:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Asignación</h3>
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShoppingCart size={16} className="text-rose-500"/> Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
@@ -1682,7 +1682,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                         <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
                                 <div>
-                                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><Briefcase size={22} className="text-gray-400"/> Cartera Asignada</h3>
+                                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><ShoppingCart size={22} className="text-gray-400"/> Cartera Asignada</h3>
                                     <p className="text-sm text-gray-500 mt-1 font-medium">Gestionando <strong className="text-gray-900">{assignedLeads.length}</strong> prospectos</p>
                                 </div>
                                 <div className="relative w-full sm:w-72">
@@ -1714,7 +1714,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                     ))
                                 ) : (
                                     <div className="text-center p-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                                        <div className="bg-white w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><Briefcase size={24} className="text-gray-300"/></div>
+                                        <div className="bg-white w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><ShoppingCart size={24} className="text-gray-300"/></div>
                                         <p className="font-bold text-gray-600 text-base">Cartera vacía</p>
                                         <p className="text-sm text-gray-400 mt-1">Este agente aún no tiene prospectos asignados.</p>
                                     </div>
@@ -1791,7 +1791,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                         <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className={`${isAssigned ? 'bg-green-50 hover:bg-green-100 border-green-200' : 'bg-blue-50 hover:bg-blue-100 border-blue-100'} border p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:flex flex-col gap-1`}>
                                             <div className={`font-bold text-[10px] ${isAssigned ? 'text-green-700' : 'text-blue-700'} flex items-center gap-1`}><Clock size={10}/> {lead.localTime || lead.time}</div>
                                             <div className="text-[9.5px] truncate font-bold text-gray-800 flex items-center gap-1"><User size={10} className="text-gray-400 shrink-0"/> {lead.name}</div>
-                                            <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><Briefcase size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
+                                            <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><ShoppingCart size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
                                         </div>
                                     )})}
                                     {dayLeads.length > 3 && <div className="text-[9px] text-gray-400 font-bold text-center hidden md:block">+{dayLeads.length - 3} más</div>}
@@ -1841,7 +1841,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                     <div key={lead.id} onClick={() => onLeadClick(lead)} className={`bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col gap-1.5 ${isAssigned ? 'hover:border-green-400' : 'hover:border-blue-300'}`}>
                                         <div className={`font-bold text-[10px] md:text-xs flex items-center gap-1 ${isAssigned ? 'text-green-600' : 'text-blue-600'}`}><Clock size={12}/> {lead.localTime || lead.time}</div>
                                         <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate flex items-center gap-1"><User size={12} className="text-gray-400 shrink-0"/> {lead.name}</div>
-                                        <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><Briefcase size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
+                                        <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><ShoppingCart size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
                                     </div>
                                 )})}
                                 {dayLeads.length === 0 && <div className="text-center text-gray-300 text-[9px] uppercase font-bold tracking-widest mt-4 rotate-90 md:rotate-0 origin-left ml-2 md:ml-0">Libre</div>}
@@ -1894,7 +1894,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                                             <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
-                                            <span className="flex items-center gap-1"><Briefcase size={12}/> {agentName}</span>
+                                            <span className="flex items-center gap-1"><ShoppingCart size={12}/> {agentName}</span>
                                             <span className="hidden sm:block w-1 h-1 bg-gray-300 rounded-full"></span>
                                             <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
                                             {lead.state && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded uppercase text-[10px] tracking-wider">{lead.state}</span>}
@@ -2468,7 +2468,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             {activeTab !== 'archived' ? (
                                 <>
                                     <button onClick={() => setIsBulkAgentSelectOpen(true)} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><UserPlus size={18} className="md:w-4 md:h-4"/> <span>Agente</span></button>
-                                    <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Briefcase size={18} className="md:w-4 md:h-4"/> <span>Vender</span></button>
+                                    <button onClick={() => handleBulkAction('marketplace')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-300 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><ShoppingCart size={18} className="md:w-4 md:h-4"/> <span>Vender</span></button>
                                     <button onClick={() => handleBulkAction('archive')} className="flex flex-col md:flex-row items-center justify-center gap-1.5 px-1 py-2 md:py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl md:rounded-lg text-[10px] md:text-sm font-medium transition-colors"><Archive size={18} className="md:w-4 md:h-4"/> <span>Archivar</span></button>
                                 </>
                             ) : (
@@ -2712,7 +2712,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                         </div>
                                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                                             {lead.status === 'new' && (
-                                                <button onClick={(e) => onUpdateLead(lead.id, { status: 'marketplace' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-200 rounded-lg transition-colors shadow-sm" title="Enviar a la Tienda"><Briefcase size={14}/></button>
+                                                <button onClick={(e) => onUpdateLead(lead.id, { status: 'marketplace' })} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-200 rounded-lg transition-colors shadow-sm" title="Enviar a la Tienda"><ShoppingCart size={14}/></button>
                                             )}
                                             {lead.status === 'marketplace' && (
                                                 <button onClick={(e) => onUpdateLead(lead.id, { status: 'new' })} className="p-2 bg-amber-50 border border-amber-200 text-amber-600 hover:bg-white rounded-lg transition-colors shadow-sm" title="Quitar de la Tienda"><RotateCcw size={14}/></button>
@@ -2780,7 +2780,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                             <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                                                 {lead.status === 'new' && (
                                                     <button onClick={(e) => onUpdateLead(lead.id, { status: 'marketplace' })} className="px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold flex items-center justify-center flex-1 gap-1.5 transition-colors shadow-sm bg-white text-gray-600 hover:text-amber-600">
-                                                        <Briefcase size={14}/> Vender
+                                                        <ShoppingCart size={14}/> Vender
                                                     </button>
                                                 )}
                                                 {lead.status === 'marketplace' && (
@@ -3748,7 +3748,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
 
                         <div className="grid sm:grid-cols-2 gap-6 md:gap-8 text-left">
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
-                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><Briefcase size={24}/></div>
+                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><ShoppingCart size={24}/></div>
                                 <div><h3 className="text-white font-bold text-base mb-1">Leads Exclusivos</h3><p className="text-xs text-gray-400 leading-relaxed">Acceso a Marketplace en tiempo real con clientes de alta intención.</p></div>
                             </div>
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
