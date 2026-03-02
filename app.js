@@ -892,7 +892,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         setAvailableSlots(slots); setTime(''); 
     }, [date, scheduleConfig]);
 
-    const isFormValid = name && phone.length >= 10 && state && (noEmail || email) && date && time;
+    const isFormValid = name && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
 
     const handleFinalSubmit = async (e) => {
         e.preventDefault();
@@ -941,7 +941,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><User size={16} className="text-rose-500"/> Mis Datos</h3>
                         <div className="space-y-3">
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Nombre Completo</label><input type="text" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. Maria Perez" value={name} onChange={e => setName(e.target.value)} disabled={status !== 'idle'} /></div>
-                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. 555 123 4567" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,''))} disabled={status !== 'idle'} /></div>
+                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: (555) 123-4567" value={phone} onChange={e => setPhone(formatPhoneNumber(e.target.value))} maxLength="14" disabled={status !== 'idle'} /></div>
                             <div>
                                 <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Estado (EE.UU.)</label>
                                 <div className="relative">
