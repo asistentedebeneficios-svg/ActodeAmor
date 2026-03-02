@@ -4063,9 +4063,9 @@ const App = () => {
         const userEmail = user.email.toLowerCase();
         const currentAgent = agents.find(a => a.email && a.email.toLowerCase() === userEmail);
 
-        // --- 🛡️ LISTA VIP DE ADMINISTRADORES (TUS CORREOS) ---
-        const adminEmails = ['jorgeguevaralincoln@gmail.com', 'jorfrend29@gmail.com', 'imnufit@gmail.com'];
-        const isSuperAdmin = adminEmails.includes(userEmail);
+        // --- 🛡️ ADMINISTRADOR PROTEGIDO POR UID (Cero correos a la vista) ---
+        const adminUIDs = ['Yy0zAUBf2vRfAAMPGIi18xv72rG2']; // 
+        const isSuperAdmin = adminUIDs.includes(user.uid);
 
         if (currentAgent) {
             return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
