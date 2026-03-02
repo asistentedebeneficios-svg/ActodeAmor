@@ -944,7 +944,13 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. 555 123 4567" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,''))} disabled={status !== 'idle'} /></div>
                             <div>
                                 <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Estado (EE.UU.)</label>
-                                <div className="relative"><MapPin className="absolute left-3.5 md:left-4 top-3.5 md:top-4 text-gray-400" size={18}/><select className="w-full p-3 md:p-4 pl-10 md:pl-10 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-gray-700" value={state} onChange={e => setState(e.target.value)} disabled={status !== 'idle'}><option value="">Seleccione su Estado</option>{US_STATES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3.5 md:left-4 top-3.5 md:top-4 text-gray-400" size={18}/>
+                                    <select className="w-full p-3 md:p-4 pl-10 md:pl-10 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-gray-700" value={state} onChange={e => setState(e.target.value)} disabled={status !== 'idle'}>
+                                        <option value="">Seleccione su Estado</option>
+                                        {FULL_US_STATES.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
