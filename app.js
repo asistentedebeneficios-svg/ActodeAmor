@@ -1476,7 +1476,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             </div>
             
             {showAgentSelector && !isAgentView && (
-                <AgentSelectionModal agents={agents} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { 
+                <AgentSelectionModal agents={agents.filter(a => a.status !== 'inactive')} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { 
                     const selectedAgent = agents.find(a => a.id === agentId);
                     if (!selectedAgent) {
                         setDialog({ title: 'Quitar Asignación', message: '¿Estás seguro de quitar la asignación actual?', type: 'warning', onConfirm: () => { onAssignAgent(lead.id, ''); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
@@ -2881,8 +2881,8 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
             {isBulkAgentSelectOpen && (
                 <AgentSelectionModal 
-                    agents={agents} 
-                    onClose={() => setIsBulkAgentSelectOpen(false)} 
+                    agents={activeAgentsList} 
+                    onClose={() => setIsBulkAgentSelectOpen(false)}
                     onSelect={(agentId) => { 
                         const selectedAgent = agents.find(a => a.id === agentId);
                         let conflictCount = 0;
@@ -2932,7 +2932,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
             {individualAgentSelectLeadId && (
                 <AgentSelectionModal 
-                    agents={agents} 
+                    agents={activeAgentsList} 
                     onClose={() => setIndividualAgentSelectLeadId(null)} 
                     onSelect={(agentId) => { 
                         const leadToAssign = processedLeads.find(l => l.id === individualAgentSelectLeadId);
@@ -3096,7 +3096,8 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
     const regularPrice = generalSettings?.regularPrice ?? 45;
     const offerPrice = generalSettings?.offerPrice ?? 35;
-    const TABS = ['marketplace', 'clientes', 'agenda', 'historial'];
+    // Si está inactivo, le borramos el Marketplace de sus opciones
+    const TABS = agent.status === 'inactive' ? ['clientes', 'agenda', 'historial'] : ['marketplace', 'clientes', 'agenda', 'historial'];
     const [viewingLead, setViewingLead] = useState(null);
     
     // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
@@ -4050,27 +4051,28 @@ const App = () => {
     
     if (showAdmin && user && !user.isAnonymous) {
         
-        // PANTALLA DE CARGA PREMIUM (Bloquea el pestañeo)
         if (isVerifying) {
             return (
                 <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans animate-fade-in">
                     <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mb-4 shadow-sm"></div>
-                    <p className="text-sm font-semibold text-gray-500 animate-pulse tracking-wide">Configurando entorno de trabajo...</p>
+                    <p className="text-sm font-semibold text-gray-500 animate-pulse tracking-wide">Verificando credenciales de seguridad...</p>
                 </div>
             );
         }
 
-        // El Guardia de Seguridad: Verifica si es un Agente de tu lista
-        const currentAgent = agents.find(a => a.email && a.email.toLowerCase() === user.email.toLowerCase());
+        const userEmail = user.email.toLowerCase();
+        const currentAgent = agents.find(a => a.email && a.email.toLowerCase() === userEmail);
 
-        // Si ES un agente, lo encerramos en su Portal SaaS
+        // --- 🛡️ LISTA VIP DE ADMINISTRADORES (TUS CORREOS) ---
+        const adminEmails = ['jorgeguevaralincoln@gmail.com', 'jorfrend29@gmail.com', 'imnufit@gmail.com'];
+        const isSuperAdmin = adminEmails.includes(userEmail);
+
         if (currentAgent) {
             return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
         }
 
-        // Si NO es agente, asumimos que eres el Jefe y te mostramos TODO
-        return (
-            <AdminDashboard 
+        if (isSuperAdmin) {
+            return <AdminDashboard
                 leads={leads} 
                 agents={agents} 
                 agentRequests={agentRequests}
@@ -4093,6 +4095,20 @@ const App = () => {
                 onLogout={handleLogout}
             />
         );
+        // SI LLEGA AQUÍ: Es un agente eliminado intentando entrar
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in">
+                <div className="bg-white/5 p-8 md:p-10 rounded-[2rem] border border-white/10 max-w-sm backdrop-blur-xl shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-[40px] pointer-events-none"></div>
+                    <div className="w-16 h-16 bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
+                        <Lock size={32}/>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Acceso Denegado</h2>
+                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">Tu cuenta no se encuentra activa en nuestra base de datos corporativa. No tienes permisos para ingresar.</p>
+                    <button onClick={handleLogout} className="bg-white text-black px-6 py-3.5 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors w-full shadow-lg">Cerrar Sesión Segura</button>
+                </div>
+            </div>
+        );                                                           
     }
 
     if (stepIndex === 0) return (
