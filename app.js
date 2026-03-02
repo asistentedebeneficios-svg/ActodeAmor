@@ -3818,12 +3818,26 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
 };
                                     
 const App = () => {
-    const [stepIndex, setStepIndex] = useState(0);
-    const [leadData, setLeadData] = useState({});
+    // --- MEMORIA DEL EMBUDO ---
+    const [stepIndex, setStepIndex] = useState(() => {
+        const savedStep = sessionStorage.getItem('funnelStepIndex');
+        return savedStep !== null ? parseInt(savedStep, 10) : 0;
+    });
+    const [leadData, setLeadData] = useState(() => {
+        const savedData = sessionStorage.getItem('funnelLeadData');
+        return savedData ? JSON.parse(savedData) : {};
+    });
+    
     const [tempSelections, setTempSelections] = useState([]);
     const [reinforcement, setReinforcement] = useState(null);
     const [fillPercent, setFillPercent] = useState(10);
     const [isSuccess, setIsSuccess] = useState(false);
+
+    // --- GUARDAR EN TIEMPO REAL ---
+    useEffect(() => {
+        sessionStorage.setItem('funnelStepIndex', stepIndex.toString());
+        sessionStorage.setItem('funnelLeadData', JSON.stringify(leadData));
+    }, [stepIndex, leadData]);
     
     // --- NUEVO: Estado de verificación para evitar el pestañeo ---
     const [isVerifying, setIsVerifying] = useState(true); 
@@ -3986,7 +4000,11 @@ const App = () => {
             } catch (err) { console.error("Error Webhook Telegram:", err); }
         }
     };
-    const completeSuccess = () => { setIsSuccess(true); };
+    const completeSuccess = () => { 
+        setIsSuccess(true); 
+        sessionStorage.removeItem('funnelStepIndex');
+        sessionStorage.removeItem('funnelLeadData');
+    };
 
     // --- CAMBIO 2: Guardar el pase VIP al entrar ---
     const handleLogin = async (email, password) => {
