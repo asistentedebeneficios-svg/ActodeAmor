@@ -3713,8 +3713,8 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
                             <ShieldCheck className="text-white w-4 h-4 sm:w-6 sm:h-6" />
                         </div>
-                        {/* Aumentamos un poco el tamaño de la fuente en móvil (text-xs) gracias al espacio libre */}
-                        <span className="text-white font-bold tracking-tight text-xs sm:text-base truncate">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
+                        {/* Subimos a text-sm para móvil y text-lg para PC, dándole mucha más presencia a la marca */}
+                        <span className="text-white font-bold tracking-tight text-sm sm:text-lg truncate">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
                     </div>
                     <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold border border-white/10 transition-all active:scale-95 shrink-0 whitespace-nowrap">
                         {/* MAGIA AQUÍ: Muestra "Login" en móvil y "Iniciar Sesión" en PC/Tablet */}
