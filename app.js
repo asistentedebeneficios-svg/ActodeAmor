@@ -3820,7 +3820,60 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
         </div>
     );
 };
-                                    
+
+// --- NUEVO: COMPONENTE DE TESTIMONIOS AUTOMÁTICOS ---
+const TestimonialsSection = () => {
+    const TESTIMONIALS = [
+        { name: "María González", state: "Texas", text: "Pensé que por mi edad y mi condición médica no me aceptarían. Fue un alivio descubrir que no piden examen médico. El agente resolvió todo en una sola llamada.", rating: 5 },
+        { name: "José y Ana Ramírez", state: "Florida", text: "Nuestro mayor miedo era dejarle gastos a nuestros hijos el día que faltemos. Ahora pagamos una cuota pequeña y tenemos la paz mental de que no serán una carga.", rating: 5 },
+        { name: "Carmen Torres", state: "California", text: "Excelente servicio y mucha empatía. Me explicaron cada detalle en español y sin presiones. Saber que mi familia estará protegida es el mejor regalo que pude darles.", rating: 5 }
+    ];
+
+    const [current, setCurrent] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrent((prev) => (prev + 1) % TESTIMONIALS.length);
+        }, 6000); // Gira cada 6 segundos
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div className="py-8 md:py-12 bg-white w-full overflow-hidden relative">
+            <div className="max-w-4xl mx-auto px-6 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-4">
+                    <Star size={12} fill="currentColor"/> Historias Reales
+                </div>
+                <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 tracking-tight">Familias que ya protegieron su futuro</h3>
+                
+                <div className="relative min-h-[220px] md:min-h-[180px]">
+                    {TESTIMONIALS.map((test, idx) => (
+                        <div key={idx} className={`absolute inset-0 transition-all duration-700 ease-in-out ${current === idx ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-8 pointer-events-none z-0'}`}>
+                            <div className="bg-rose-50/40 border border-rose-100 rounded-3xl p-6 md:p-8 shadow-sm h-full flex flex-col justify-center">
+                                <div className="flex justify-center gap-1 mb-4">
+                                    {[...Array(test.rating)].map((_, i) => <Star key={i} size={16} className="text-amber-400" fill="currentColor"/>)}
+                                </div>
+                                <p className="text-gray-700 text-base md:text-lg italic font-medium leading-relaxed mb-6 text-balance">"{test.text}"</p>
+                                <div className="flex flex-col items-center mt-auto">
+                                    <span className="font-bold text-gray-900">{test.name}</span>
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">{test.state}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                
+                {/* Puntos de navegación inferiores */}
+                <div className="flex justify-center gap-2 mt-6">
+                    {TESTIMONIALS.map((_, idx) => (
+                        <button key={idx} onClick={() => setCurrent(idx)} className={`h-2 rounded-full transition-all duration-300 ${current === idx ? 'bg-rose-500 w-6' : 'bg-gray-200 w-2 hover:bg-rose-300'}`}></button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+                                                                   
 const App = () => {
     // --- MEMORIA DEL EMBUDO ---
     const [stepIndex, setStepIndex] = useState(() => {
@@ -4188,6 +4241,9 @@ const App = () => {
                     </div>
                 </div>
             </div>
+
+            {/* SECCIÓN DE TESTIMONIOS */}
+            <TestimonialsSection />
 
             {/* Trust Grid */}
             <div className="py-12 md:py-24 px-6 max-w-7xl mx-auto w-full">
