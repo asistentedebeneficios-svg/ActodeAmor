@@ -3367,9 +3367,16 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         }
         
         if (urlParams.get('canceled') === 'true') {
+            // NUEVO: Si cancela, liberamos inmediatamente cualquier lead que tuviera bloqueado
+            leads.forEach(l => {
+                if (l.lockedBy === agent.id) {
+                    onUpdateLead(l.id, { lockedBy: null, lockedAt: null });
+                }
+            });
+
             setDialog({ 
                 title: 'Compra Cancelada', 
-                message: 'Has cancelado el proceso de pago. No se hizo ningún cargo a tu tarjeta y los prospectos siguen en la tienda.', 
+                message: 'Has cancelado el proceso de pago. No se hizo ningún cargo a tu tarjeta y los prospectos han sido liberados.', 
                 type: 'warning', 
                 onConfirm: () => setDialog(null) 
             });
@@ -3507,14 +3514,23 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         }
     }
 
-    // Filtro Inteligente del Marketplace (AHORA RESTRINGIDO POR LICENCIA)
+    // Filtro Inteligente del Marketplace (LICENCIA + BLOQUEO DE CARRITO)
+    const LOCK_TIME_MS = 10 * 60 * 1000; // 10 minutos
+    const nowMs = Date.now();
+
     const allAvailableLeads = processedLeads.filter(l => {
         const isMarketplace = l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2;
         if (!isMarketplace) return false;
         
-        // Bloqueo de Seguridad: Solo ve el lead si tiene licencia en el estado del prospecto
+        // 1. Bloqueo de Seguridad: Licencia
         if (!l.state) return false; 
-        return agentLicensedStateNames.includes(l.state);
+        if (!agentLicensedStateNames.includes(l.state)) return false;
+
+        // 2. Bloqueo de Concurrencia: Ocultar si otro agente lo tiene en su carrito
+        const isLocked = l.lockedBy && l.lockedAt && (nowMs - l.lockedAt < LOCK_TIME_MS);
+        if (isLocked && l.lockedBy !== agent.id) return false; // Oculto para los demás
+
+        return true;
     });
     
     // Motor matemático: Cuenta cuántos leads hay por cada estado (solo de los permitidos)
@@ -3544,12 +3560,14 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         return total + (isFireSale ? offerPrice : regularPrice); 
     }, 0);
 
-    // Lógica del Temporizador
+    // Lógica del Temporizador y Liberación de Leads
     useEffect(() => {
         let timer;
         if (cart.length > 0 && timeLeft > 0) {
             timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
         } else if (timeLeft === 0) {
+            // NUEVO: Liberar leads en Firebase al expirar el tiempo
+            cart.forEach(leadId => onUpdateLead(leadId, { lockedBy: null, lockedAt: null }));
             setCart([]); 
             setTimeLeft(600); 
             setDialog({ title: 'Tiempo Expirado', message: 'El tiempo para reservar ha expirado. Las citas han sido liberadas para el resto del equipo.', type: 'warning', onConfirm: () => setDialog(null) });
@@ -3557,7 +3575,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
             setTimeLeft(600);
         }
         return () => clearInterval(timer);
-    }, [cart.length, timeLeft]);
+    }, [cart, timeLeft]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -3567,7 +3585,19 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
     const toggleCart = (leadId, isBlocked) => { 
         if (isBlocked) return; 
-        setCart(prev => prev.includes(leadId) ? prev.filter(id => id !== leadId) : [...prev, leadId]); 
+        const isRemoving = cart.includes(leadId);
+        
+        // 1. Actualiza el carrito visual localmente
+        setCart(prev => isRemoving ? prev.filter(id => id !== leadId) : [...prev, leadId]); 
+        
+        // 2. Bloquea o libera el prospecto en la base de datos para todos los demás
+        onUpdateLead(leadId, { 
+            lockedBy: isRemoving ? null : agent.id, 
+            lockedAt: isRemoving ? null : Date.now() 
+        });
+
+        // 3. Reinicia el tiempo solo si es el primer lead que agrega
+        if (cart.length === 0 && !isRemoving) setTimeLeft(600);
     };
 
     const [isCheckingOut, setIsCheckingOut] = useState(false);
