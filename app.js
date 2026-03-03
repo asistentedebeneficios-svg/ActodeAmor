@@ -384,6 +384,36 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
     );
 };
 
+// --- NUEVO: MODAL ELEGANTE DE CONVOCATORIA CERRADA ---
+const RegistrationClosedModal = ({ onClose }) => {
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md overflow-y-auto z-[100] animate-fade-in flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2rem] w-full max-w-md relative shadow-2xl animate-slide-up p-8 md:p-12 text-center border border-gray-100 overflow-hidden">
+                {/* Brillo de fondo estilo Apple */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gray-100 rounded-full blur-[40px] pointer-events-none"></div>
+                
+                <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition-colors z-10"><X size={20}/></button>
+                
+                <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-gray-100 shadow-inner relative z-10">
+                    <Lock size={32} className="text-gray-400" strokeWidth={1.5}/>
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4 tracking-tight relative z-10">Convocatoria Cerrada</h2>
+                
+                <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-10 font-medium relative z-10">
+                    Agradecemos profundamente tu interés en formar parte de Asistente de Beneficios. En este momento <strong className="text-gray-800">no estamos recibiendo nuevas solicitudes</strong> para expandir el equipo. 
+                    <br/><br/>
+                    Por favor, mantente atento a nuestras próximas aperturas.
+                </p>
+                
+                <button onClick={onClose} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl relative z-10">
+                    Entendido, volver
+                </button>
+            </div>
+        </div>
+    );
+};
+
 // --- COMPONENTS ---
 const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
     const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
@@ -1997,10 +2027,14 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
     );
 };
 
-const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
+// --- NUEVO: PANTALLA DE CONFIGURACIÓN DEL SISTEMA (PANTALLA COMPLETA) ---
+const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSaveGeneral, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
-    const [isEditing, setIsEditing] = useState(false);
-    const [showAuth, setShowAuth] = useState(false);
+    const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
+    const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
+    const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
+    
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -2010,80 +2044,191 @@ const WebhookSettingsModal = ({ webhooks, onSave, onClose }) => {
         setError('');
         try {
             await signInWithEmailAndPassword(auth, auth.currentUser.email, password);
-            setShowAuth(false);
-            setIsEditing(true);
+            setIsAuthenticated(true);
             setPassword('');
         } catch (err) {
-            setError('Contraseña incorrecta. Intente de nuevo.');
+            setError('Contraseña de administrador incorrecta.');
         }
     };
 
     const handleSave = async () => {
         setIsSaving(true);
-        await onSave(localHooks);
+        await onSaveWebhooks(localHooks);
+        await onSaveGeneral({ 
+            ...generalSettings, 
+            acceptingAgents, 
+            regularPrice: Number(regPrice), 
+            offerPrice: Number(offPrice) 
+        });
         setIsSaving(false);
-        setIsEditing(false);
+        // Notificamos éxito sutilmente o podemos cerrar
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[80] p-4 animate-fade-in">
-            <div className="glass-card bg-white/95 rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
-                
-                <div className="mb-6 pr-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="bg-black text-white p-2 rounded-xl"><Settings size={20}/></div>
-                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Webhooks Make</h3>
+    if (!isAuthenticated) {
+        return (
+            <div className="fixed inset-0 bg-[#F5F5F7] z-[200] flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-gray-100 shadow-inner">
+                        <Lock size={32} className="text-gray-400" />
                     </div>
-                    <p className="text-sm text-gray-500">Configura las URLs de conexión externa.</p>
-                </div>
-
-                {showAuth ? (
-                    <form onSubmit={verifyPassword} className="space-y-4 animate-slide-up">
-                        <div className="p-5 bg-rose-50 border border-rose-100 rounded-2xl">
-                            <p className="text-xs font-bold text-rose-700 uppercase tracking-widest mb-3 flex items-center gap-2"><Lock size={14}/> Autenticación Requerida</p>
-                            <input type="password" placeholder="Ingresa tu contraseña de Admin..." className="w-full p-3.5 bg-white border border-rose-200 rounded-xl outline-none focus:border-rose-500 text-sm font-medium shadow-inner" value={password} onChange={e=>setPassword(e.target.value)} required autoFocus/>
-                            {error && <p className="text-xs text-red-500 mt-2 font-bold">{error}</p>}
-                            <div className="flex gap-2 mt-4">
-                                <button type="button" onClick={()=>setShowAuth(false)} className="flex-1 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 font-bold text-xs hover:bg-gray-50 transition-colors">Cancelar</button>
-                                <button type="submit" className="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 shadow-md transition-colors">Desbloquear</button>
-                            </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Área Restringida</h2>
+                    <p className="text-sm text-gray-500 mb-8">Ingresa tu contraseña de administrador para gestionar el sistema.</p>
+                    <form onSubmit={verifyPassword} className="space-y-4">
+                        <input 
+                            type="password" 
+                            placeholder="Contraseña" 
+                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-black transition-all text-center font-bold"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            autoFocus
+                        />
+                        {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={onClose} className="flex-1 py-4 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">Cancelar</button>
+                            <button type="submit" className="flex-1 py-4 bg-black text-white rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform">Entrar</button>
                         </div>
                     </form>
-                ) : (
-                    <div className="space-y-5 animate-slide-up">
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Webhook: Telegram (Nuevo Lead)</label>
-                            <input 
-                                type={isEditing ? "text" : "password"} 
-                                value={localHooks.telegram} 
-                                onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
-                                readOnly={!isEditing}
-                                placeholder="https://hook..."
-                                className={`w-full p-3.5 border rounded-xl outline-none transition-all text-sm font-medium ${isEditing ? 'bg-white border-blue-300 focus:ring-4 focus:ring-blue-500/10 text-gray-900' : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed tracking-[0.2em]'}`}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Webhook: Correo (Asignar Agente)</label>
-                            <input 
-                                type={isEditing ? "text" : "password"} 
-                                value={localHooks.assignment} 
-                                onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
-                                readOnly={!isEditing}
-                                placeholder="https://hook..."
-                                className={`w-full p-3.5 border rounded-xl outline-none transition-all text-sm font-medium ${isEditing ? 'bg-white border-blue-300 focus:ring-4 focus:ring-blue-500/10 text-gray-900' : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed tracking-[0.2em]'}`}
-                            />
-                        </div>
+                </div>
+            </div>
+        );
+    }
 
-                        <div className="pt-3 border-t border-gray-100">
-                            {!isEditing ? (
-                                <button onClick={() => setShowAuth(true)} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 rounded-xl font-bold text-sm transition-colors shadow-sm"><Edit2 size={16}/> Habilitar Edición</button>
-                            ) : (
-                                <button onClick={handleSave} disabled={isSaving} className="w-full flex items-center justify-center gap-2 py-3.5 bg-black text-white rounded-xl font-bold text-sm hover:scale-[1.02] shadow-xl transition-transform">{isSaving ? 'Guardando...' : 'Guardar y Proteger'}</button>
-                            )}
+    return (
+        <div className="fixed inset-0 bg-[#F5F5F7] z-[200] flex flex-col animate-fade-in overflow-hidden font-sans">
+            {/* Header Superior */}
+            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 h-20 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                    <button onClick={onClose} className="p-2.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+                        <ArrowLeft size={22} />
+                    </button>
+                    <div>
+                        <h2 className="font-bold text-xl text-gray-900 tracking-tight">Configuración del Sistema</h2>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Panel Maestro</p>
+                    </div>
+                </div>
+                <button 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="bg-black text-white px-8 py-3 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                >
+                    {isSaving ? 'Guardando...' : <><Save size={16}/> Guardar Cambios</>}
+                </button>
+            </header>
+
+            {/* Contenido Principal */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-12">
+                <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+                    
+                    {/* SECCIÓN 1: RECLUTAMIENTO (Bento Card) */}
+                    <div className="md:col-span-7 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col justify-between group">
+                        <div>
+                            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-6 border border-blue-100 shadow-sm">
+                                <UserPlus size={24} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Reclutamiento de Agentes</h3>
+                            <p className="text-gray-500 font-medium mb-8">Controla la entrada de nuevos especialistas a tu equipo de ventas.</p>
+                        </div>
+                        
+                        <div className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between ${acceptingAgents ? 'bg-green-50 border-green-100' : 'bg-rose-50 border-rose-100'}`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-3 h-3 rounded-full ${acceptingAgents ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                                <div>
+                                    <p className="font-bold text-gray-900">{acceptingAgents ? 'Convocatoria Abierta' : 'Convocatoria Cerrada'}</p>
+                                    <p className="text-xs text-gray-500">{acceptingAgents ? 'Los aspirantes pueden enviar su solicitud.' : 'El formulario está bloqueado para el público.'}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setAcceptingAgents(!acceptingAgents)}
+                                className={`w-14 h-8 rounded-full p-1 transition-all relative shadow-inner ${acceptingAgents ? 'bg-green-500' : 'bg-gray-300'}`}
+                            >
+                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${acceptingAgents ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </button>
                         </div>
                     </div>
-                )}
+
+                    {/* SECCIÓN 2: PRECIOS MARKETPLACE (Bento Card) */}
+                    <div className="md:col-span-5 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100">
+                        <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-6 border border-amber-100 shadow-sm">
+                            <DollarSign size={24} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-6">Precios</h3>
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Regular por Cita ($)</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 outline-none focus:bg-white focus:border-amber-400 transition-all"
+                                    value={regPrice}
+                                    onChange={e => setRegPrice(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Oferta / Urgente ($)</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-rose-600 outline-none focus:bg-white focus:border-rose-400 transition-all"
+                                    value={offPrice}
+                                    onChange={e => setOffPrice(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN 3: WEBHOOKS Y AUTOMATIZACIÓN (Bento Card Ancha) */}
+                    <div className="md:col-span-12 bg-gray-900 rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden text-white">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px]"></div>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10">
+                                    <Settings size={24} className="text-blue-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold tracking-tight">Automatización (Webhooks Make)</h3>
+                                    <p className="text-gray-400 text-sm">Gestiona los túneles de información con tus herramientas externas.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Nuevo Lead (Telegram)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="https://hook.make.com/..."
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
+                                        value={localHooks.telegram}
+                                        onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Asignación de Agente (Correo)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="https://hook.make.com/..."
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
+                                        value={localHooks.assignment}
+                                        onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="mt-8 flex items-center gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl">
+                                <AlertTriangle size={18} className="text-amber-400 shrink-0" />
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    Cualquier cambio aquí afectará inmediatamente las notificaciones de Telegram y el envío de correos electrónicos. Asegúrate de que las URLs de Make estén activas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN 4: ESPACIO PARA FUTURAS CANCIONES (Placeholder) */}
+                    <div className="md:col-span-12 py-12 text-center">
+                        <div className="w-16 h-16 bg-gray-200/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
+                            <Plus size={24} className="text-gray-400" />
+                        </div>
+                        <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">Nuevas funciones próximamente</p>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
@@ -2172,8 +2317,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
-    const [showWebhookSettings, setShowWebhookSettings] = useState(false);
-    const [showPriceSettings, setShowPriceSettings] = useState(false);
+    const [showFullSettings, setShowFullSettings] = useState(false);
     const [dialog, setDialog] = useState(null);
 
     const [timeTick, setTimeTick] = useState(0);
@@ -2396,8 +2540,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                             <span>Auto</span>
                         </button>
-                        <button onClick={() => setShowPriceSettings(true)} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><DollarSign size={16}/></button>
-                        <button onClick={() => setShowWebhookSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
+                        <button onClick={() => setShowFullSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
                         <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
                     </div>
                 </div>
@@ -2419,8 +2562,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                          <span>Auto-Marketplace</span>
                      </button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                     <button onClick={() => setShowPriceSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 transition-colors shadow-sm"><DollarSign size={18} /></button>
-                     <button onClick={() => setShowWebhookSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
+                     <button onClick={() => setShowFullSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
                      <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
             </div>
@@ -2985,9 +3127,16 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     }} 
                 />
             )}
-            
-            {showWebhookSettings && <WebhookSettingsModal webhooks={webhooks} onSave={onUpdateWebhooks} onClose={() => setShowWebhookSettings(false)} />}
-            {showPriceSettings && <PriceSettingsModal generalSettings={generalSettings} onSave={onUpdateGeneralSettings} onClose={() => setShowPriceSettings(false)} />}
+
+            {showFullSettings && (
+                <SystemSettingsScreen 
+                    webhooks={webhooks} 
+                    generalSettings={generalSettings} 
+                    onSaveWebhooks={onUpdateWebhooks} 
+                    onSaveGeneral={onUpdateGeneralSettings} 
+                    onClose={() => setShowFullSettings(false)} 
+                />
+            )}
         </div>
     );
 };
@@ -4225,9 +4374,12 @@ const App = () => {
 
    if (isPortalRoute && !showAdmin) {
         if (showRegister) {
+            if (generalSettings?.acceptingAgents === false) {
+                return <RegistrationClosedModal onClose={() => setShowRegister(false)} />;
+            }
             return (
                 <div className="min-h-screen bg-[#F5F5F7]">
-                        <AgentRegistrationForm 
+                        <AgentRegistrationForm
                             onCancel={() => setShowRegister(false)} 
                             onSubmit={async (data) => {
                                 try {
@@ -4331,6 +4483,9 @@ const App = () => {
     } // <-- Aquí cerramos el if general de showAdmin
     // --- PANTALLA: FORMULARIO DE AGENTE DESDE LA HOME ---
     if (showAgentFormFromHome) {
+        if (generalSettings?.acceptingAgents === false) {
+            return <RegistrationClosedModal onClose={() => setShowAgentFormFromHome(false)} />;
+        }
         return (
             <AgentRegistrationForm 
                 onCancel={() => setShowAgentFormFromHome(false)} 
