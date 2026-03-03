@@ -1083,11 +1083,8 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
 const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], allLeads = [] }) => {
     const [search, setSearch] = useState('');
-    
-    // Verificamos si al menos uno de los prospectos seleccionados YA tiene un agente asignado
     const hasExistingAssignment = contextLeads.some(lead => lead.assignedTo && lead.assignedTo !== '');
     
-    // Función interna para normalizar la hora a 24h para comparar choques
     const getClean24h = (tStr) => {
         if (!tStr) return null;
         let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
@@ -1102,11 +1099,11 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
         return `${String(h).padStart(2, '0')}:${m}`; 
     };
 
-    // --- FILTRO MAESTRO DE AGENTES ---
-    const availableAgents = agents.filter(agent => {
-        if (!contextLeads || contextLeads.length === 0) return true;
-        
-        // 1. FILTRO DE ESTADO (Licencia)
+    // --- ALGORITMO DE COMPATIBILIDAD (EL CEREBRO) ---
+    const processedAgents = agents.map(agent => {
+        if (!contextLeads || contextLeads.length === 0) return { ...agent, assignableLeads: [] };
+
+        // 1. Extraer los estados donde el agente tiene licencia
         let agentStates = [];
         if (agent.licensesArray && agent.licensesArray.length > 0) {
             agentStates = agent.licensesArray.map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name).filter(Boolean);
@@ -1117,35 +1114,37 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
             }
         }
 
-        const hasAllStates = contextLeads.every(lead => {
-            if (!lead.state) return true; // Si el lead no tiene estado, lo pasamos
-            return agentStates.includes(lead.state);
-        });
+        // 2. Filtrar cuáles leads específicos puede tomar este agente
+        const assignableLeads = contextLeads.filter(cLead => {
+            // Regla A: ¿Tiene licencia en este estado?
+            if (cLead.state && !agentStates.includes(cLead.state)) return false;
 
-        if (!hasAllStates) return false; // No tiene licencia, lo ocultamos
-
-        // 2. FILTRO DE DISPONIBILIDAD (Choque de Horario)
-        const hasConflict = contextLeads.some(cLead => {
-            if (!cLead.date) return false;
+            // Regla B: ¿Tiene su agenda libre a esta hora?
+            if (!cLead.date) return true; 
             const targetTime24h = getClean24h(cLead.localTime || getLocalTimeInfo(cLead.date, cLead.time, cLead.state) || cLead.time);
-            if (!targetTime24h) return false;
-            
-            return allLeads.some(exLead => {
-                if (exLead.id === cLead.id) return false; // No comparar con el mismo lead
-                if (exLead.assignedTo !== agent.id) return false; // Solo revisar a este agente
-                if (exLead.status === 'archived') return false; // Citas pasadas no cuentan
-                if (exLead.date !== cLead.date) return false; // Solo el mismo día
-                
+            if (!targetTime24h) return true;
+
+            const hasConflict = allLeads.some(exLead => {
+                if (exLead.id === cLead.id) return false; 
+                if (exLead.assignedTo !== agent.id) return false; 
+                if (exLead.status === 'archived') return false; 
+                if (exLead.date !== cLead.date) return false; 
                 const exTime24h = getClean24h(exLead.localTime || getLocalTimeInfo(exLead.date, exLead.time, exLead.state) || exLead.time);
                 return exTime24h === targetTime24h;
             });
+
+            return !hasConflict;
         });
 
-        return !hasConflict; // Solo sobrevive si NO tiene conflictos
-    });
+        return { ...agent, assignableLeads };
+    })
+    // 3. SOLO mostrar agentes que puedan tomar al menos 1 lead
+    .filter(agent => contextLeads.length === 0 || agent.assignableLeads.length > 0)
+    // 4. Ordenar a los mejores prospectos (los que pueden tomar más leads) arriba
+    .sort((a, b) => b.assignableLeads.length - a.assignableLeads.length);
 
-    // Buscador por texto
-    const filteredAgents = availableAgents.filter(a => {
+    // Filtro de búsqueda manual por texto
+    const filteredAgents = processedAgents.filter(a => {
         const term = search.toLowerCase();
         return (a.name && a.name.toLowerCase().includes(term)) || 
                (a.email && a.email.toLowerCase().includes(term)) ||
@@ -1158,7 +1157,7 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
                 <div className="flex justify-between items-start mb-5">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 leading-tight">Asignar Agente</h3>
-                        <p className="text-[10px] uppercase tracking-widest text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">Disponibles y con licencia</p>
+                        <p className="text-[10px] uppercase tracking-widest text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">Inteligencia Activada</p>
                     </div>
                     <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
                 </div>
@@ -1168,26 +1167,36 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
                     {hasExistingAssignment && (
-                        <button onClick={() => onSelect('')} className="w-full text-left p-3.5 hover:bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium transition-colors mb-2">
+                        <button onClick={() => onSelect('', [])} className="w-full text-left p-3.5 hover:bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium transition-colors mb-2">
                             <span className="flex items-center gap-2"><MinusCircle size={16}/> Quitar Asignación actual</span>
                         </button>
                     )}
                     {filteredAgents.map(agent => (
-                        <button key={agent.id} onClick={() => onSelect(agent.id)} className="w-full flex items-center gap-4 p-3 hover:bg-rose-50/50 rounded-xl border border-transparent hover:border-rose-100 transition-all text-left group">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-white text-rose-600 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-rose-50 font-bold">
-                                {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
+                        <button key={agent.id} onClick={() => onSelect(agent.id, agent.assignableLeads)} className="w-full flex items-center justify-between p-3 hover:bg-rose-50/50 rounded-xl border border-transparent hover:border-rose-100 transition-all text-left group">
+                            <div className="flex items-center gap-4 overflow-hidden">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-rose-100 to-white text-rose-600 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-rose-50 font-bold">
+                                    {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0 pr-2">
+                                    <p className="font-bold text-gray-900 group-hover:text-rose-700 transition-colors truncate">{agent.name}</p>
+                                    <p className="text-xs text-gray-500 truncate">{agent.email}</p>
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-gray-900 group-hover:text-rose-700 transition-colors truncate">{agent.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{agent.email}</p>
-                            </div>
+                            {/* BADGE DE COMPATIBILIDAD (Solo visible si es asignación en lote) */}
+                            {contextLeads.length > 1 && (
+                                <div className="shrink-0 text-right pl-2">
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md border ${agent.assignableLeads.length === contextLeads.length ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                        {agent.assignableLeads.length}/{contextLeads.length}
+                                    </span>
+                                </div>
+                            )}
                         </button>
                     ))}
                     {filteredAgents.length === 0 && (
                         <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100"><Users size={16} className="text-gray-300"/></div>
                             <p className="text-sm font-bold text-gray-600">No hay agentes disponibles</p>
-                            <p className="text-[10px] mt-1.5 max-w-[200px] mx-auto text-center leading-relaxed">Están ocupados en ese horario o no tienen licencia en el estado.</p>
+                            <p className="text-[10px] mt-1.5 max-w-[200px] mx-auto text-center leading-relaxed">Nadie en tu equipo tiene la licencia o el tiempo libre para tomar estos prospectos.</p>
                         </div>
                     )}
                 </div>
@@ -1582,51 +1591,15 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     contextLeads={[lead]} 
                     allLeads={allLeads} 
                     onClose={() => setShowAgentSelector(false)} 
-                    onSelect={(agentId) => {
-                    const selectedAgent = agents.find(a => a.id === agentId);
-                    if (!selectedAgent) {
-                        setDialog({ title: 'Quitar Asignación', message: '¿Estás seguro de quitar la asignación actual?', type: 'warning', onConfirm: () => { onAssignAgent(lead.id, ''); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
-                        return;
-                    }
-
-                    const getClean24h = (tStr) => {
-                        if (!tStr) return null;
-                        let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-                        let isPM = clean.includes('p');
-                        let isAM = clean.includes('a');
-                        let nums = clean.replace(/[^0-9]/g, '');
-                        if (nums.length < 3) return null;
-                        let h = parseInt(nums.slice(0, -2), 10);
-                        const m = nums.slice(-2);
-                        if (isPM && h < 12) h += 12;
-                        if (isAM && h === 12) h = 0;
-                        return `${String(h).padStart(2, '0')}:${m}`; 
-                    };
-
-                    const targetTime24h = getClean24h(lead.localTime || lead.time);
-                    const hasConflict = allLeads.some(l => {
-                        if (l.id === lead.id || l.assignedTo !== agentId || l.status === 'archived') return false;
-                        if (l.date !== lead.date) return false;
-                        
-                        const otherLocalTime = l.localTime || getLocalTimeInfo(l.date, l.time, l.state) || l.time;
-                        const otherTime24h = getClean24h(otherLocalTime); 
-                        if(!targetTime24h || !otherTime24h) return false;
-                        return otherTime24h === targetTime24h; 
-                    });
-
-                    if (hasConflict) {
-                        setShowAgentSelector(false);
-                        setTimeout(() => setDialog({ 
-                            title: 'Choque de Horario', 
-                            message: `El agente ${selectedAgent.name} ya tiene otra cita agendada para el ${lead.date} a las ${lead.localTime || lead.time}.\n\nPor favor, selecciona otro agente o cambia la hora primero.`, 
-                            type: 'warning', 
-                            onConfirm: () => setDialog(null) 
-                        }), 150);
-                        return;
-                    }
-
-                    setDialog({ title: 'Asignar Agente', message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`, type: 'info', onConfirm: () => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
-                }}/>
+                    onSelect={(agentId) => { 
+                        const selectedAgent = agents.find(a => a.id === agentId);
+                        if (!selectedAgent) {
+                            setDialog({ title: 'Quitar Asignación', message: '¿Estás seguro de quitar la asignación actual?', type: 'warning', onConfirm: () => { onAssignAgent(lead.id, ''); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
+                            return;
+                        }
+                        setDialog({ title: 'Asignar Agente', message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`, type: 'info', onConfirm: () => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
+                    }}
+                />
             )}
         </div>
     );
@@ -3155,49 +3128,29 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     contextLeads={selectedLeads.map(id => processedLeads.find(l => l.id === id)).filter(Boolean)} 
                     allLeads={processedLeads} 
                     onClose={() => setIsBulkAgentSelectOpen(false)}
-                    onSelect={(agentId) => {
+                    onSelect={(agentId, assignableLeads) => { 
+                        if (!agentId) return;
+
                         const selectedAgent = agents.find(a => a.id === agentId);
-                        let conflictCount = 0;
+                        const assignableIds = assignableLeads.map(l => l.id);
                         
-                        const getClean24h = (tStr) => {
-                            if (!tStr) return null;
-                            let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-                            let isPM = clean.includes('p');
-                            let isAM = clean.includes('a');
-                            let nums = clean.replace(/[^0-9]/g, '');
-                            if (nums.length < 3) return null;
-                            let h = parseInt(nums.slice(0, -2), 10);
-                            const m = nums.slice(-2);
-                            if (isPM && h < 12) h += 12;
-                            if (isAM && h === 12) h = 0;
-                            return `${String(h).padStart(2, '0')}:${m}`; 
-                        };
-
-                        const leadsToAssign = selectedLeads.map(id => processedLeads.find(l => l.id === id)).filter(Boolean);
-                        
-                        for (let lead of leadsToAssign) {
-                            const targetTime24h = getClean24h(lead.localTime || lead.time);
-                            const hasConflict = processedLeads.some(l => {
-                                if (l.id === lead.id || l.assignedTo !== agentId || l.status === 'archived') return false;
-                                if (l.date !== lead.date) return false;
-                                return getClean24h(l.localTime || l.time) === targetTime24h; 
-                            });
-                            if (hasConflict) conflictCount++;
+                        if (assignableIds.length < selectedLeads.length) {
+                            const omitidos = selectedLeads.length - assignableIds.length;
+                            if (!window.confirm(`⚠️ ASIGNACIÓN PARCIAL\n\nEl agente ${selectedAgent.name} solo puede tomar ${assignableIds.length} de los ${selectedLeads.length} prospectos seleccionados (por reglas de licencia o agenda).\n\n¿Deseas asignarle estos ${assignableIds.length} y dejar los otros ${omitidos} en la bandeja?`)) {
+                                return;
+                            }
+                        } else {
+                            if (!window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar los ${assignableIds.length} prospectos a ${selectedAgent.name}?`)) {
+                                return;
+                            }
                         }
 
-                        if (conflictCount > 0) {
-                            setIsBulkAgentSelectOpen(false);
-                            setTimeout(() => setDialog({ 
-                                title: 'Múltiples Choques', 
-                                message: `El agente ${selectedAgent?.name} tiene conflicto de horario con ${conflictCount} de las citas seleccionadas.\n\nOperación cancelada para proteger el calendario del agente.`, 
-                                type: 'warning', 
-                                onConfirm: () => setDialog(null) 
-                            }), 150);
-                            return; 
+                        bulkUpdateLeads(assignableIds, { assignedTo: agentId });
+                        if (selectedAgent) {
+                            assignableLeads.forEach(leadObj => triggerAssignmentWebhook(leadObj, selectedAgent));
                         }
-
-                        handleBulkAction('assign', agentId); 
-                        setIsBulkAgentSelectOpen(false); 
+                        setSelectedLeads([]);
+                        setIsBulkAgentSelectOpen(false);
                     }} 
                 />
             )}
@@ -3208,50 +3161,19 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     contextLeads={[processedLeads.find(l => l.id === individualAgentSelectLeadId)].filter(Boolean)} 
                     allLeads={processedLeads} 
                     onClose={() => setIndividualAgentSelectLeadId(null)} 
-                    onSelect={(agentId) => { 
+                    onSelect={(agentId, assignableLeads) => { 
                         const leadToAssign = processedLeads.find(l => l.id === individualAgentSelectLeadId);
                         const selectedAgent = agents.find(a => a.id === agentId);
                         
-                        if (leadToAssign && selectedAgent) {
-                            const getClean24h = (tStr) => {
-                                if (!tStr) return null;
-                                let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-                                let isPM = clean.includes('p');
-                                let isAM = clean.includes('a');
-                                let nums = clean.replace(/[^0-9]/g, '');
-                                if (nums.length < 3) return null;
-                                let h = parseInt(nums.slice(0, -2), 10);
-                                const m = nums.slice(-2);
-                                if (isPM && h < 12) h += 12;
-                                if (isAM && h === 12) h = 0;
-                                return `${String(h).padStart(2, '0')}:${m}`; 
-                            };
-
-                            const targetTime24h = getClean24h(leadToAssign.localTime || leadToAssign.time);
-                            
-                            const hasConflict = processedLeads.some(l => {
-                                if (l.id === leadToAssign.id || l.assignedTo !== agentId || l.status === 'archived') return false;
-                                if (l.date !== leadToAssign.date) return false;
-                                return getClean24h(l.localTime || l.time) === targetTime24h; 
-                            });
-
-                            if (hasConflict) {
-                                setIndividualAgentSelectLeadId(null);
-                                setTimeout(() => setDialog({ 
-                                    title: 'Choque de Horario', 
-                                    message: `El agente ${selectedAgent.name} ya tiene una cita el ${leadToAssign.date} a las ${leadToAssign.localTime || leadToAssign.time}.\n\nPor favor, elige otro agente o cambia el horario primero.`, 
-                                    type: 'warning', 
-                                    onConfirm: () => setDialog(null) 
-                                }), 150);
-                                return; 
+                        if (!agentId) {
+                            if (window.confirm('⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?')) {
+                                onUpdateLead(individualAgentSelectLeadId, { assignedTo: '' }); 
+                                setIndividualAgentSelectLeadId(null); 
                             }
+                            return;
                         }
 
-                        const confirmMsg = selectedAgent 
-                            ? `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.` 
-                            : `⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?`;
-                        
-                        if (window.confirm(confirmMsg)) {
+                        if (window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`)) {
                             onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
                             if (leadToAssign && selectedAgent) triggerAssignmentWebhook(leadToAssign, selectedAgent);
                             setIndividualAgentSelectLeadId(null); 
