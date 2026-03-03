@@ -1560,10 +1560,17 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
     const [innerSearch, setInnerSearch] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState(agent);
+    
+    // --- NUEVO: Estado para manejar las licencias dinámicamente en la edición ---
+    const [licenses, setLicenses] = useState(agent.licensesArray || []);
+    
     const [dialog, setDialog] = useState(null);
     const [previewImage, setPreviewImage] = useState(null); // LIGHTBOX PARA LA FICHA
 
-    useEffect(() => { setFormData(agent); }, [agent]);
+    useEffect(() => { 
+        setFormData(agent); 
+        setLicenses(agent.licensesArray || []);
+    }, [agent]);
 
     const assignedLeads = leads.filter(l => {
         if (l.assignedTo !== agent.id) return false;
@@ -1584,9 +1591,42 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
     const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
     const handlePhotoChange = (e) => { const file = e.target.files[0]; if (file) { if (file.size > 1048576) { alert("Máximo 1MB."); return; } const reader = new FileReader(); reader.onloadend = () => setFormData(prev => ({...prev, photo: reader.result})); reader.readAsDataURL(file); }};
     
+    // --- NUEVO: Manejadores para el constructor de licencias ---
+    const handleLicenseChange = (index, field, value) => {
+        const newLics = [...licenses];
+        newLics[index][field] = value;
+        setLicenses(newLics);
+    };
+
+    const handleLicenseFileChange = (index, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 1048576) { alert("La foto de la licencia no debe superar 1MB."); return; }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const newLics = [...licenses];
+            newLics[index].fileStr = reader.result;
+            newLics[index].fileName = file.name;
+            setLicenses(newLics);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const addLicense = () => setLicenses([...licenses, { state: '', number: '', fileStr: '', fileName: '' }]);
+    const removeLicense = (index) => setLicenses(licenses.filter((_, i) => i !== index));
+
     const handleSaveProfile = async (e) => {
         e.preventDefault();
-        await onSaveAgent({ ...formData, timestamp: agent.timestamp || Date.now() });
+        
+        // Auto-generamos el resumen de texto para las búsquedas, basado en el array dinámico
+        const updatedLicenseSummary = licenses.filter(l => l.state && l.number).map(l => `${l.number} (${l.state})`).join(', ');
+
+        await onSaveAgent({ 
+            ...formData, 
+            licensesArray: licenses, 
+            license: updatedLicenseSummary || 'Sin estados configurados',
+            timestamp: agent.timestamp || Date.now() 
+        });
         setIsEditing(false);
     };
 
@@ -1637,7 +1677,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                         {agent.companies && <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3.5 rounded-xl border border-gray-100"><Building size={16} className="text-gray-400 shrink-0"/> <span className="truncate font-medium">{agent.companies}</span></div>}
                                         {agent.isAgency && <div className="inline-flex mt-1 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-purple-100"><Users size={12} className="mr-1"/> Tiene Agencia</div>}
 
-                                        {/* NUEVO: BLOQUE ELEGANTE DE LICENCIAS CON MINIATURAS */}
+                                        {/* BLOQUE ELEGANTE DE LICENCIAS CON MINIATURAS */}
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
                                             <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><FileText size={14}/> Licencias Estatales</h5>
                                             <div className="flex flex-col gap-3">
@@ -1685,8 +1725,41 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                             <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-[10px] font-bold backdrop-blur-sm">Subir<input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} /></label>
                                         </div>
                                     </div>
+                                    
                                     <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre</label><input name="name" required value={formData.name} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
-                                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estados (Resumen)</label><input name="license" value={formData.license} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 transition-all text-sm font-medium text-gray-900" /></div>
+                                    
+                                    {/* CONSTRUCTOR DE LICENCIAS INTEGRADO */}
+                                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                                        <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2"><FileText size={14}/> Licencias</h3>
+                                        <div className="space-y-3">
+                                            {licenses.map((lic, index) => (
+                                                <div key={index} className="grid grid-cols-1 gap-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative">
+                                                    <div className="flex gap-2">
+                                                        <div className="flex-1">
+                                                            <select value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs focus:border-blue-400 text-gray-700">
+                                                                <option value="">Estado</option>
+                                                                {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.abbr}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex-[2]">
+                                                            <input type="text" placeholder="Número" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs focus:border-blue-400" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="w-full p-2 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-400 rounded-lg text-[10px] text-center text-gray-500 cursor-pointer flex items-center justify-center gap-1 overflow-hidden transition-colors">
+                                                            {lic.fileName || lic.fileStr ? <span className="text-green-600 font-bold truncate">✅ Foto lista</span> : <span>Subir foto de licencia</span>}
+                                                            <input type="file" accept="image/*" onChange={(e) => handleLicenseFileChange(index, e)} className="hidden" />
+                                                        </label>
+                                                    </div>
+                                                    <button type="button" onClick={() => removeLicense(index)} className="absolute -top-1.5 -right-1.5 bg-red-100 text-red-500 hover:bg-red-200 rounded-full p-1 shadow-sm transition-colors"><X size={10} strokeWidth={3}/></button>
+                                                </div>
+                                            ))}
+                                            {licenses.length === 0 && <p className="text-xs text-gray-400 italic">No hay licencias registradas.</p>}
+                                        </div>
+                                        <button type="button" onClick={addLicense} className="mt-3 text-xs font-bold text-blue-600 flex items-center gap-1 bg-white hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors shadow-sm w-full justify-center">
+                                            <Plus size={14}/> Agregar Estado
+                                        </button>
+                                    </div>
                                     
                                     <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5"><Building size={14}/> Compañías</label><input name="companies" value={formData.companies || ''} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 transition-all text-sm font-medium" /></div>
                                     <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
@@ -1709,6 +1782,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
 
                     {/* COLUMNA DERECHA: PROSPECTOS ASIGNADOS */}
                     <div className="md:col-span-8 space-y-6 flex flex-col h-full">
+                        {/* ... MANTENEMOS INTACTA TU PARTE DERECHA DE CARTERA ASIGNADA ... */}
                         <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
                                 <div>
