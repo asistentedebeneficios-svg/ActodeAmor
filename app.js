@@ -3846,8 +3846,8 @@ const TestimonialsSection = () => {
                 </div>
                 <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-10 md:mb-12 tracking-tight text-balance">Familias que ya protegieron su futuro</h3>
                 
-                {/* AJUSTE DE ALTURA RESPONSIVA: Aumentamos min-h en móvil/tablet */}
-                <div className="relative min-h-[380px] xs:min-h-[320px] sm:min-h-[300px] md:min-h-[240px] lg:min-h-[220px]">
+                {/* AJUSTE DE ALTURA RESPONSIVA: Altura perfecta para móviles, iPad y PC */}
+                <div className="relative min-h-[260px] sm:min-h-[240px] md:min-h-[220px]">
                     {TESTIMONIALS.map((test, idx) => (
                         <div key={idx} className={`absolute inset-0 transition-all duration-700 ease-in-out ${current === idx ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-12 pointer-events-none z-0'}`}>
                             {/* AJUSTE DE PADDING: Menos padding en móvil (p-5), normal en escritorio (md:p-8) */}
