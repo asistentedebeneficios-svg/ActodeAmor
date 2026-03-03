@@ -3821,7 +3821,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
     );
 };
 
-// --- NUEVO: COMPONENTE DE TESTIMONIOS AUTOMÁTICOS ---
+// --- NUEVO: COMPONENTE DE TESTIMONIOS AUTOMÁTICOS (CORREGIDO PARA MÓVILES) ---
 const TestimonialsSection = () => {
     const TESTIMONIALS = [
         { name: "María González", state: "Texas", text: "Pensé que por mi edad y mi condición médica no me aceptarían. Fue un alivio descubrir que no piden examen médico. El agente resolvió todo en una sola llamada.", rating: 5 },
@@ -3834,39 +3834,46 @@ const TestimonialsSection = () => {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrent((prev) => (prev + 1) % TESTIMONIALS.length);
-        }, 6000); // Gira cada 6 segundos
+        }, 6000);
         return () => clearInterval(timer);
     }, []);
 
     return (
-        <div className="py-8 md:py-12 bg-white w-full overflow-hidden relative">
+        <div className="py-8 md:py-16 bg-white w-full overflow-hidden relative">
             <div className="max-w-4xl mx-auto px-6 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-4 md:mb-5">
                     <Star size={12} fill="currentColor"/> Historias Reales
                 </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 tracking-tight">Familias que ya protegieron su futuro</h3>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-10 md:mb-12 tracking-tight text-balance">Familias que ya protegieron su futuro</h3>
                 
-                <div className="relative min-h-[220px] md:min-h-[180px]">
+                {/* AJUSTE DE ALTURA RESPONSIVA: Aumentamos min-h en móvil/tablet */}
+                <div className="relative min-h-[380px] xs:min-h-[320px] sm:min-h-[300px] md:min-h-[240px] lg:min-h-[220px]">
                     {TESTIMONIALS.map((test, idx) => (
-                        <div key={idx} className={`absolute inset-0 transition-all duration-700 ease-in-out ${current === idx ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-8 pointer-events-none z-0'}`}>
-                            <div className="bg-rose-50/40 border border-rose-100 rounded-3xl p-6 md:p-8 shadow-sm h-full flex flex-col justify-center">
-                                <div className="flex justify-center gap-1 mb-4">
+                        <div key={idx} className={`absolute inset-0 transition-all duration-700 ease-in-out ${current === idx ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-12 pointer-events-none z-0'}`}>
+                            {/* AJUSTE DE PADDING: Menos padding en móvil (p-5), normal en escritorio (md:p-8) */}
+                            <div className="bg-rose-50/40 border border-rose-100 rounded-3xl p-5 sm:p-6 md:p-8 lg:p-10 shadow-sm h-full flex flex-col justify-center items-center">
+                                
+                                <div className="flex justify-center gap-1 mb-4 md:mb-5">
                                     {[...Array(test.rating)].map((_, i) => <Star key={i} size={16} className="text-amber-400" fill="currentColor"/>)}
                                 </div>
-                                <p className="text-gray-700 text-base md:text-lg italic font-medium leading-relaxed mb-6 text-balance">"{test.text}"</p>
+                                
+                                {/* AJUSTE DE TEXTO: Más pequeño en móvil (text-sm), mediano en tablet (md:text-base), normal en desktop (lg:text-lg) */}
+                                <p className="text-gray-700 text-sm md:text-base lg:text-lg italic font-medium leading-relaxed mb-6 md:mb-8 text-balance max-w-2xl">
+                                    "{test.text}"
+                                </p>
+                                
                                 <div className="flex flex-col items-center mt-auto">
-                                    <span className="font-bold text-gray-900">{test.name}</span>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">{test.state}</span>
+                                    <span className="font-bold text-gray-900 text-sm md:text-base">{test.name}</span>
+                                    <span className="text-[10px] md:text-xs text-gray-400 uppercase tracking-widest mt-1">{test.state}</span>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
                 
-                {/* Puntos de navegación inferiores */}
-                <div className="flex justify-center gap-2 mt-6">
+                <div className="flex justify-center gap-2 mt-8 md:mt-10">
                     {TESTIMONIALS.map((_, idx) => (
-                        <button key={idx} onClick={() => setCurrent(idx)} className={`h-2 rounded-full transition-all duration-300 ${current === idx ? 'bg-rose-500 w-6' : 'bg-gray-200 w-2 hover:bg-rose-300'}`}></button>
+                        <button key={idx} onClick={() => setCurrent(idx)} className={`h-2.5 rounded-full transition-all duration-300 ${current === idx ? 'bg-rose-500 w-8' : 'bg-gray-200 w-2.5 hover:bg-rose-300'}`}></button>
                     ))}
                 </div>
             </div>
