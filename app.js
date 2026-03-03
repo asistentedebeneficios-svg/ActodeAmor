@@ -3566,7 +3566,6 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         if (cart.length > 0 && timeLeft > 0) {
             timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
         } else if (timeLeft === 0) {
-            // NUEVO: Liberar leads en Firebase al expirar el tiempo
             cart.forEach(leadId => onUpdateLead(leadId, { lockedBy: null, lockedAt: null }));
             setCart([]); 
             setTimeLeft(600); 
@@ -3577,6 +3576,39 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         return () => clearInterval(timer);
     }, [cart, timeLeft]);
 
+    // --- NUEVO: AUTO-LIMPIEZA DEL CARRITO EN TIEMPO REAL (ANTIRROBO) ---
+    useEffect(() => {
+        if (cart.length === 0) return;
+        
+        const nowMs = Date.now();
+        let cartChanged = false;
+        
+        const validCart = cart.filter(leadId => {
+            const lead = processedLeads.find(l => l.id === leadId);
+            // Si el lead ya no está disponible, se vendió, o no existe
+            if (!lead || lead.status !== 'marketplace' || lead.assignedTo) {
+                cartChanged = true; return false;
+            }
+            // Si otro agente lo bloqueó milisegundos antes
+            const isLockedByOther = lead.lockedBy && lead.lockedBy !== agent.id && lead.lockedAt && (nowMs - lead.lockedAt < (10 * 60 * 1000));
+            if (isLockedByOther) {
+                cartChanged = true; return false;
+            }
+            return true;
+        });
+
+        if (cartChanged) {
+            setCart(validCart);
+            setDialog({
+                title: 'Prospecto Reservado',
+                message: 'Uno de los prospectos de tu carrito acaba de ser tomado por otro agente fracciones de segundo antes. Tu carrito ha sido actualizado.',
+                type: 'warning',
+                onConfirm: () => setDialog(null)
+            });
+            if (validCart.length === 0) setTimeLeft(600);
+        }
+    }, [processedLeads]);
+
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
         const s = (seconds % 60).toString().padStart(2, '0');
@@ -3585,18 +3617,25 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
     const toggleCart = (leadId, isBlocked) => { 
         if (isBlocked) return; 
+        
+        // Bloqueo manual extra por si hace clic en el milisegundo exacto
+        const leadActual = processedLeads.find(l => l.id === leadId);
+        const isLockedByOther = leadActual && leadActual.lockedBy && leadActual.lockedBy !== agent.id && leadActual.lockedAt && (Date.now() - leadActual.lockedAt < (10 * 60 * 1000));
+        
+        if (isLockedByOther && !cart.includes(leadId)) {
+            setDialog({ title: '¡Gana el más rápido!', message: 'Otro agente acaba de tomar este prospecto hace un instante.', type: 'warning', onConfirm: () => setDialog(null) });
+            return;
+        }
+
         const isRemoving = cart.includes(leadId);
         
-        // 1. Actualiza el carrito visual localmente
         setCart(prev => isRemoving ? prev.filter(id => id !== leadId) : [...prev, leadId]); 
         
-        // 2. Bloquea o libera el prospecto en la base de datos para todos los demás
         onUpdateLead(leadId, { 
             lockedBy: isRemoving ? null : agent.id, 
             lockedAt: isRemoving ? null : Date.now() 
         });
 
-        // 3. Reinicia el tiempo solo si es el primer lead que agrega
         if (cart.length === 0 && !isRemoving) setTimeLeft(600);
     };
 
