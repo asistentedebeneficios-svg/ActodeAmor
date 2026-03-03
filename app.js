@@ -1081,21 +1081,81 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     );
 };
 
-const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
+const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], allLeads = [] }) => {
     const [search, setSearch] = useState('');
-    const filteredAgents = agents.filter(a => {
+    
+    // Función interna para normalizar la hora a 24h para comparar choques
+    const getClean24h = (tStr) => {
+        if (!tStr) return null;
+        let clean = tStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+        let isPM = clean.includes('p');
+        let isAM = clean.includes('a');
+        let nums = clean.replace(/[^0-9]/g, '');
+        if (nums.length < 3) return null;
+        let h = parseInt(nums.slice(0, -2), 10);
+        const m = nums.slice(-2);
+        if (isPM && h < 12) h += 12;
+        if (isAM && h === 12) h = 0;
+        return `${String(h).padStart(2, '0')}:${m}`; 
+    };
+
+    // --- FILTRO MAESTRO DE AGENTES ---
+    const availableAgents = agents.filter(agent => {
+        if (!contextLeads || contextLeads.length === 0) return true;
+        
+        // 1. FILTRO DE ESTADO (Licencia)
+        let agentStates = [];
+        if (agent.licensesArray && agent.licensesArray.length > 0) {
+            agentStates = agent.licensesArray.map(lic => FULL_US_STATES.find(s => s.abbr === lic.state)?.name).filter(Boolean);
+        } else if (agent.license) {
+            const matches = agent.license.match(/\(([^)]+)\)/g);
+            if (matches) {
+                agentStates = matches.map(m => FULL_US_STATES.find(s => s.abbr === m.replace(/[()]/g, '').trim())?.name).filter(Boolean);
+            }
+        }
+
+        const hasAllStates = contextLeads.every(lead => {
+            if (!lead.state) return true; // Si el lead no tiene estado, lo pasamos
+            return agentStates.includes(lead.state);
+        });
+
+        if (!hasAllStates) return false; // No tiene licencia, lo ocultamos
+
+        // 2. FILTRO DE DISPONIBILIDAD (Choque de Horario)
+        const hasConflict = contextLeads.some(cLead => {
+            if (!cLead.date) return false;
+            const targetTime24h = getClean24h(cLead.localTime || getLocalTimeInfo(cLead.date, cLead.time, cLead.state) || cLead.time);
+            if (!targetTime24h) return false;
+            
+            return allLeads.some(exLead => {
+                if (exLead.id === cLead.id) return false; // No comparar con el mismo lead
+                if (exLead.assignedTo !== agent.id) return false; // Solo revisar a este agente
+                if (exLead.status === 'archived') return false; // Citas pasadas no cuentan
+                if (exLead.date !== cLead.date) return false; // Solo el mismo día
+                
+                const exTime24h = getClean24h(exLead.localTime || getLocalTimeInfo(exLead.date, exLead.time, exLead.state) || exLead.time);
+                return exTime24h === targetTime24h;
+            });
+        });
+
+        return !hasConflict; // Solo sobrevive si NO tiene conflictos
+    });
+
+    // Buscador por texto
+    const filteredAgents = availableAgents.filter(a => {
         const term = search.toLowerCase();
         return (a.name && a.name.toLowerCase().includes(term)) || 
                (a.email && a.email.toLowerCase().includes(term)) ||
                (a.license && a.license.toLowerCase().includes(term));
     });
+
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4 animate-fade-in">
             <div className="glass-card bg-white/95 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up relative">
-                <div className="flex justify-between items-center mb-5">
+                <div className="flex justify-between items-start mb-5">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 leading-tight">Asignar Agente</h3>
-                        <p className="text-xs text-gray-500">Selecciona a un miembro del equipo</p>
+                        <p className="text-[10px] uppercase tracking-widest text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">Disponibles y con licencia</p>
                     </div>
                     <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
                 </div>
@@ -1118,7 +1178,13 @@ const AgentSelectionModal = ({ agents, onClose, onSelect }) => {
                             </div>
                         </button>
                     ))}
-                    {filteredAgents.length === 0 && <div className="text-center py-8 text-gray-400"><p className="text-sm font-medium">No se encontraron agentes</p><p className="text-xs mt-1">Prueba con otra búsqueda</p></div>}
+                    {filteredAgents.length === 0 && (
+                        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100"><Users size={16} className="text-gray-300"/></div>
+                            <p className="text-sm font-bold text-gray-600">No hay agentes disponibles</p>
+                            <p className="text-[10px] mt-1.5 max-w-[200px] mx-auto text-center leading-relaxed">Están ocupados en ese horario o no tienen licencia en el estado.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -1506,7 +1572,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             </div>
             
             {showAgentSelector && !isAgentView && (
-                <AgentSelectionModal agents={agents.filter(a => a.status !== 'inactive')} onClose={() => setShowAgentSelector(false)} onSelect={(agentId) => { 
+                <AgentSelectionModal 
+                    agents={agents.filter(a => a.status !== 'inactive')} 
+                    contextLeads={[lead]} 
+                    allLeads={allLeads} 
+                    onClose={() => setShowAgentSelector(false)} 
+                    onSelect={(agentId) => {
                     const selectedAgent = agents.find(a => a.id === agentId);
                     if (!selectedAgent) {
                         setDialog({ title: 'Quitar Asignación', message: '¿Estás seguro de quitar la asignación actual?', type: 'warning', onConfirm: () => { onAssignAgent(lead.id, ''); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
@@ -3076,8 +3147,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             {isBulkAgentSelectOpen && (
                 <AgentSelectionModal 
                     agents={activeAgentsList} 
+                    contextLeads={selectedLeads.map(id => processedLeads.find(l => l.id === id)).filter(Boolean)} 
+                    allLeads={processedLeads} 
                     onClose={() => setIsBulkAgentSelectOpen(false)}
-                    onSelect={(agentId) => { 
+                    onSelect={(agentId) => {
                         const selectedAgent = agents.find(a => a.id === agentId);
                         let conflictCount = 0;
                         
@@ -3127,6 +3200,8 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             {individualAgentSelectLeadId && (
                 <AgentSelectionModal 
                     agents={activeAgentsList} 
+                    contextLeads={[processedLeads.find(l => l.id === individualAgentSelectLeadId)].filter(Boolean)} 
+                    allLeads={processedLeads} 
                     onClose={() => setIndividualAgentSelectLeadId(null)} 
                     onSelect={(agentId) => { 
                         const leadToAssign = processedLeads.find(l => l.id === individualAgentSelectLeadId);
