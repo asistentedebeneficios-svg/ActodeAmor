@@ -4274,22 +4274,41 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                                         ))}
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                        <div>
+                                    <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-gray-50 gap-4">
+                                        <div className="w-full sm:w-auto flex justify-between sm:block items-center">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total a pagar</p>
                                             <p className="text-3xl font-black text-gray-900">${bundle.price}</p>
                                         </div>
-                                        <button 
-                                            onClick={() => {
-                                                // Preparamos los items para Stripe basados en este bundle
-                                                const items = [{ name: `Paquete Exclusivo ${bundle.id}`, price: bundle.price }];
-                                                setCart(bundle.leads.map(l => l.id)); // Metemos los leads del bundle al carrito internamente
-                                                handleCheckout(items, bundle.leads.map(l => l.id)); // Disparamos checkout
-                                            }}
-                                            className="bg-black text-white px-8 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-transform shadow-lg flex items-center gap-2"
-                                        >
-                                            Aceptar y Pagar <ChevronRight size={16}/>
-                                        </button>
+                                        <div className="flex gap-2 w-full sm:w-auto">
+                                            <button 
+                                                onClick={() => {
+                                                    setDialog({
+                                                        title: 'Rechazar Oferta',
+                                                        message: '¿Estás seguro de que deseas rechazar este paquete exclusivo? Los prospectos serán liberados y perderás esta oportunidad.',
+                                                        type: 'warning',
+                                                        onConfirm: () => {
+                                                            // Devuelve los prospectos a la bandeja y borra el rastro de la oferta y bloqueos
+                                                            bundle.leads.forEach(l => onUpdateLead(l.id, { status: 'new', offer: null, lockedBy: null, lockedAt: null }));
+                                                            setDialog(null);
+                                                        },
+                                                        onCancel: () => setDialog(null)
+                                                    });
+                                                }}
+                                                className="flex-1 sm:flex-none bg-gray-100 text-gray-500 px-4 py-3.5 rounded-2xl font-bold text-sm hover:bg-red-50 hover:text-red-500 transition-colors flex items-center justify-center gap-1.5"
+                                            >
+                                                <X size={16}/> Rechazar
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    const items = [{ name: `Paquete Exclusivo ${bundle.id}`, price: bundle.price }];
+                                                    setCart(bundle.leads.map(l => l.id));
+                                                    handleCheckout(items, bundle.leads.map(l => l.id));
+                                                }}
+                                                className="flex-[2] sm:flex-none bg-black text-white px-6 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2"
+                                            >
+                                                Aceptar y Pagar <ChevronRight size={16}/>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
