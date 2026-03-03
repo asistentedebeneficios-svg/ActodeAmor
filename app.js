@@ -4118,7 +4118,7 @@ const App = () => {
     if (showAgentFormFromHome) {
         return (
             <AgentRegistrationForm 
-                onClose={() => setShowAgentFormFromHome(false)} 
+                onCancel={() => setShowAgentFormFromHome(false)} 
             />
         );
     }
