@@ -3836,6 +3836,7 @@ const App = () => {
     const [reinforcement, setReinforcement] = useState(null);
     const [fillPercent, setFillPercent] = useState(10);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [showAgentFormFromHome, setShowAgentFormFromHome] = useState(false);
 
     // --- GUARDAR EN TIEMPO REAL ---
     useEffect(() => {
@@ -4113,6 +4114,14 @@ const App = () => {
             </div>
         );
     } // <-- Aquí cerramos el if general de showAdmin
+    // --- PANTALLA: FORMULARIO DE AGENTE DESDE LA HOME ---
+    if (showAgentFormFromHome) {
+        return (
+            <AgentRegistrationForm 
+                onClose={() => setShowAgentFormFromHome(false)} 
+            />
+        );
+    }
 
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
@@ -4214,17 +4223,29 @@ const App = () => {
                 </div>
             </div>
             
-            <footer className="mt-auto py-10 md:py-12 text-center text-gray-400 text-xs md:text-sm border-t border-gray-100 bg-gray-50 flex flex-col items-center">
+           <footer className="mt-auto py-10 md:py-12 text-center text-gray-400 text-xs md:text-sm border-t border-gray-100 bg-gray-50 flex flex-col items-center">
                 <Heart size={20} className="text-gray-300 mb-4" />
                 <p className="font-medium">&copy; {new Date().getFullYear()} asistentedebeneficios.com</p>
                 <p className="mt-1">Todos los derechos reservados.</p>
                 <div className="flex items-center justify-center gap-1.5 mt-4 text-[10px] md:text-xs font-bold uppercase tracking-widest bg-gray-200/50 px-3 py-1.5 rounded-lg text-gray-500">
                     <Lock size={12}/> Sitio 100% seguro y encriptado
                 </div>
+
+                {/* ENLACE SUTIL PARA AGENTES */}
+                <div className="mt-8 pt-6 border-t border-gray-200/80 w-full max-w-xs text-center animate-fade-in">
+                    <p className="text-[11px] text-gray-400 font-medium">
+                        ¿Eres un especialista con licencia activa?{' '}
+                        <button 
+                            onClick={() => setShowAgentFormFromHome(true)} 
+                            className="text-gray-500 hover:text-rose-600 underline decoration-gray-300 hover:decoration-rose-300 underline-offset-2 transition-colors duration-300"
+                        >
+                            Únete a nuestro equipo
+                        </button>
+                    </p>
+                </div>
             </footer>
         </div>
     );
-
     return (
         <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
         
