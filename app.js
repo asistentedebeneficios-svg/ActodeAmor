@@ -3971,16 +3971,21 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-    const handleCheckout = async () => {
-        if (cart.length === 0) return;
+    const handleCheckout = async (directItems = null, directLeadIds = null) => {
+        // Usamos los IDs que vienen del botón de Ofertas, o si no, usamos el carrito normal
+        const checkoutLeadIds = directLeadIds || cart;
+        
+        if (checkoutLeadIds.length === 0) return;
+        
         setIsCheckingOut(true);
         try {
-            // 1. Empaquetamos los prospectos del carrito
-            const items = cart.map(leadId => {
-                const lead = availableLeads.find(l => l.id === leadId);
-                const isFireSale = lead.hoursUntil <= 3;
+            // 1. Usamos los items directos (Ofertas) o empaquetamos los del carrito (Marketplace)
+            const items = directItems || checkoutLeadIds.map(leadId => {
+                // Buscamos en 'processedLeads' (la base de datos completa) para no perder los leads de Ofertas
+                const lead = processedLeads.find(l => l.id === leadId);
+                const isFireSale = lead && lead.hoursUntil <= 3;
                 return {
-                    name: `Prospecto en ${lead.state || 'US'}`,
+                    name: `Prospecto en ${lead ? lead.state : 'US'}`,
                     price: isFireSale ? offerPrice : regularPrice
                 };
             });
@@ -3992,7 +3997,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                 body: JSON.stringify({
                     items: items,
                     agentId: agent.id,
-                    leadIds: cart
+                    leadIds: checkoutLeadIds
                 })
             });
 
