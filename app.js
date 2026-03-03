@@ -2027,7 +2027,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
     );
 };
 
-// --- NUEVO: PANTALLA DE CONFIGURACIÓN DEL SISTEMA (PANTALLA COMPLETA) ---
+// --- NUEVO: PANTALLA DE CONFIGURACIÓN DEL SISTEMA (CON BOTÓN MÁGICO) ---
 const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSaveGeneral, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
@@ -2037,7 +2037,10 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    
+    // Estados para la animación del botón
     const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     const verifyPassword = async (e) => {
         e.preventDefault();
@@ -2053,6 +2056,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
 
     const handleSave = async () => {
         setIsSaving(true);
+        setIsSaved(false); // Reiniciamos por si acaso
+        
         await onSaveWebhooks(localHooks);
         await onSaveGeneral({ 
             ...generalSettings, 
@@ -2060,8 +2065,14 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
             regularPrice: Number(regPrice), 
             offerPrice: Number(offPrice) 
         });
+        
         setIsSaving(false);
-        // Notificamos éxito sutilmente o podemos cerrar
+        setIsSaved(true); // ¡Activamos el color verde!
+        
+        // Devolvemos el botón a la normalidad después de 2.5 segundos
+        setTimeout(() => {
+            setIsSaved(false);
+        }, 2500);
     };
 
     if (!isAuthenticated) {
@@ -2095,7 +2106,7 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
 
     return (
         <div className="fixed inset-0 bg-[#F5F5F7] z-[200] flex flex-col animate-fade-in overflow-hidden font-sans">
-            {/* Header Superior */}
+            {/* Header Superior con el Botón Animado */}
             <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 h-20 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <button onClick={onClose} className="p-2.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
@@ -2106,12 +2117,33 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Panel Maestro</p>
                     </div>
                 </div>
+                
+                {/* --- BOTÓN MÁGICO --- */}
                 <button 
                     onClick={handleSave} 
-                    disabled={isSaving}
-                    className="bg-black text-white px-8 py-3 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                    disabled={isSaving || isSaved}
+                    className={`px-8 py-3 rounded-full font-bold text-sm shadow-xl transition-all duration-300 flex items-center justify-center gap-2 min-w-[180px] ${
+                        isSaved 
+                            ? 'bg-green-500 text-white hover:scale-100 cursor-default ring-4 ring-green-500/20' 
+                            : 'bg-black text-white hover:scale-105'
+                    }`}
                 >
-                    {isSaving ? 'Guardando...' : <><Save size={16}/> Guardar Cambios</>}
+                    {isSaving ? (
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Guardando...
+                        </div>
+                    ) : isSaved ? (
+                        <>
+                            <Check size={18} strokeWidth={3} className="animate-scale-up" /> 
+                            ¡Guardado!
+                        </>
+                    ) : (
+                        <>
+                            <Save size={16}/> 
+                            Guardar Cambios
+                        </>
+                    )}
                 </button>
             </header>
 
