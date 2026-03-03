@@ -2459,7 +2459,7 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
 };
                                                                    
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
-    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
+    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
@@ -2650,6 +2650,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
         else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
+        else if(activeTab === 'offers') list = processedLeads.filter(l => l.status === 'pending_payment');
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         return list;
     };
@@ -2848,7 +2849,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
             {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
@@ -2867,6 +2868,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             </>
                         )}
                         {tab === 'assigned' && 'Asignados'}
+                        {tab === 'offers' && 'Ofertas'}
                         {tab === 'archived' && 'Archivados'}
                         {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
                         {tab === 'agents' && (
@@ -4015,11 +4017,11 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
             {/* Pestañas de Navegación */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['marketplace', 'clientes', 'agenda'].map(tab => (
+                {(agent.status === 'inactive' ? ['clientes', 'agenda'] : ['marketplace', 'ofertas', 'clientes', 'agenda']).map(tab => (
                     <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                         {tab === 'marketplace' && (
                                     <>
-                                        Tienda
+                                        Marketplace
                                         {availableLeads.length > 0 && (
                                             <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm leading-none min-w-[20px] text-center animate-pulse-once">
                                                 {availableLeads.length}
