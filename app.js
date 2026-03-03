@@ -3881,99 +3881,136 @@ const TestimonialsSection = () => {
     );
 };
 
-// --- NUEVO: PÁGINA "QUIÉNES SOMOS" (ELEGANTE PERO CON LOS COLORES DE TU MARCA) ---
+// --- NUEVO: PÁGINA "QUIÉNES SOMOS" (DISEÑO WOW - BENTO GRID APPLE STYLE) ---
 const AboutUsPage = ({ onClose }) => {
     return (
-        <div className="min-h-screen bg-white font-sans animate-fade-in pb-24 relative selection:bg-rose-100 selection:text-rose-900">
-            {/* Cabecera Minimalista */}
-            <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-gray-50/80">
+        <div className="min-h-screen bg-[#F5F5F7] font-sans animate-fade-in pb-20 md:pb-32 relative selection:bg-rose-500 selection:text-white">
+            {/* Cabecera Flotante Premium */}
+            <header className="fixed top-0 left-0 w-full z-50 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-gray-200/50">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <button onClick={onClose} className="p-2.5 hover:bg-gray-50 rounded-full transition-colors flex items-center gap-2 text-gray-500 text-sm font-medium group">
-                        <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors"/> 
-                        <span className="hidden sm:inline group-hover:text-gray-800 transition-colors">Volver al inicio</span>
+                    <button onClick={onClose} className="px-4 py-2.5 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm rounded-full transition-all flex items-center gap-2 text-gray-700 text-sm font-bold group">
+                        <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors shrink-0"/> 
+                        <span className="hidden sm:inline">Volver</span>
                     </button>
-                    <div className="flex items-center gap-2 opacity-60">
-                        <ShieldCheck size={20} className="text-gray-800" strokeWidth={1.5} />
-                        <span className="text-gray-800 font-medium tracking-tight text-sm">asistente<span className="font-light text-gray-400">debeneficios</span></span>
+                    <div className="flex items-center gap-2 opacity-80">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center shadow-inner">
+                            <ShieldCheck size={18} className="text-gray-700" strokeWidth={2} />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight text-sm">asistente<span className="font-light text-gray-500">debeneficios</span></span>
                     </div>
                 </div>
             </header>
 
-            <div className="pt-32 md:pt-40 px-6 max-w-4xl mx-auto">
-                {/* Hero Section Editorial (Con el color de vuelta) */}
-                <div className="text-center mb-24 md:mb-32">
-                    <div className="inline-flex items-center justify-center p-4 bg-rose-50 rounded-full text-rose-500 mb-8 border border-rose-100 shadow-sm">
-                        <Heart size={28} strokeWidth={1.5} fill="currentColor" className="opacity-80"/>
-                    </div>
-                    {/* Aquí combinamos la letra fina con tu degradado rojo/rosa */}
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl tracking-tight mb-6 leading-[1.15] text-balance">
-                        <span className="font-light text-gray-800">Más que asesores,</span><br/>
-                        <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-rose-600">somos protectores de tu legado.</span>
+            <div className="pt-32 md:pt-40 px-4 md:px-8 max-w-6xl mx-auto">
+                
+                {/* 1. HERO SECTION: Espectacular y limpio */}
+                <div className="text-center mb-16 md:mb-24">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 tracking-tighter mb-6 leading-[1.05] text-balance">
+                        Protegemos <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-600 to-rose-500 bg-300% animate-gradient">
+                            tu legado.
+                        </span>
                     </h1>
+                    <p className="text-xl md:text-2xl text-gray-500 font-medium max-w-2xl mx-auto text-balance">
+                        No somos un call center. Somos la plataforma que devuelve la tranquilidad a las familias hispanas.
+                    </p>
                 </div>
 
-                {/* Contenido Principal */}
-                <div className="space-y-24 text-lg md:text-xl text-gray-600 leading-relaxed font-light">
+                {/* 2. BENTO GRID: Adiós al "Documento de Word" */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
                     
-                    {/* Caja de Historia Suavizada */}
-                    <div className="bg-[#FBFBFD] p-8 md:p-16 rounded-[2.5rem] text-center border border-gray-100/50">
-                        <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-400 mb-8">Nuestra Historia</h2>
-                        <p className="text-gray-600 text-balance leading-loose text-lg md:text-2xl font-light">
-                            Nacimos de una convicción muy simple, pero profunda: <strong className="text-rose-600 font-medium">ninguna familia debería tener que enfrentar el dolor de una pérdida sumándole la angustia de las deudas.</strong> Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Por eso creamos Asistente de Beneficios: para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
-                        </p>
-                    </div>
-
-                    <div className="px-4 md:px-12 text-center md:text-left">
-                        <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-8 flex items-center justify-center md:justify-start gap-3 tracking-tight">
-                            <Users className="text-blue-500" strokeWidth={1.5} size={28}/> ¿Qué hacemos?
-                        </h2>
-                        <div className="space-y-6 text-gray-500 text-lg md:text-xl leading-relaxed font-light">
-                            <p>
-                                Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong className="text-gray-800 font-medium">especialistas certificados</strong> en gastos finales. 
-                            </p>
-                            <p>
-                                No somos un centro de llamadas frío ni vendemos tus datos al mejor postor. Diseñamos un sistema donde <strong className="text-gray-800 font-medium">tú tienes el control</strong>. Tú decides cómo, cuándo y con quién hablar. Nuestro trabajo es simplificarte la vida: evaluamos tu situación en minutos, sin exámenes médicos y sin letras pequeñas, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de los Estados Unidos.
+                    {/* Tarjeta Gigante: Nuestra Historia */}
+                    <div className="md:col-span-12 bg-white rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-16 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-xl transition-shadow duration-500">
+                        <div className="absolute -top-24 -right-24 text-rose-50 opacity-50 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                            <Heart size={400} fill="currentColor" strokeWidth={0}/>
+                        </div>
+                        <div className="relative z-10 max-w-4xl">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold uppercase tracking-widest text-gray-500 mb-8">
+                                <Activity size={14} className="text-rose-500"/> El Origen
+                            </div>
+                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight md:leading-tight mb-8 text-balance">
+                                Ninguna familia debería enfrentar el dolor de una pérdida sumándole la angustia de las deudas.
+                            </h2>
+                            <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed md:leading-relaxed text-balance">
+                                Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Creamos Asistente de Beneficios para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
                             </p>
                         </div>
                     </div>
 
-                    {/* Grid de Valores (Devolviendo los colores a los íconos) */}
-                    <div className="pt-8">
-                        <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-400 mb-12">Nuestros Valores Fundamentales</h2>
-                        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group hover:-translate-y-1">
-                                <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"><Heart size={26} strokeWidth={1.5}/></div>
-                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Empatía Pura</h3>
-                                <p className="text-base text-gray-500 font-light leading-relaxed">Entendemos que no tratamos con números, sino con familias y legados. Te escuchamos sin juzgar y sin presionar.</p>
-                            </div>
-                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group hover:-translate-y-1">
-                                <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"><Search size={26} strokeWidth={1.5}/></div>
-                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Transparencia Total</h3>
-                                <p className="text-base text-gray-500 font-light leading-relaxed">Las letras pequeñas no existen aquí. Te explicamos qué cubre tu plan, cuánto cuesta y garantizamos que tu cuota nunca subirá.</p>
-                            </div>
-                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group hover:-translate-y-1">
-                                <div className="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"><Lock size={26} strokeWidth={1.5}/></div>
-                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Seguridad y Privacidad</h3>
-                                <p className="text-base text-gray-500 font-light leading-relaxed">Tu confianza es nuestro activo más valioso. Utilizamos encriptación de nivel bancario para que tus datos estén 100% blindados.</p>
-                            </div>
-                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group hover:-translate-y-1">
-                                <div className="w-14 h-14 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"><Activity size={26} strokeWidth={1.5}/></div>
-                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Tecnología Humana</h3>
-                                <p className="text-base text-gray-500 font-light leading-relaxed">Usamos la mejor tecnología para agilizar el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Cierre Espectacular Oscuro pero Elegante */}
-                    <div className="mt-24 bg-gray-900 text-white p-12 md:p-20 rounded-[3rem] text-center shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                        <p className="text-2xl md:text-3xl lg:text-4xl font-light leading-tight mb-10 text-balance italic text-gray-100 relative z-10">
-                            "Creemos que el mejor regalo que le puedes dejar a los tuyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
+                    {/* Tarjeta Izquierda: Qué Hacemos */}
+                    <div className="md:col-span-7 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-gray-100 relative overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-inner"><Users size={28}/></div>
+                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 tracking-tight">Especialistas a tu medida.</h3>
+                        <p className="text-gray-500 text-lg leading-relaxed font-medium">
+                            Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong>especialistas certificados</strong> en gastos finales. Evaluamos tu situación en minutos, sin exámenes médicos, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de EE.UU.
                         </p>
-                        <p className="text-rose-400 font-medium uppercase tracking-[0.2em] text-[10px] md:text-xs relative z-10">Nosotros estamos aquí para ayudarte a sellar esa promesa.</p>
                     </div>
 
+                    {/* Tarjeta Derecha: El Control */}
+                    <div className="md:col-span-5 bg-gradient-to-br from-gray-900 to-black text-white rounded-[2.5rem] p-8 md:p-12 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+                        <div className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-2xl flex items-center justify-center mb-8 border border-white/20"><Settings size={28}/></div>
+                        <h3 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight text-white">Tú tienes el control absoluto.</h3>
+                        <p className="text-gray-400 text-lg leading-relaxed font-medium">
+                            No vendemos tus datos. No hacemos llamadas frías. Tú decides cómo, cuándo y con quién hablar. Sin letras pequeñas, sin sorpresas.
+                        </p>
+                    </div>
                 </div>
+
+                {/* 3. GRID DE VALORES (Elegante y Visual) */}
+                <div className="mt-24 md:mt-32">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Nuestros Pilares</h2>
+                    </div>
+                    
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        {/* Pilar 1 */}
+                        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-rose-200 hover:shadow-lg transition-all group">
+                            <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Heart size={24}/></div>
+                            <h4 className="font-bold text-xl text-gray-900 mb-3">Empatía Pura</h4>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">No tratamos con números, sino con familias y legados. Escuchamos sin juzgar ni presionar.</p>
+                        </div>
+                        {/* Pilar 2 */}
+                        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all group">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Search size={24}/></div>
+                            <h4 className="font-bold text-xl text-gray-900 mb-3">Transparencia</h4>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Cero letras pequeñas. Sabrás exactamente qué cubre tu plan y garantizamos que tu cuota nunca subirá.</p>
+                        </div>
+                        {/* Pilar 3 */}
+                        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all group">
+                            <div className="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Lock size={24}/></div>
+                            <h4 className="font-bold text-xl text-gray-900 mb-3">Privacidad</h4>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Tu confianza lo es todo. Usamos encriptación bancaria para que tus datos estén 100% blindados.</p>
+                        </div>
+                        {/* Pilar 4 */}
+                        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-purple-200 hover:shadow-lg transition-all group">
+                            <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Activity size={24}/></div>
+                            <h4 className="font-bold text-xl text-gray-900 mb-3">Humano</h4>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">La tecnología agiliza el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. CIERRE ÉPICO */}
+                <div className="mt-24 md:mt-32">
+                    <div className="bg-white p-10 md:p-20 rounded-[3rem] text-center border border-gray-100 shadow-2xl relative overflow-hidden">
+                        <div className="absolute -top-32 -left-32 w-64 h-64 bg-rose-400/20 rounded-full blur-[80px]"></div>
+                        <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-blue-400/20 rounded-full blur-[80px]"></div>
+                        
+                        <div className="relative z-10 max-w-3xl mx-auto">
+                            <p className="text-2xl md:text-4xl font-extrabold text-gray-900 leading-snug md:leading-snug mb-8 tracking-tight">
+                                "Creemos que el mejor regalo que le puedes dejar a los tuyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
+                            </p>
+                            <p className="text-rose-600 font-bold uppercase tracking-[0.2em] text-xs md:text-sm">
+                                Nosotros estamos aquí para ayudarte a sellar esa promesa.
+                            </p>
+                            <button onClick={onClose} className="mt-12 bg-black text-white px-8 py-4 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-transform flex items-center gap-2 mx-auto">
+                                Volver y Comenzar <ChevronRight size={16}/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
