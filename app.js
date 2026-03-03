@@ -2288,7 +2288,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
-    const [showFullSettings, setShowFullSettings] = useState(false);
+    // --- MEMORIA PARA NO PERDER LA PANTALLA AL RECARGAR ---
+    const [showFullSettings, setShowFullSettings] = useState(() => {
+        return sessionStorage.getItem('adminShowSettings') === 'true';
+    });
+
+    useEffect(() => {
+        sessionStorage.setItem('adminShowSettings', showFullSettings);
+    }, [showFullSettings]);
     const [dialog, setDialog] = useState(null);
 
     const [timeTick, setTimeTick] = useState(0);
@@ -4339,6 +4346,7 @@ const App = () => {
         await adminLogout();
         setShowAdmin(false);
         localStorage.removeItem('isAdminLoggedIn');
+        sessionStorage.removeItem('adminShowSettings'); // Limpiamos la memoria de la tuerca
         // Obligamos al navegador a quedarse en la ruta del portal al salir
         window.location.hash = '#portal';
     };
