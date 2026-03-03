@@ -1084,6 +1084,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], allLeads = [] }) => {
     const [search, setSearch] = useState('');
     
+    // Verificamos si al menos uno de los prospectos seleccionados YA tiene un agente asignado
+    const hasExistingAssignment = contextLeads.some(lead => lead.assignedTo && lead.assignedTo !== '');
+    
     // Función interna para normalizar la hora a 24h para comparar choques
     const getClean24h = (tStr) => {
         if (!tStr) return null;
@@ -1164,9 +1167,11 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
                     <input type="text" placeholder="Buscar por nombre o correo..." className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-rose-500 focus:bg-white focus:ring-2 focus:ring-rose-500/20 transition-all text-sm" value={search} onChange={e => setSearch(e.target.value)} autoFocus />
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
-                    <button onClick={() => onSelect('')} className="w-full text-left p-3.5 hover:bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium transition-colors mb-2">
-                        <span className="flex items-center gap-2"><MinusCircle size={16}/> Quitar Asignación actual</span>
-                    </button>
+                    {hasExistingAssignment && (
+                        <button onClick={() => onSelect('')} className="w-full text-left p-3.5 hover:bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium transition-colors mb-2">
+                            <span className="flex items-center gap-2"><MinusCircle size={16}/> Quitar Asignación actual</span>
+                        </button>
+                    )}
                     {filteredAgents.map(agent => (
                         <button key={agent.id} onClick={() => onSelect(agent.id)} className="w-full flex items-center gap-4 p-3 hover:bg-rose-50/50 rounded-xl border border-transparent hover:border-rose-100 transition-all text-left group">
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-100 to-white text-rose-600 flex items-center justify-center overflow-hidden shrink-0 shadow-sm border border-rose-50 font-bold">
