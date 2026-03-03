@@ -3418,10 +3418,37 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         currentClientsList = showArchived ? archivedClients : activeClients;
     }
     
-    // Filtro Inteligente del Marketplace
-    const allAvailableLeads = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
+    // --- NUEVA REGLA DE NEGOCIO: EXTRAER ESTADOS PERMITIDOS DEL AGENTE ---
+    let agentLicensedStateNames = [];
+    if (agent.licensesArray && agent.licensesArray.length > 0) {
+        // Extraemos los nombres completos basados en las abreviaciones de sus licencias
+        agentLicensedStateNames = agent.licensesArray.map(lic => {
+            const stateObj = FULL_US_STATES.find(s => s.abbr === lic.state);
+            return stateObj ? stateObj.name : null;
+        }).filter(Boolean);
+    } else if (agent.license) {
+        // Soporte para agentes antiguos que solo tienen el texto "12345 (FL)"
+        const matches = agent.license.match(/\(([^)]+)\)/g);
+        if (matches) {
+            agentLicensedStateNames = matches.map(m => {
+                const abbr = m.replace(/[()]/g, '').trim();
+                const stateObj = FULL_US_STATES.find(s => s.abbr === abbr);
+                return stateObj ? stateObj.name : null;
+            }).filter(Boolean);
+        }
+    }
+
+    // Filtro Inteligente del Marketplace (AHORA RESTRINGIDO POR LICENCIA)
+    const allAvailableLeads = processedLeads.filter(l => {
+        const isMarketplace = l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2;
+        if (!isMarketplace) return false;
+        
+        // Bloqueo de Seguridad: Solo ve el lead si tiene licencia en el estado del prospecto
+        if (!l.state) return false; 
+        return agentLicensedStateNames.includes(l.state);
+    });
     
-    // Motor matemático: Cuenta cuántos leads hay por cada estado
+    // Motor matemático: Cuenta cuántos leads hay por cada estado (solo de los permitidos)
     const stateCounts = allAvailableLeads.reduce((acc, lead) => {
         if(lead.state) acc[lead.state] = (acc[lead.state] || 0) + 1;
         return acc;
