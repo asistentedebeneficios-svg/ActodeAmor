@@ -3881,87 +3881,94 @@ const TestimonialsSection = () => {
     );
 };
 
-// --- NUEVO: PÁGINA "QUIÉNES SOMOS" ---
+// --- NUEVO: PÁGINA "QUIÉNES SOMOS" (DISEÑO APPLE - ELEGANTE Y LIGERO) ---
 const AboutUsPage = ({ onClose }) => {
     return (
-        <div className="min-h-screen bg-white font-sans animate-fade-in pb-20 relative">
-            {/* Cabecera */}
-            <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="min-h-screen bg-white font-sans animate-fade-in pb-24 relative selection:bg-rose-100 selection:text-rose-900">
+            {/* Cabecera Minimalista */}
+            <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-gray-50/80">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <button onClick={onClose} className="p-2.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-2 text-gray-600 text-sm font-bold shadow-sm">
-                        <ArrowLeft size={18}/> <span className="hidden sm:inline">Volver al inicio</span>
+                    <button onClick={onClose} className="p-2.5 hover:bg-gray-50 rounded-full transition-colors flex items-center gap-2 text-gray-500 text-sm font-medium group">
+                        <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors"/> 
+                        <span className="hidden sm:inline group-hover:text-gray-800 transition-colors">Volver al inicio</span>
                     </button>
-                    <div className="flex items-center gap-2 opacity-50">
-                        <ShieldCheck size={20} className="text-gray-900" />
-                        <span className="text-gray-900 font-bold tracking-tight text-sm">asistente<span className="font-light text-gray-400">debeneficios</span></span>
+                    <div className="flex items-center gap-2 opacity-60">
+                        <ShieldCheck size={20} className="text-gray-800" strokeWidth={1.5} />
+                        <span className="text-gray-800 font-medium tracking-tight text-sm">asistente<span className="font-light text-gray-400">debeneficios</span></span>
                     </div>
                 </div>
             </header>
 
-            <div className="pt-32 px-6 max-w-4xl mx-auto">
-                {/* Hero Section */}
-                <div className="text-center mb-20">
-                    <div className="inline-flex items-center justify-center p-4 bg-rose-50 rounded-full text-rose-500 mb-8 border border-rose-100 shadow-inner">
-                        <Heart size={40} fill="currentColor"/>
+            <div className="pt-32 md:pt-40 px-6 max-w-4xl mx-auto">
+                {/* Hero Section Editorial */}
+                <div className="text-center mb-24 md:mb-32">
+                    <div className="inline-flex items-center justify-center p-4 bg-gray-50 rounded-full text-rose-400 mb-8 border border-gray-100 shadow-sm">
+                        <Heart size={28} strokeWidth={1.5} />
                     </div>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight text-balance">
-                        Más que asesores,<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-rose-700">somos protectores de tu legado.</span>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl text-gray-900 tracking-tight mb-6 leading-[1.15] text-balance">
+                        <span className="font-light text-gray-500">Más que asesores,</span><br/>
+                        <span className="font-semibold text-gray-900">somos protectores de tu legado.</span>
                     </h1>
                 </div>
 
                 {/* Contenido Principal */}
-                <div className="space-y-16 text-lg md:text-xl text-gray-600 leading-relaxed font-medium">
+                <div className="space-y-24 text-lg md:text-xl text-gray-600 leading-relaxed font-light">
                     
-                    <div className="bg-gray-50/50 p-8 md:p-12 rounded-[2.5rem] border border-gray-100 text-center">
-                        <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-6">Nuestra Historia</h2>
-                        <p className="text-gray-800 text-balance">
-                            Nacimos de una convicción muy simple, pero profunda: <strong className="text-rose-600 font-extrabold">ninguna familia debería tener que enfrentar el dolor de una pérdida sumándole la angustia de las deudas.</strong> Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Por eso creamos Asistente de Beneficios: para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
+                    {/* Caja de Historia Suavizada */}
+                    <div className="bg-[#FBFBFD] p-8 md:p-16 rounded-[2.5rem] text-center border border-gray-100/50">
+                        <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-400 mb-8">Nuestra Historia</h2>
+                        <p className="text-gray-600 text-balance leading-loose text-lg md:text-2xl font-light">
+                            Nacimos de una convicción muy simple, pero profunda: <strong className="text-rose-500 font-medium">ninguna familia debería tener que enfrentar el dolor de una pérdida sumándole la angustia de las deudas.</strong> Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Por eso creamos Asistente de Beneficios: para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
                         </p>
                     </div>
 
-                    <div className="px-4 md:px-8">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3"><Users className="text-blue-500"/> ¿Qué hacemos?</h2>
-                        <p className="mb-6">
-                            Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong>especialistas certificados</strong> en gastos finales. 
-                        </p>
-                        <p>
-                            No somos un centro de llamadas frío ni vendemos tus datos al mejor postor. Diseñamos un sistema donde <strong>tú tienes el control</strong>. Tú decides cómo, cuándo y con quién hablar. Nuestro trabajo es simplificarte la vida: evaluamos tu situación en minutos, sin exámenes médicos y sin letras pequeñas, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de los Estados Unidos.
-                        </p>
+                    <div className="px-4 md:px-12 text-center md:text-left">
+                        <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-8 flex items-center justify-center md:justify-start gap-3 tracking-tight">
+                            <Users className="text-gray-300" strokeWidth={1.5} size={28}/> ¿Qué hacemos?
+                        </h2>
+                        <div className="space-y-6 text-gray-500 text-lg md:text-xl leading-relaxed font-light">
+                            <p>
+                                Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong className="text-gray-800 font-medium">especialistas certificados</strong> en gastos finales. 
+                            </p>
+                            <p>
+                                No somos un centro de llamadas frío ni vendemos tus datos al mejor postor. Diseñamos un sistema donde <strong className="text-gray-800 font-medium">tú tienes el control</strong>. Tú decides cómo, cuándo y con quién hablar. Nuestro trabajo es simplificarte la vida: evaluamos tu situación en minutos, sin exámenes médicos y sin letras pequeñas, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de los Estados Unidos.
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Grid de Valores */}
-                    <div className="pt-10">
-                        <h2 className="text-center text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-10">Nuestros Valores Fundamentales</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-5"><Heart size={24}/></div>
-                                <h3 className="font-bold text-gray-900 mb-2">Empatía Pura</h3>
-                                <p className="text-sm text-gray-500">Entendemos que no tratamos con números, sino con familias y legados. Te escuchamos sin juzgar y sin presionar.</p>
+                    {/* Grid de Valores Apple-Style */}
+                    <div className="pt-8">
+                        <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-gray-400 mb-12">Nuestros Valores Fundamentales</h2>
+                        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group">
+                                <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-rose-50 group-hover:text-rose-500 transition-colors"><Heart size={24} strokeWidth={1.5}/></div>
+                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Empatía Pura</h3>
+                                <p className="text-base text-gray-500 font-light leading-relaxed">Entendemos que no tratamos con números, sino con familias y legados. Te escuchamos sin juzgar y sin presionar.</p>
                             </div>
-                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-5"><Search size={24}/></div>
-                                <h3 className="font-bold text-gray-900 mb-2">Transparencia Total</h3>
-                                <p className="text-sm text-gray-500">Las letras pequeñas no existen aquí. Te explicamos qué cubre tu plan, cuánto cuesta y garantizamos que tu cuota nunca subirá.</p>
+                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group">
+                                <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors"><Search size={24} strokeWidth={1.5}/></div>
+                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Transparencia Total</h3>
+                                <p className="text-base text-gray-500 font-light leading-relaxed">Las letras pequeñas no existen aquí. Te explicamos qué cubre tu plan, cuánto cuesta y garantizamos que tu cuota nunca subirá.</p>
                             </div>
-                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-5"><Lock size={24}/></div>
-                                <h3 className="font-bold text-gray-900 mb-2">Seguridad y Privacidad</h3>
-                                <p className="text-sm text-gray-500">Tu confianza es nuestro activo más valioso. Utilizamos encriptación de nivel bancario para que tus datos estén 100% blindados.</p>
+                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group">
+                                <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-50 group-hover:text-green-500 transition-colors"><Lock size={24} strokeWidth={1.5}/></div>
+                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Seguridad y Privacidad</h3>
+                                <p className="text-base text-gray-500 font-light leading-relaxed">Tu confianza es nuestro activo más valioso. Utilizamos encriptación de nivel bancario para que tus datos estén 100% blindados.</p>
                             </div>
-                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-5"><Activity size={24}/></div>
-                                <h3 className="font-bold text-gray-900 mb-2">Tecnología Humana</h3>
-                                <p className="text-sm text-gray-500">Usamos la mejor tecnología para agilizar el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
+                            <div className="p-8 md:p-10 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all group">
+                                <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-50 group-hover:text-purple-500 transition-colors"><Activity size={24} strokeWidth={1.5}/></div>
+                                <h3 className="font-semibold text-gray-900 mb-3 text-lg tracking-tight">Tecnología Humana</h3>
+                                <p className="text-base text-gray-500 font-light leading-relaxed">Usamos la mejor tecnología para agilizar el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Cierre */}
-                    <div className="mt-16 bg-gray-900 text-white p-10 md:p-16 rounded-[2.5rem] text-center shadow-2xl">
-                        <p className="text-xl md:text-2xl font-bold leading-relaxed mb-8">
+                    {/* Cierre Estilo Apple (Plateado/Gris claro) */}
+                    <div className="mt-24 bg-[#F5F5F7] text-gray-900 p-12 md:p-20 rounded-[3rem] text-center border border-gray-200/50">
+                        <p className="text-2xl md:text-3xl lg:text-4xl font-light leading-tight mb-10 text-balance italic text-gray-700">
                             "Creemos que el mejor regalo que le puedes dejar a los tuyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
                         </p>
-                        <p className="text-rose-400 font-medium uppercase tracking-widest text-sm">Nosotros estamos aquí para ayudarte a sellar esa promesa.</p>
+                        <p className="text-gray-400 font-semibold uppercase tracking-[0.2em] text-[10px] md:text-xs">Nosotros estamos aquí para ayudarte a sellar esa promesa.</p>
                     </div>
 
                 </div>
