@@ -4293,7 +4293,7 @@ const App = () => {
 
                 {/* Image Call to Action Final */}
                 <div className="mt-20 md:mt-32 relative rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl mx-auto w-full group">
-                    <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80&w=1200" alt="Familia hispana sonriendo" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"/>
+                    <img src="https://imnufit.com/wp-content/uploads/2026/03/Gemini_Generated_Image_jhi98yjhi98yjhi9-scaled.png" alt="Cuidado y tranquilidad familiar" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"/>
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/80 to-transparent"></div>
                     <div className="relative z-10 p-8 md:p-20 text-left max-w-3xl">
                         <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight">El mejor regalo es la <span className="text-rose-400">tranquilidad</span></h2>
