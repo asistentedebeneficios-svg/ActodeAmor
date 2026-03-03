@@ -3880,6 +3880,95 @@ const TestimonialsSection = () => {
         </div>
     );
 };
+
+// --- NUEVO: PÁGINA "QUIÉNES SOMOS" ---
+const AboutUsPage = ({ onClose }) => {
+    return (
+        <div className="min-h-screen bg-white font-sans animate-fade-in pb-20 relative">
+            {/* Cabecera */}
+            <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <button onClick={onClose} className="p-2.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-2 text-gray-600 text-sm font-bold shadow-sm">
+                        <ArrowLeft size={18}/> <span className="hidden sm:inline">Volver al inicio</span>
+                    </button>
+                    <div className="flex items-center gap-2 opacity-50">
+                        <ShieldCheck size={20} className="text-gray-900" />
+                        <span className="text-gray-900 font-bold tracking-tight text-sm">asistente<span className="font-light text-gray-400">debeneficios</span></span>
+                    </div>
+                </div>
+            </header>
+
+            <div className="pt-32 px-6 max-w-4xl mx-auto">
+                {/* Hero Section */}
+                <div className="text-center mb-20">
+                    <div className="inline-flex items-center justify-center p-4 bg-rose-50 rounded-full text-rose-500 mb-8 border border-rose-100 shadow-inner">
+                        <Heart size={40} fill="currentColor"/>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight text-balance">
+                        Más que asesores,<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-rose-700">somos protectores de tu legado.</span>
+                    </h1>
+                </div>
+
+                {/* Contenido Principal */}
+                <div className="space-y-16 text-lg md:text-xl text-gray-600 leading-relaxed font-medium">
+                    
+                    <div className="bg-gray-50/50 p-8 md:p-12 rounded-[2.5rem] border border-gray-100 text-center">
+                        <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-6">Nuestra Historia</h2>
+                        <p className="text-gray-800 text-balance">
+                            Nacimos de una convicción muy simple, pero profunda: <strong className="text-rose-600 font-extrabold">ninguna familia debería tener que enfrentar el dolor de una pérdida sumándole la angustia de las deudas.</strong> Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Por eso creamos Asistente de Beneficios: para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
+                        </p>
+                    </div>
+
+                    <div className="px-4 md:px-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3"><Users className="text-blue-500"/> ¿Qué hacemos?</h2>
+                        <p className="mb-6">
+                            Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong>especialistas certificados</strong> en gastos finales. 
+                        </p>
+                        <p>
+                            No somos un centro de llamadas frío ni vendemos tus datos al mejor postor. Diseñamos un sistema donde <strong>tú tienes el control</strong>. Tú decides cómo, cuándo y con quién hablar. Nuestro trabajo es simplificarte la vida: evaluamos tu situación en minutos, sin exámenes médicos y sin letras pequeñas, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de los Estados Unidos.
+                        </p>
+                    </div>
+
+                    {/* Grid de Valores */}
+                    <div className="pt-10">
+                        <h2 className="text-center text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-10">Nuestros Valores Fundamentales</h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-5"><Heart size={24}/></div>
+                                <h3 className="font-bold text-gray-900 mb-2">Empatía Pura</h3>
+                                <p className="text-sm text-gray-500">Entendemos que no tratamos con números, sino con familias y legados. Te escuchamos sin juzgar y sin presionar.</p>
+                            </div>
+                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-5"><Search size={24}/></div>
+                                <h3 className="font-bold text-gray-900 mb-2">Transparencia Total</h3>
+                                <p className="text-sm text-gray-500">Las letras pequeñas no existen aquí. Te explicamos qué cubre tu plan, cuánto cuesta y garantizamos que tu cuota nunca subirá.</p>
+                            </div>
+                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-5"><Lock size={24}/></div>
+                                <h3 className="font-bold text-gray-900 mb-2">Seguridad y Privacidad</h3>
+                                <p className="text-sm text-gray-500">Tu confianza es nuestro activo más valioso. Utilizamos encriptación de nivel bancario para que tus datos estén 100% blindados.</p>
+                            </div>
+                            <div className="p-6 md:p-8 bg-white border border-gray-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-5"><Activity size={24}/></div>
+                                <h3 className="font-bold text-gray-900 mb-2">Tecnología Humana</h3>
+                                <p className="text-sm text-gray-500">Usamos la mejor tecnología para agilizar el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cierre */}
+                    <div className="mt-16 bg-gray-900 text-white p-10 md:p-16 rounded-[2.5rem] text-center shadow-2xl">
+                        <p className="text-xl md:text-2xl font-bold leading-relaxed mb-8">
+                            "Creemos que el mejor regalo que le puedes dejar a los tuyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
+                        </p>
+                        <p className="text-rose-400 font-medium uppercase tracking-widest text-sm">Nosotros estamos aquí para ayudarte a sellar esa promesa.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+};
                                                                    
 const App = () => {
     // --- MEMORIA DEL EMBUDO ---
@@ -3897,6 +3986,7 @@ const App = () => {
     const [fillPercent, setFillPercent] = useState(10);
     const [isSuccess, setIsSuccess] = useState(false);
     const [showAgentFormFromHome, setShowAgentFormFromHome] = useState(false);
+    const [showAboutUs, setShowAboutUs] = useState(false);
 
     // --- GUARDAR EN TIEMPO REAL ---
     useEffect(() => {
@@ -4202,17 +4292,30 @@ const App = () => {
         );
     }
 
+// --- PANTALLA: QUIÉNES SOMOS ---
+    if (showAboutUs) {
+        return <AboutUsPage onClose={() => setShowAboutUs(false)} />;
+    }                                                                   
+                                                                   
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
             {/* CABECERA PÁGINA PRINCIPAL */}
             <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-gray-50">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
                             <ShieldCheck size={24} className="text-white" />
                         </div>
                         <span className="text-gray-900 font-bold tracking-tight">asistente<span className="font-light text-gray-400">debeneficios.com</span></span>
                     </div>
+                    
+                    {/* BOTÓN CONÓCENOS (?) */}
+                    <button onClick={() => setShowAboutUs(true)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 transition-colors group">
+                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block group-hover:text-rose-600">Conócenos</span>
+                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm">
+                            <HelpCircle size={20} />
+                        </div>
+                    </button>
                 </div>
             </header>
             
