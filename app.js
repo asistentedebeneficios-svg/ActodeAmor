@@ -2614,6 +2614,26 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
     const urgentLeadsCount = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2).length;
 
+    // --- NUEVO: MOTOR DE AGRUPACIÓN DE OFERTAS PARA EL ADMIN ---
+    const pendingOffersLeads = processedLeads.filter(l => l.status === 'pending_payment' && l.offer);
+    const adminBundles = {};
+    pendingOffersLeads.forEach(l => {
+        const bId = l.offer.bundleId;
+        if (!adminBundles[bId]) {
+            adminBundles[bId] = { 
+                id: bId, 
+                leads: [], 
+                agentId: l.offer.agentId, 
+                price: l.offer.price, 
+                expiresAt: l.offer.expiresAt 
+            };
+        }
+        adminBundles[bId].leads.push(l);
+    });
+    const groupedOffers = Object.values(adminBundles).sort((a, b) => a.expiresAt - b.expiresAt);
+
+    const [viewingBundle, setViewingBundle] = useState(null); // Estado para el desglose de la nota
+
     const getFilteredLeads = () => {
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
@@ -3053,6 +3073,54 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             </div>
                         )}
                     </div>
+                ) : activeTab === 'offers' ? (
+                    <div className="max-w-6xl mx-auto pb-20 animate-fade-in">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {groupedOffers.map(bundle => {
+                                const agentObj = agents.find(a => a.id === bundle.agentId);
+                                if (!agentObj) return null;
+                                return (
+                                    <div key={bundle.id} onClick={() => setViewingBundle(bundle)} className="bg-white p-6 rounded-[2.5rem] shadow-soft border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden">
+                                        {/* Badge de Precio Flotante */}
+                                        <div className="absolute top-6 right-6 bg-green-500 text-white px-4 py-1.5 rounded-full font-black text-sm shadow-lg shadow-green-500/20">
+                                            ${bundle.price}
+                                        </div>
+
+                                        <div className="flex flex-col items-center text-center">
+                                            <div className="w-20 h-20 rounded-full bg-gray-100 border-4 border-gray-50 overflow-hidden mb-4 shadow-sm group-hover:border-rose-100 transition-colors">
+                                                {agentObj.photo ? <img src={agentObj.photo} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">{agentObj.name.charAt(0)}</div>}
+                                            </div>
+                                            
+                                            <h3 className="text-xl font-black text-gray-900 group-hover:text-rose-600 transition-colors">{agentObj.name}</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">{bundle.id}</p>
+
+                                            <div className="w-full space-y-3">
+                                                <div className="flex items-center gap-3 text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                                                    <Phone size={14} className="text-rose-500"/> {agentObj.phone}
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs font-bold text-gray-500 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                                                    <Mail size={14} className="text-rose-500"/> <span className="truncate">{agentObj.email}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 pt-4 border-t border-gray-50 w-full flex justify-between items-center">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bundle.leads.length} Prospectos</span>
+                                                <div className="flex items-center gap-1 text-rose-500 font-mono text-[10px] font-bold animate-pulse">
+                                                    <Clock size={12}/> {Math.floor((bundle.expiresAt - Date.now()) / (1000 * 60 * 60))}h restantes
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {groupedOffers.length === 0 && (
+                                <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-gray-200">
+                                    <DollarSign size={40} className="mx-auto text-gray-200 mb-4"/>
+                                    <p className="text-gray-400 font-bold">No hay notas de cobro pendientes.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 ) : (
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0">
                         <div className="hidden md:grid grid-cols-[50px_2fr_1fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
@@ -3363,6 +3431,81 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     onClose={() => setOfferSetup(null)}
                     onSendOffer={handleSendOffer}
                 />
+            )}
+            {/* MODAL DE DESGLOSE DE OFERTA (PARA EL ADMIN) */}
+            {viewingBundle && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl relative animate-slide-up border border-gray-100">
+                        <button onClick={() => setViewingBundle(null)} className="absolute top-6 right-6 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"><X size={18}/></button>
+                        
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 shadow-inner">
+                                <FileText size={28}/>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-gray-900 leading-tight">Detalle de Cobro</h2>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{viewingBundle.id}</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Agente Responsable</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-white border border-gray-200 overflow-hidden shrink-0">
+                                        {agents.find(a=>a.id === viewingBundle.agentId)?.photo ? <img src={agents.find(a=>a.id === viewingBundle.agentId).photo} className="w-full h-full object-cover"/> : <User className="w-full h-full p-2 text-gray-300"/>}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900 text-sm">{agents.find(a=>a.id === viewingBundle.agentId)?.name}</p>
+                                        <p className="text-[11px] text-gray-500">{agents.find(a=>a.id === viewingBundle.agentId)?.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-3">Contenido del Paquete</span>
+                                <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
+                                    {viewingBundle.leads.map(l => (
+                                        <div key={l.id} className="flex items-center justify-between text-xs bg-white p-2 rounded-lg border border-gray-100">
+                                            <span className="font-bold text-gray-700">{l.name}</span>
+                                            <span className="text-[10px] font-bold text-rose-500 uppercase">{l.state}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-5 bg-black rounded-[2rem] text-white mb-6">
+                            <div>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Monto de la Oferta</p>
+                                <p className="text-3xl font-black">${viewingBundle.price}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Vencimiento</p>
+                                <p className="text-xs font-mono font-bold text-rose-400">{new Date(viewingBundle.expiresAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                setDialog({
+                                    title: 'Cancelar Oferta',
+                                    message: '¿Estás seguro de cancelar esta nota de cobro? Los prospectos volverán a la bandeja principal inmediatamente.',
+                                    type: 'danger',
+                                    onConfirm: () => {
+                                        bulkUpdateLeads(viewingBundle.leads.map(l=>l.id), { status: 'new', offer: null });
+                                        setViewingBundle(null);
+                                        setDialog(null);
+                                    },
+                                    onCancel: () => setDialog(null)
+                                });
+                            }}
+                            className="w-full py-4 rounded-2xl text-red-500 font-bold text-sm bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <X size={18}/> Cancelar y Liberar Leads
+                        </button>
+                    </div>
+                </div>
             )}
 
             {showFullSettings && (
