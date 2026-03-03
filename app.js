@@ -2405,6 +2405,59 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
     );
 };
 
+const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSendOffer }) => {
+    const agent = agents.find(a => a.id === offerSetup.agentId);
+    const leads = offerSetup.leads;
+    const defaultPrice = (generalSettings?.regularPrice || 45) * leads.length;
+    const [price, setPrice] = useState(defaultPrice);
+
+    if (!agent) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl relative animate-slide-up border border-gray-100 text-center">
+                <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"><X size={18}/></button>
+                
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-amber-200">
+                    <DollarSign size={32} strokeWidth={2}/>
+                </div>
+                
+                <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Nota de Cobro</h2>
+                <p className="text-sm text-gray-500 mb-6">Generando oferta directa para <strong>{agent.name}</strong></p>
+
+                <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100 text-left">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Resumen del paquete</span>
+                    <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
+                        {leads.map(l => (
+                            <div key={l.id} className="flex items-center justify-between text-sm">
+                                <span className="font-bold text-gray-800 truncate pr-2">{l.name}</span>
+                                <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-500 shrink-0">{l.state || 'N/A'}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total a Cobrar ($)</label>
+                    <input 
+                        type="number" 
+                        className="w-full text-center text-4xl font-black text-gray-900 bg-white border-b-2 border-dashed border-gray-300 focus:border-rose-500 outline-none pb-2 transition-colors"
+                        value={price}
+                        onChange={e => setPrice(e.target.value)}
+                    />
+                </div>
+
+                <button onClick={() => onSendOffer(price)} className="w-full bg-black text-white py-4 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                    <Check size={18}/> Enviar Oferta al Agente
+                </button>
+                <p className="text-[10px] text-gray-400 mt-4 leading-relaxed">
+                    Esta oferta vencerá en 24h o en la hora de la cita más próxima (lo que ocurra primero).
+                </p>
+            </div>
+        </div>
+    );
+};
+                                                                   
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
@@ -2427,6 +2480,49 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showScheduleSettings, setShowScheduleSettings] = useState(false);
+    
+    // --- NUEVO ESTADO Y MOTOR DE OFERTAS DIRECTAS ---
+    const [offerSetup, setOfferSetup] = useState(null);
+
+    const handleSendOffer = (price) => {
+        if (!offerSetup) return;
+        const bundleId = `OFR-${Date.now().toString().slice(-6)}`;
+        const nowMs = Date.now();
+        
+        // Calcular expiración dinámica: 24h o la hora de la cita más próxima
+        let minHoursUntil = 24;
+        offerSetup.leads.forEach(l => {
+            if (l.hoursUntil !== 999 && l.hoursUntil > 0 && l.hoursUntil < minHoursUntil) {
+                minHoursUntil = l.hoursUntil;
+            }
+        });
+        const expiresAt = nowMs + (minHoursUntil * 60 * 60 * 1000);
+
+        const updateData = {
+            status: 'pending_payment',
+            offer: {
+                agentId: offerSetup.agentId,
+                price: Number(price),
+                expiresAt: expiresAt,
+                bundleId: bundleId
+            }
+        };
+
+        bulkUpdateLeads(offerSetup.leads.map(l => l.id), updateData);
+        
+        setOfferSetup(null);
+        setSelectedLeads([]);
+        setIndividualAgentSelectLeadId(null);
+        setIsBulkAgentSelectOpen(false);
+
+        setDialog({ 
+            title: 'Oferta Enviada', 
+            message: `La propuesta de cobro por $${price} ha sido enviada exitosamente. Los prospectos estarán bloqueados hasta que el agente pague o expire el tiempo.`, 
+            type: 'success', 
+            onConfirm: () => setDialog(null) 
+        });
+    };
+
     // --- MEMORIA PARA NO PERDER LA PANTALLA AL RECARGAR ---
     const [showFullSettings, setShowFullSettings] = useState(() => {
         return sessionStorage.getItem('adminShowSettings') === 'true';
@@ -3125,18 +3221,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                     if (!agentId) {
                         const timeInfo = getAgentLocalDateTime(assignedLead.date, assignedLead.time, assignedLead.state);
                         const isFuture = timeInfo ? timeInfo.localMs > now : true;
-                
-                        // Aplicamos tu lógica: Futuro -> Bandeja (new), Pasado -> Archivados (archived)
                         onUpdateLead(leadId, { 
                             assignedTo: '', 
                             status: isFuture ? 'new' : 'archived' 
                         });
                     } else {
-                        // Si hay un agentId, es una ASIGNACIÓN normal
-                        onUpdateLead(leadId, { assignedTo: agentId, status: 'assigned' }); // Aseguramos que el status sea assigned
-                        
-                        const assignedAgent = agents.find(a => a.id === agentId);
-                        if (assignedLead && assignedAgent) triggerAssignmentWebhook(assignedLead, assignedAgent);
+                        // Si hay un agentId, abrimos la Nota de Cobro en lugar de asignar directo
+                        setOfferSetup({ agentId: agentId, leads: [assignedLead] });
+                        setViewingLead(null); // Cerramos la ficha para que se vea el modal de cobro limpio
                     }
                 }}
                 />
@@ -3167,12 +3259,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         const assignableIds = assignableLeads.map(l => l.id);
 
                         const executeAssignment = () => {
-                            bulkUpdateLeads(assignableIds, { assignedTo: agentId });
-                            if (selectedAgent) {
-                                assignableLeads.forEach(leadObj => triggerAssignmentWebhook(leadObj, selectedAgent));
-                            }
-                            setSelectedLeads([]);
-                            setIsBulkAgentSelectOpen(false);
+                            setOfferSetup({ agentId: agentId, leads: assignableLeads });
                             setDialog(null);
                         };
                         
@@ -3180,15 +3267,15 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             const omitidos = selectedLeads.length - assignableIds.length;
                             setDialog({
                                 title: 'Asignación Parcial',
-                                message: `El agente ${selectedAgent.name} solo puede tomar ${assignableIds.length} de los ${selectedLeads.length} prospectos seleccionados (por reglas de licencia o agenda).\n\n¿Deseas asignarle estos ${assignableIds.length} y dejar los otros ${omitidos} en la bandeja?`,
+                                message: `El agente ${selectedAgent.name} solo puede tomar ${assignableIds.length} de los ${selectedLeads.length} prospectos seleccionados.\n\n¿Deseas generar la nota de cobro por estos ${assignableIds.length} y dejar los otros ${omitidos} en la bandeja?`,
                                 type: 'warning',
                                 onConfirm: executeAssignment,
                                 onCancel: () => setDialog(null)
                             });
                         } else {
                             setDialog({
-                                title: 'Confirmar Asignación',
-                                message: `¿Estás seguro de asignar los ${assignableIds.length} prospectos a ${selectedAgent.name}?`,
+                                title: 'Generar Oferta',
+                                message: `¿Estás seguro de crear una nota de cobro para ${selectedAgent.name} con estos ${assignableIds.length} prospectos?`,
                                 type: 'info',
                                 onConfirm: executeAssignment,
                                 onCancel: () => setDialog(null)
@@ -3224,18 +3311,27 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         }
 
                         setDialog({
-                            title: 'Asignar Agente',
-                            message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`,
+                            title: 'Generar Oferta',
+                            message: `¿Deseas preparar una nota de cobro a ${selectedAgent.name} por este prospecto?`,
                             type: 'info',
                             onConfirm: () => {
-                                onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
-                                if (leadToAssign && selectedAgent) triggerAssignmentWebhook(leadToAssign, selectedAgent);
-                                setIndividualAgentSelectLeadId(null); 
+                                setOfferSetup({ agentId: agentId, leads: [leadToAssign] });
                                 setDialog(null);
                             },
                             onCancel: () => setDialog(null)
                         });
                     }} 
+                />
+            )}
+
+            {/* RENDERIZAMOS EL MODAL DE LA NOTA DE COBRO SI HAY OFERTA EN CURSO */}
+            {offerSetup && (
+                <OfferPreviewModal
+                    offerSetup={offerSetup}
+                    agents={agents}
+                    generalSettings={generalSettings}
+                    onClose={() => setOfferSetup(null)}
+                    onSendOffer={handleSendOffer}
                 />
             )}
 
