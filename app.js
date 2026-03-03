@@ -3352,6 +3352,31 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         return () => clearInterval(timer);
     }, []);
 
+    // --- NUEVO: DETECTOR DE REGRESO DE STRIPE ---
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('success') === 'true') {
+            setDialog({ 
+                title: '¡Adquisición Exitosa! 🎉', 
+                message: 'Tu pago se ha procesado de manera segura y correcta. Los prospectos ya están en tu cartera listos para que los contactes.', 
+                type: 'success', 
+                onConfirm: () => setDialog(null) 
+            });
+            window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+        
+        if (urlParams.get('canceled') === 'true') {
+            setDialog({ 
+                title: 'Compra Cancelada', 
+                message: 'Has cancelado el proceso de pago. No se hizo ningún cargo a tu tarjeta y los prospectos siguen en la tienda.', 
+                type: 'warning', 
+                onConfirm: () => setDialog(null) 
+            });
+            window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+        }
+    }, []);
+
     // --- 1. ENRUTADOR WEB AVANZADO (Memoria de Pestaña y Ficha) ---
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
@@ -3926,15 +3951,31 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
             {/* BARRA FLOTANTE DE PAGO OPTIMIZADA (Ahora con Precio Dinámico) */}
             {activeTab === 'marketplace' && cart.length > 0 && (
                 <div className="fixed bottom-6 left-0 right-0 px-4 md:px-0 flex justify-center z-50 animate-slide-up pointer-events-none">
-                    <div className="w-full md:w-auto max-w-[400px] bg-black/95 backdrop-blur-md text-white p-1.5 md:p-2 rounded-2xl md:rounded-full shadow-2xl flex items-center justify-between gap-2 border border-white/10 pointer-events-auto">
-                        <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4">
-                            <span className="text-[11px] md:text-sm font-medium text-gray-200 whitespace-nowrap"><span className="font-bold text-white">{cart.length}</span> leads</span>
-                            <div className="w-px h-4 bg-white/20"></div>
-                            <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
-                        </div>
-                        <button onClick={handleCheckout} disabled={isCheckingOut} className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 disabled:opacity-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                            {isCheckingOut ? 'Conectando seguro...' : `Pagar $${cartTotal}`} <ChevronRight size={14}/>
-                        </button>
+                    <div className="w-full md:w-auto max-w-[400px] bg-black/95 backdrop-blur-md text-white p-1.5 md:p-2 rounded-2xl md:rounded-full shadow-2xl flex items-center justify-between gap-2 border border-white/10 pointer-events-auto overflow-hidden transition-all">
+                        {!isCheckingOut ? (
+                            <>
+                                <div className="flex items-center gap-2 md:gap-4 pl-3 md:pl-4">
+                                    <span className="text-[11px] md:text-sm font-medium text-gray-200 whitespace-nowrap"><span className="font-bold text-white">{cart.length}</span> leads</span>
+                                    <div className="w-px h-4 bg-white/20"></div>
+                                    <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
+                                </div>
+                                <button onClick={handleCheckout} className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-lg">
+                                    Pagar ${cartTotal} <ChevronRight size={14}/>
+                                </button>
+                            </>
+                        ) : (
+                            <div className="flex items-center justify-between w-full px-4 py-1.5 gap-4 animate-fade-in">
+                                <div className="flex flex-col w-full">
+                                    <span className="text-[11px] md:text-sm font-bold text-white flex items-center gap-2">
+                                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 
+                                        Redirigiendo a Stripe...
+                                    </span>
+                                    <span className="text-[9px] md:text-[10px] text-rose-400 font-medium mt-1">
+                                        ⚠️ Termina tu compra pronto. Te quedan {Math.floor(timeLeft / 60)} min.
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
