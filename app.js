@@ -2868,7 +2868,12 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                             </>
                         )}
                         {tab === 'assigned' && 'Asignados'}
-                        {tab === 'offers' && 'Ofertas'}
+                        {tab === 'offers' && (
+                            <>
+                                Ofertas
+                                {groupedOffers.length > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{groupedOffers.length}</span>}
+                            </>
+                        )}
                         {tab === 'archived' && 'Archivados'}
                         {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
                         {tab === 'agents' && (
@@ -3436,7 +3441,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             )}
             {/* MODAL DE DESGLOSE DE OFERTA (PARA EL ADMIN) */}
             {viewingBundle && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 animate-fade-in">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[90000] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl relative animate-slide-up border border-gray-100">
                         <button onClick={() => setViewingBundle(null)} className="absolute top-6 right-6 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"><X size={18}/></button>
                         
@@ -3459,7 +3464,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                     </div>
                                     <div>
                                         <p className="font-bold text-gray-900 text-sm">{agents.find(a=>a.id === viewingBundle.agentId)?.name}</p>
-                                        <p className="text-[11px] text-gray-500">{agents.find(a=>a.id === viewingBundle.agentId)?.email}</p>
+                                        <div className="flex flex-col gap-1 mt-1">
+                                            <a href={`tel:${agents.find(a=>a.id === viewingBundle.agentId)?.phone}`} className="text-[11px] text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 font-medium"><Phone size={10}/> {agents.find(a=>a.id === viewingBundle.agentId)?.phone}</a>
+                                            <a href={`mailto:${agents.find(a=>a.id === viewingBundle.agentId)?.email}`} className="text-[11px] text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 font-medium"><Mail size={10}/> {agents.find(a=>a.id === viewingBundle.agentId)?.email}</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -3899,8 +3907,16 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         
         const validCart = cart.filter(leadId => {
             const lead = processedLeads.find(l => l.id === leadId);
-            // Si el lead ya no está disponible, se vendió, o no existe
-            if (!lead || lead.status !== 'marketplace' || lead.assignedTo) {
+            // Si el lead no existe o ya fue asignado
+            if (!lead || lead.assignedTo) {
+                cartChanged = true; return false;
+            }
+            // Si es una nota de cobro directa, la dejamos pasar sin aplicar el filtro antirrobo del marketplace
+            if (lead.status === 'pending_payment') {
+                return true;
+            }
+            // Si no es nota de cobro, TIENE que ser del marketplace
+            if (lead.status !== 'marketplace') {
                 cartChanged = true; return false;
             }
             // Si otro agente lo bloqueó milisegundos antes
@@ -4030,14 +4046,14 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                                     </>
                                 )}
                                 {tab === 'ofertas' && (
-                                    <div className="flex items-center gap-1.5">
+                                    <>
                                         Ofertas
                                         {offerBundles.length > 0 && (
-                                            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse">
+                                            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm leading-none min-w-[20px] text-center animate-pulse">
                                                 {offerBundles.length}
                                             </span>
                                         )}
-                                    </div>
+                                    </>
                                 )}
                         {tab === 'clientes' && 'Mis Clientes'}
                         {tab === 'agenda' && 'Agenda'}
