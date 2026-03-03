@@ -2566,27 +2566,43 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
         }).catch(e => console.error("Error Webhook Correo:", e));
     };
 
-    const handleBulkAction = async (action, value) => {
-        if(!window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Deseas aplicar esta acción a ${selectedLeads.length} prospectos?`)) return;
-        if(action === 'delete') await bulkDeleteLeads(selectedLeads);
-        else if(action === 'archive') await bulkUpdateLeads(selectedLeads, { status: 'archived' });
-        else if(action === 'restore') await bulkUpdateLeads(selectedLeads, { status: 'new' });
-        else if(action === 'marketplace') await bulkUpdateLeads(selectedLeads, { status: 'marketplace' });
-        else if(action === 'assign') {
-            await bulkUpdateLeads(selectedLeads, { assignedTo: value });
-            const assignedAgent = agents.find(a => a.id === value);
-            if (assignedAgent) {
-                selectedLeads.forEach(leadId => {
-                    const assignedLead = processedLeads.find(l => l.id === leadId);
-                    if (assignedLead) triggerAssignmentWebhook(assignedLead, assignedAgent);
-                });
-            }
-        }
-        setSelectedLeads([]);
+    const handleBulkAction = (action) => {
+        let title = 'Acción en Lote';
+        let msg = `¿Deseas aplicar esta acción a los ${selectedLeads.length} prospectos seleccionados?`;
+        let type = 'warning';
+
+        if (action === 'delete') { title = 'Eliminar Prospectos'; msg = `¿Estás seguro de eliminar permanentemente ${selectedLeads.length} prospectos?`; type = 'danger'; }
+        if (action === 'archive') { title = 'Archivar Prospectos'; msg = `¿Mover ${selectedLeads.length} prospectos al archivo?`; }
+        if (action === 'restore') { title = 'Restaurar Prospectos'; msg = `¿Devolver ${selectedLeads.length} prospectos a la bandeja principal?`; }
+        if (action === 'marketplace') { title = 'Enviar a Tienda'; msg = `¿Enviar ${selectedLeads.length} prospectos al Marketplace para su venta?`; type = 'info'; }
+
+        setDialog({
+            title: title,
+            message: msg,
+            type: type,
+            onConfirm: async () => {
+                setDialog(null);
+                if(action === 'delete') await bulkDeleteLeads(selectedLeads);
+                else if(action === 'archive') await bulkUpdateLeads(selectedLeads, { status: 'archived' });
+                else if(action === 'restore') await bulkUpdateLeads(selectedLeads, { status: 'new' });
+                else if(action === 'marketplace') await bulkUpdateLeads(selectedLeads, { status: 'marketplace' });
+                setSelectedLeads([]);
+            },
+            onCancel: () => setDialog(null)
+        });
     };
 
-    const handleDeleteLead = (e, id) => { e.stopPropagation(); if (window.confirm('⚠️ ADVERTENCIA\n\n¿Eliminar prospecto permanentemente?')) onDeleteLead(id); };
-    
+    const handleDeleteLead = (e, id) => { 
+        e.stopPropagation(); 
+        setDialog({
+            title: 'Eliminar Prospecto',
+            message: '¿Estás seguro de eliminar este prospecto permanentemente? Esta acción no se puede deshacer.',
+            type: 'danger',
+            onConfirm: () => { onDeleteLead(id); setDialog(null); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
     const handleSaveAgent = async (agentData) => {
         await onSaveAgent(agentData);
         setIsAgentModalOpen(false);
@@ -3133,24 +3149,35 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
                         const selectedAgent = agents.find(a => a.id === agentId);
                         const assignableIds = assignableLeads.map(l => l.id);
+
+                        const executeAssignment = () => {
+                            bulkUpdateLeads(assignableIds, { assignedTo: agentId });
+                            if (selectedAgent) {
+                                assignableLeads.forEach(leadObj => triggerAssignmentWebhook(leadObj, selectedAgent));
+                            }
+                            setSelectedLeads([]);
+                            setIsBulkAgentSelectOpen(false);
+                            setDialog(null);
+                        };
                         
                         if (assignableIds.length < selectedLeads.length) {
                             const omitidos = selectedLeads.length - assignableIds.length;
-                            if (!window.confirm(`⚠️ ASIGNACIÓN PARCIAL\n\nEl agente ${selectedAgent.name} solo puede tomar ${assignableIds.length} de los ${selectedLeads.length} prospectos seleccionados (por reglas de licencia o agenda).\n\n¿Deseas asignarle estos ${assignableIds.length} y dejar los otros ${omitidos} en la bandeja?`)) {
-                                return;
-                            }
+                            setDialog({
+                                title: 'Asignación Parcial',
+                                message: `El agente ${selectedAgent.name} solo puede tomar ${assignableIds.length} de los ${selectedLeads.length} prospectos seleccionados (por reglas de licencia o agenda).\n\n¿Deseas asignarle estos ${assignableIds.length} y dejar los otros ${omitidos} en la bandeja?`,
+                                type: 'warning',
+                                onConfirm: executeAssignment,
+                                onCancel: () => setDialog(null)
+                            });
                         } else {
-                            if (!window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar los ${assignableIds.length} prospectos a ${selectedAgent.name}?`)) {
-                                return;
-                            }
+                            setDialog({
+                                title: 'Confirmar Asignación',
+                                message: `¿Estás seguro de asignar los ${assignableIds.length} prospectos a ${selectedAgent.name}?`,
+                                type: 'info',
+                                onConfirm: executeAssignment,
+                                onCancel: () => setDialog(null)
+                            });
                         }
-
-                        bulkUpdateLeads(assignableIds, { assignedTo: agentId });
-                        if (selectedAgent) {
-                            assignableLeads.forEach(leadObj => triggerAssignmentWebhook(leadObj, selectedAgent));
-                        }
-                        setSelectedLeads([]);
-                        setIsBulkAgentSelectOpen(false);
                     }} 
                 />
             )}
@@ -3166,18 +3193,32 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                         const selectedAgent = agents.find(a => a.id === agentId);
                         
                         if (!agentId) {
-                            if (window.confirm('⚠️ CONFIRMACIÓN\n\n¿Estás seguro de quitar la asignación actual?')) {
-                                onUpdateLead(individualAgentSelectLeadId, { assignedTo: '' }); 
-                                setIndividualAgentSelectLeadId(null); 
-                            }
+                            setDialog({
+                                title: 'Quitar Asignación',
+                                message: '¿Estás seguro de quitar la asignación actual?',
+                                type: 'warning',
+                                onConfirm: () => {
+                                    onUpdateLead(individualAgentSelectLeadId, { assignedTo: '' }); 
+                                    setIndividualAgentSelectLeadId(null); 
+                                    setDialog(null);
+                                },
+                                onCancel: () => setDialog(null)
+                            });
                             return;
                         }
 
-                        if (window.confirm(`⚠️ CONFIRMACIÓN\n\n¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`)) {
-                            onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
-                            if (leadToAssign && selectedAgent) triggerAssignmentWebhook(leadToAssign, selectedAgent);
-                            setIndividualAgentSelectLeadId(null); 
-                        }
+                        setDialog({
+                            title: 'Asignar Agente',
+                            message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`,
+                            type: 'info',
+                            onConfirm: () => {
+                                onUpdateLead(individualAgentSelectLeadId, { assignedTo: agentId }); 
+                                if (leadToAssign && selectedAgent) triggerAssignmentWebhook(leadToAssign, selectedAgent);
+                                setIndividualAgentSelectLeadId(null); 
+                                setDialog(null);
+                            },
+                            onCancel: () => setDialog(null)
+                        });
                     }} 
                 />
             )}
@@ -3302,6 +3343,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
     // Si está inactivo, le borramos el Marketplace de sus opciones
     const TABS = agent.status === 'inactive' ? ['clientes', 'agenda', 'historial'] : ['marketplace', 'clientes', 'agenda', 'historial'];
     const [viewingLead, setViewingLead] = useState(null);
+    const [dialog, setDialog] = useState(null);
     
     // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
     const [timeTick, setTimeTick] = useState(0);
@@ -3485,8 +3527,7 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
         } else if (timeLeft === 0) {
             setCart([]); 
             setTimeLeft(600); 
-            // Opcional: Reemplazar el alert si quieres, pero por ahora lo dejamos por seguridad.
-            alert("⏳ El tiempo para reservar ha expirado. Las citas han sido liberadas.");
+            setDialog({ title: 'Tiempo Expirado', message: 'El tiempo para reservar ha expirado. Las citas han sido liberadas para el resto del equipo.', type: 'warning', onConfirm: () => setDialog(null) });
         } else if (cart.length === 0) {
             setTimeLeft(600);
         }
@@ -3537,18 +3578,19 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
             if (result.url) {
                 window.location.href = result.url;
             } else {
-                alert("Error al preparar la pasarela de pagos.");
+                setDialog({ title: 'Error de Conexión', message: 'No pudimos conectar con la pasarela de pagos. Por favor, intenta de nuevo.', type: 'danger', onConfirm: () => setDialog(null) });
                 setIsCheckingOut(false);
             }
         } catch (error) {
             console.error("Error Stripe:", error);
-            alert("Error de conexión. Intenta de nuevo.");
+            setDialog({ title: 'Error de Red', message: 'Hubo un fallo de comunicación. Verifica tu conexión e intenta de nuevo.', type: 'danger', onConfirm: () => setDialog(null) });
             setIsCheckingOut(false);
         }
     };
 
     return (
         <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24 overflow-x-hidden">
+            <CustomDialog isOpen={!!dialog} {...dialog} />        
             {/* Header Minimalista */}
             <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
                 <div className="flex items-center gap-3">
