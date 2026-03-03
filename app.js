@@ -2234,67 +2234,6 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
     );
 };
 
-const PriceSettingsModal = ({ generalSettings, onSave, onClose }) => {
-    const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
-    const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        await onSave({
-            ...generalSettings,
-            regularPrice: Number(regPrice),
-            offerPrice: Number(offPrice)
-        });
-        setIsSaving(false);
-        onClose();
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[80] p-4 animate-fade-in">
-            <div className="glass-card bg-white/95 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
-                
-                <div className="mb-6 pr-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="bg-green-50 text-green-600 p-2.5 rounded-xl border border-green-100"><DollarSign size={20} strokeWidth={2.5}/></div>
-                        <h3 className="text-xl font-bold text-gray-900 leading-tight">Precios de Citas</h3>
-                    </div>
-                    <p className="text-sm text-gray-500">Ajusta los valores para el Marketplace.</p>
-                </div>
-
-                <div className="space-y-5 animate-slide-up">
-                    <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Precio Regular ($)</label>
-                        <input 
-                            type="number" 
-                            value={regPrice} 
-                            onChange={e => setRegPrice(e.target.value)}
-                            className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-green-400 focus:ring-4 focus:ring-green-500/10 rounded-xl outline-none transition-all text-sm font-bold text-gray-900 shadow-inner"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Precio Oferta / Urgente ($)</label>
-                        <input 
-                            type="number" 
-                            value={offPrice} 
-                            onChange={e => setOffPrice(e.target.value)}
-                            className="w-full p-3.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-500/10 rounded-xl outline-none transition-all text-sm font-bold text-red-600 shadow-inner"
-                        />
-                    </div>
-
-                    <div className="pt-4 flex gap-3 border-t border-gray-100">
-                        <button onClick={onClose} className="flex-1 py-3.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">Cancelar</button>
-                        <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3.5 bg-black text-white rounded-xl font-bold text-sm hover:scale-[1.02] shadow-xl transition-transform flex items-center justify-center gap-2">
-                            {isSaving ? 'Guardando...' : <><Save size={16}/> Guardar</>}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
