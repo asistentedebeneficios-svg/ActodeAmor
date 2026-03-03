@@ -1064,11 +1064,10 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         <div className="flex flex-col gap-4">
                             {/* AQUÍ ESTÁ EL CAMBIO: min={minDate} restringe para que solo se pueda desde mañana */}
                             <div>
-                                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 mb-1.5 block tracking-wider">Seleccione el Día</label>
                                 <div className="relative">
                                     {!date && (
                                         <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
-                                            <span className="text-gray-400 text-sm md:text-base font-medium">Elija una fecha...</span>
+                                            <span className="text-gray-400 text-sm md:text-base font-medium">Seleccione un día...</span>
                                         </div>
                                     )}
                                     <input 
