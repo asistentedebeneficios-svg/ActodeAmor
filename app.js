@@ -3952,7 +3952,7 @@ const AboutUsPage = ({ onClose }) => {
                         <div className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-2xl flex items-center justify-center mb-8 border border-white/20"><Settings size={28}/></div>
                         <h3 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight text-white">Tú tienes el control absoluto.</h3>
                         <p className="text-gray-400 text-lg leading-relaxed font-medium">
-                            No vendemos tus datos. No hacemos llamadas frías. Tú decides cómo, cuándo y con quién hablar. Sin letras pequeñas, sin sorpresas.
+                            No hacemos llamadas frías. Tú decides cómo, cuándo y con quién hablar. Sin letras pequeñas, sin sorpresas.
                         </p>
                     </div>
                 </div>
