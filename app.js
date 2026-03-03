@@ -4227,9 +4227,9 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
             {/* VISTA NUEVA: OFERTAS DIRECTAS */}
             {activeTab === 'ofertas' && (
                 <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto animate-fade-in">
-                    <div className="mb-8">
-                        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Ofertas Exclusivas</h1>
-                        <p className="text-gray-500 text-sm mt-1">Paquetes seleccionados por el administrador para ti.</p>
+                    <div className="mb-4 md:mb-6 px-1">
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Ofertas Exclusivas</h1>
+                        <p className="text-gray-500 text-xs md:text-sm mt-1">Paquetes seleccionados por el administrador para ti.</p>
                     </div>
 
                     {offerBundles.length === 0 ? (
