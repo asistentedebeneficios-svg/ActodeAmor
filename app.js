@@ -4050,8 +4050,27 @@ const App = () => {
         return <PortalLoginScreen onLogin={handleLogin} onOpenRegister={() => setShowRegister(true)} />;
     }
     
-    if (showAdmin && user && !user.isAnonymous) {
+    // --- ESCUDO ANTI-PESTAÑEO ---
+    if (showAdmin) {
         
+        // 1. Si Firebase aún no responde, bloqueamos la pantalla (Evita que se vea la Home)
+        if (!user) {
+            return (
+                <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans animate-fade-in">
+                    <div className="w-10 h-10 border-4 border-gray-200 border-t-black rounded-full animate-spin mb-4 shadow-sm"></div>
+                    <p className="text-sm font-semibold text-gray-500 animate-pulse tracking-wide">Restaurando sesión segura...</p>
+                </div>
+            );
+        }
+
+        // 2. Si el tiempo expiró y el servidor te desconectó, te devolvemos al login sin errores
+        if (user.isAnonymous) {
+            localStorage.removeItem('isAdminLoggedIn');
+            window.location.reload();
+            return null;
+        }
+
+        // 3. Ya sabemos que eres tú, esperamos la base de datos
         if (isVerifying) {
             return (
                 <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center font-sans animate-fade-in">
