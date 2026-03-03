@@ -2486,6 +2486,36 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
     const handleSendOffer = (price) => {
         if (!offerSetup) return;
+        const numericPrice = Number(price);
+
+        // 🎁 REGLA DEL DUEÑO: SI EL PRECIO ES $0, SE ASIGNA DIRECTO (REGALO)
+        if (numericPrice <= 0) {
+            const assignableIds = offerSetup.leads.map(l => l.id);
+            const selectedAgent = agents.find(a => a.id === offerSetup.agentId);
+
+            // Asignación directa y eliminación de cualquier bloqueo de oferta previa
+            bulkUpdateLeads(assignableIds, { assignedTo: offerSetup.agentId, status: 'assigned', offer: null });
+            
+            // Disparar Webhooks (Correo al agente)
+            if (selectedAgent) {
+                offerSetup.leads.forEach(leadObj => triggerAssignmentWebhook(leadObj, selectedAgent));
+            }
+
+            setOfferSetup(null);
+            setSelectedLeads([]);
+            setIndividualAgentSelectLeadId(null);
+            setIsBulkAgentSelectOpen(false);
+
+            setDialog({ 
+                title: '🎁 Asignación Gratuita', 
+                message: `Has asignado ${assignableIds.length} prospectos a ${selectedAgent?.name || 'el agente'} sin costo. Ya están disponibles en su cartera.`, 
+                type: 'success', 
+                onConfirm: () => setDialog(null) 
+            });
+            return; // Detenemos la función aquí
+        }
+
+        // 💳 LÓGICA NORMAL: NOTA DE COBRO (> $0)
         const bundleId = `OFR-${Date.now().toString().slice(-6)}`;
         const nowMs = Date.now();
         
@@ -2502,7 +2532,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             status: 'pending_payment',
             offer: {
                 agentId: offerSetup.agentId,
-                price: Number(price),
+                price: numericPrice,
                 expiresAt: expiresAt,
                 bundleId: bundleId
             }
@@ -2517,7 +2547,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
 
         setDialog({ 
             title: 'Oferta Enviada', 
-            message: `La propuesta de cobro por $${price} ha sido enviada exitosamente. Los prospectos estarán bloqueados hasta que el agente pague o expire el tiempo.`, 
+            message: `La propuesta de cobro por $${numericPrice} ha sido enviada exitosamente. Los prospectos estarán bloqueados hasta que el agente pague o expire el tiempo.`, 
             type: 'success', 
             onConfirm: () => setDialog(null) 
         });
@@ -3453,14 +3483,14 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
     const regularPrice = generalSettings?.regularPrice ?? 45;
     const offerPrice = generalSettings?.offerPrice ?? 35;
     // Si está inactivo, le borramos el Marketplace de sus opciones
-    const TABS = agent.status === 'inactive' ? ['clientes', 'agenda', 'historial'] : ['marketplace', 'clientes', 'agenda', 'historial'];
+    const TABS = agent.status === 'inactive' ? ['clientes', 'agenda', 'historial'] : ['marketplace', 'ofertas', 'clientes', 'agenda', 'historial'];
     const [viewingLead, setViewingLead] = useState(null);
     const [dialog, setDialog] = useState(null);
     
-    // --- MÁGIA: RELOJ INTERNO SILENCIOSO (Actualiza la pantalla cada minuto) ---
+    // --- MÁGIA: RELOJ INTERNO (Actualiza la pantalla cada SEGUNDO para los Countdowns) ---
     const [timeTick, setTimeTick] = useState(0);
     useEffect(() => {
-        const timer = setInterval(() => setTimeTick(t => t + 1), 60000); // 60000ms = 1 minuto
+        const timer = setInterval(() => setTimeTick(t => t + 1), 1000); 
         return () => clearInterval(timer);
     }, []);
 
@@ -3587,6 +3617,33 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
     // --- 4. ORDENAMOS Y FILTRAMOS (Sincronizado con Admin) ---
     const myLeads = processedLeads.filter(l => l.assignedTo === agent.id);
+
+    // --- NUEVO: MOTOR DE AGRUPACIÓN DE OFERTAS ---
+    const myDirectOffers = processedLeads.filter(l => l.status === 'pending_payment' && l.offer?.agentId === agent.id);
+    const bundles = {};
+    myDirectOffers.forEach(l => {
+        const bId = l.offer.bundleId;
+        if (!bundles[bId]) {
+            bundles[bId] = { 
+                id: bId, 
+                leads: [], 
+                expiresAt: l.offer.expiresAt, 
+                price: l.offer.price 
+            };
+        }
+        bundles[bId].leads.push(l);
+    });
+    const offerBundles = Object.values(bundles).sort((a, b) => a.expiresAt - b.expiresAt);
+
+    // Función para el Countdown Visual de cada tarjeta
+    const getRemainingTime = (expiresAt) => {
+        const diff = expiresAt - Date.now();
+        if (diff <= 0) return "Expirado";
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        return `${h}h ${m}m ${s}s`;
+    };
     
     // Citas activas: La más próxima va arriba
     const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.hoursUntil - b.hoursUntil);
@@ -3818,17 +3875,25 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                 {['marketplace', 'clientes', 'agenda'].map(tab => (
                     <button key={tab} onClick={() => {setActiveTab(tab); setViewingLead(null);}} className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === tab ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
                         {tab === 'marketplace' && (
-                            <>
-                                Marketplace
-                                {availableLeads.length > 0 ? (
-                                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm leading-none min-w-[20px] text-center animate-pulse-once">
-                                        {availableLeads.length}
-                                    </span>
-                                ) : (
-                                    <span>(0)</span>
+                                    <>
+                                        Tienda
+                                        {availableLeads.length > 0 && (
+                                            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm leading-none min-w-[20px] text-center animate-pulse-once">
+                                                {availableLeads.length}
+                                            </span>
+                                        )}
+                                    </>
                                 )}
-                            </>
-                        )}
+                                {tab === 'ofertas' && (
+                                    <div className="flex items-center gap-1.5">
+                                        Ofertas
+                                        {offerBundles.length > 0 && (
+                                            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse">
+                                                {offerBundles.length}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                         {tab === 'clientes' && 'Mis Clientes'}
                         {tab === 'agenda' && 'Agenda'}
                     </button>
@@ -3988,6 +4053,80 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                                     </div>
                                 );
                             })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* VISTA NUEVA: OFERTAS DIRECTAS */}
+            {activeTab === 'ofertas' && (
+                <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full overflow-y-auto animate-fade-in">
+                    <div className="mb-8">
+                        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Ofertas Exclusivas</h1>
+                        <p className="text-gray-500 text-sm mt-1">Paquetes seleccionados por el administrador para ti.</p>
+                    </div>
+
+                    {offerBundles.length === 0 ? (
+                        <div className="text-center p-16 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+                            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100 shadow-inner">
+                                <DollarSign size={28} className="text-gray-300"/>
+                            </div>
+                            <p className="text-gray-500 font-bold">No tienes ofertas pendientes</p>
+                            <p className="text-xs text-gray-400 mt-1">Cuando el admin te asigne prospectos directamente, aparecerán aquí.</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-6">
+                            {offerBundles.map(bundle => (
+                                <div key={bundle.id} className="bg-white rounded-[2rem] p-6 shadow-soft border border-gray-100 relative overflow-hidden group hover:shadow-xl transition-all border-l-4 border-l-amber-400">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
+                                                <BadgeCheck size={20}/>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-gray-900 leading-tight">Paquete Directo</h4>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bundle.id}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest block mb-1">Vence en:</span>
+                                            <div className="bg-rose-50 px-3 py-1 rounded-full text-rose-600 font-mono font-black text-xs border border-rose-100 animate-pulse">
+                                                {getRemainingTime(bundle.expiresAt)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mb-8">
+                                        {bundle.leads.map(l => (
+                                            <div key={l.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                                                    <span className="text-sm font-bold text-gray-700">{l.name}</span>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase">{l.state}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total a pagar</p>
+                                            <p className="text-3xl font-black text-gray-900">${bundle.price}</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                // Preparamos los items para Stripe basados en este bundle
+                                                const items = [{ name: `Paquete Exclusivo ${bundle.id}`, price: bundle.price }];
+                                                setCart(bundle.leads.map(l => l.id)); // Metemos los leads del bundle al carrito internamente
+                                                handleCheckout(items, bundle.leads.map(l => l.id)); // Disparamos checkout
+                                            }}
+                                            className="bg-black text-white px-8 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-transform shadow-lg flex items-center gap-2"
+                                        >
+                                            Aceptar y Pagar <ChevronRight size={16}/>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
