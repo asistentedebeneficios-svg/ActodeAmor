@@ -607,6 +607,11 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                                                 <option value="">Sel. Estado</option>
                                                 {availableStates.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
                                             </select>
+                                            {availableStates.length < 50 && generalSettings?.waitlistUrl && (
+                                                <a href={generalSettings.waitlistUrl} target="_blank" rel="noopener noreferrer" className="block mt-1.5 text-[9px] text-blue-500 hover:text-blue-600 underline">
+                                                    ¿Tu estado no aparece? Anótate aquí.
+                                                </a>
+                                            )}
                                         </div>
                                         <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
                                         <div>
@@ -1039,7 +1044,12 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                     </select>
                                     {availableStates.length < 50 && (
                                         <p className="text-[10px] text-gray-400 mt-2 ml-1 leading-tight font-medium">
-                                            Si su estado no aparece, es porque por el momento no contamos con cobertura en esa área.
+                                            Si su estado no aparece, es porque por el momento no contamos con cobertura en esa área.{' '}
+                                            {generalSettings?.waitlistUrl && (
+                                                <a href={generalSettings.waitlistUrl} target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600 underline underline-offset-2 transition-colors">
+                                                    Únase a nuestra lista de espera aquí.
+                                                </a>
+                                            )}
                                         </p>
                                     )}
                                 </div>
@@ -2171,7 +2181,7 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
     const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
     // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
     const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
-    
+    const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -2202,7 +2212,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
             acceptingAgents, 
             regularPrice: Number(regPrice), 
             offerPrice: Number(offPrice),
-            activeStates: activeStates
+            activeStates: activeStates,
+            waitlistUrl: waitlistUrl
         });
         
         setIsSaving(false);
@@ -2359,9 +2370,38 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-8">
+                            <div className="grid md:grid-cols-3 gap-6">
                                 <div>
                                     <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Nuevo Lead (Telegram)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="https://hook.make.com/..."
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
+                                        value={localHooks.telegram}
+                                        onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Asignación (Correo)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="https://hook.make.com/..."
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
+                                        value={localHooks.assignment}
+                                        onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Link Lista de Espera</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ej: https://airtable.com/..."
+                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
+                                        value={waitlistUrl}
+                                        onChange={e => setWaitlistUrl(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                                     <input 
                                         type="text" 
                                         placeholder="https://hook.make.com/..."
