@@ -1904,7 +1904,7 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
     );
 };
 
-const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
+const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState('month'); 
 
@@ -2152,10 +2152,6 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
                         <button onClick={today} className="p-2 px-4 text-xs font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors border-r border-gray-200">Hoy</button>
                         <button onClick={next} className="p-2 px-3 hover:bg-gray-50 text-gray-600 transition-colors"><ArrowRight size={16}/></button>
                     </div>
-
-                    {onOpenSettings && (
-                        <button onClick={onOpenSettings} className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 hover:text-rose-600 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm shrink-0"><Settings size={14}/> Horarios</button>
-                    )}
                 </div>
             </div>
 
@@ -2163,18 +2159,12 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick, onOpenSettings }) => {
             {view === 'week' && renderWeek()}
             {view === 'day' && renderDay()}
             {view === 'year' && renderYear()}
-
-            {onOpenSettings && (
-                <div className="lg:hidden p-3 border-t border-gray-200 bg-white shrink-0">
-                    <button onClick={onOpenSettings} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-colors shadow-sm"><Settings size={14}/> Configurar Horas Disponibles</button>
-                </div>
-            )}
         </div>
     );
 };
 
 // --- NUEVO: PANTALLA DE CONFIGURACIÓN DEL SISTEMA (CON BOTÓN MÁGICO) ---
-const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSaveGeneral, onClose }) => {
+const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebhooks, onSaveGeneral, onUpdateSchedule, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
     const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
@@ -2434,10 +2424,14 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
                                         <div className={`w-3 h-3 rounded-full shrink-0 ${isActive ? 'bg-emerald-500' : 'bg-gray-200'}`}></div>
                                     </button>
                                 );
-                            })}
+                              })}
                         </div>
                     </div>
-
+                    
+                    {/* SECCIÓN 5: HORARIO LABORAL (Movido desde la Agenda) */}
+                    <div className="md:col-span-12 mb-12">
+                        <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -2518,7 +2512,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
     const [isBulkAgentSelectOpen, setIsBulkAgentSelectOpen] = useState(false);
     const [individualAgentSelectLeadId, setIndividualAgentSelectLeadId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [showScheduleSettings, setShowScheduleSettings] = useState(false);
     
     // --- NUEVO ESTADO Y MOTOR DE OFERTAS DIRECTAS ---
     const [offerSetup, setOfferSetup] = useState(null);
@@ -2891,7 +2884,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                 {['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
-                        onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm(''); setShowScheduleSettings(false);}} 
+                        onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm('');}}
                         className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === tab 
                                 ? (tab === 'urgent' ? 'border-red-600 text-red-600' : 'border-gray-900 text-gray-900') 
@@ -2950,17 +2943,9 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             <div className="flex-1 overflow-auto bg-apple-gray relative p-4 md:p-8">
                 {
                  activeTab === 'schedule' ? (
-                     showScheduleSettings ? (
-                        <div className="max-w-4xl mx-auto">
-                            <div className="mb-6">
-                                <button onClick={() => setShowScheduleSettings(false)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200 transition-colors"><ArrowLeft size={16}/> Volver al Calendario</button>
-                            </div>
-                            <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
-                        </div>
-                    ) : (
-                        <AdminCalendar leads={processedLeads} agents={agents} onLeadClick={setViewingLead} onOpenSettings={() => setShowScheduleSettings(true)} />
-                    )
+                        <AdminCalendar leads={processedLeads} agents={agents} onLeadClick={setViewingLead} />
                  ) :
+                 
                  activeTab === 'agents' ? (
                     <div className="max-w-6xl mx-auto pb-20 animate-fade-in">
                         <div className="flex justify-between items-center mb-6">
@@ -3561,9 +3546,11 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             {showFullSettings && (
                 <SystemSettingsScreen 
                     webhooks={webhooks} 
-                    generalSettings={generalSettings} 
+                    generalSettings={generalSettings}
+                    schedule={schedule}
                     onSaveWebhooks={onUpdateWebhooks} 
-                    onSaveGeneral={onUpdateGeneralSettings} 
+                    onSaveGeneral={onUpdateGeneralSettings}
+                    onUpdateSchedule={onUpdateSchedule}
                     onClose={() => setShowFullSettings(false)} 
                 />
             )}
