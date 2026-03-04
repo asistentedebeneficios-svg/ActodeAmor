@@ -415,7 +415,8 @@ const RegistrationClosedModal = ({ onClose }) => {
 };
 
 // --- COMPONENTS ---
-const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
+const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, generalSettings }) => {
+    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
     const [licenses, setLicenses] = useState(initialData && initialData.licenses ? initialData.licenses : [{ state: '', number: '', fileStr: '', fileName: '' }]);
     const [profilePicStr, setProfilePicStr] = useState(initialData ? initialData.photo : '');
@@ -604,7 +605,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null }) => {
                                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Estado</label>
                                             <select value={lic.state} onChange={e => handleLicenseChange(index, 'state', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400 text-gray-700">
                                                 <option value="">Sel. Estado</option>
-                                                {FULL_US_STATES.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
+                                                {availableStates.map(st => <option key={st.abbr} value={st.abbr}>{st.name}</option>)}
                                             </select>
                                         </div>
                                         <div><label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Número</label><input type="text" placeholder="Ej: 1234567" value={lic.number} onChange={e => handleLicenseChange(index, 'number', e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm focus:border-blue-400" /></div>
@@ -880,7 +881,8 @@ const FAQStep = ({ options, onContinue }) => {
     );
 };
 
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger }) => {
+const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
+    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
@@ -1033,8 +1035,13 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                     <MapPin className="absolute left-3.5 md:left-4 top-3.5 md:top-4 text-gray-400" size={18}/>
                                     <select className="w-full p-3 md:p-4 pl-10 md:pl-10 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-gray-700" value={state} onChange={e => setState(e.target.value)} disabled={status !== 'idle'}>
                                         <option value="">Seleccione su Estado</option>
-                                        {FULL_US_STATES.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                                        {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
                                     </select>
+                                    {availableStates.length < 50 && (
+                                        <p className="text-[10px] text-gray-400 mt-2 ml-1 leading-tight font-medium">
+                                            Si su estado no aparece, es porque por el momento no contamos con cobertura en esa área.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -2172,6 +2179,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
     const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
     const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
+    // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
+    const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -2202,7 +2211,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
             ...generalSettings, 
             acceptingAgents, 
             regularPrice: Number(regPrice), 
-            offerPrice: Number(offPrice) 
+            offerPrice: Number(offPrice),
+            activeStates: activeStates
         });
         
         setIsSaving(false);
@@ -2391,12 +2401,41 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, onSaveWebhooks, onSav
                         </div>
                     </div>
 
-                    {/* SECCIÓN 4: ESPACIO PARA FUTURAS CANCIONES (Placeholder) */}
-                    <div className="md:col-span-12 py-12 text-center">
-                        <div className="w-16 h-16 bg-gray-200/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200">
-                            <Plus size={24} className="text-gray-400" />
+                    {/* SECCIÓN 4: MERCADOS OPERATIVOS */}
+                    <div className="md:col-span-12 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mb-12">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm">
+                                <MapPin size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Mercados Operativos</h3>
+                                <p className="text-gray-500 text-sm mt-1">Activa o desactiva los estados donde tienes presencia y agentes.</p>
+                            </div>
                         </div>
-                        <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">Nuevas funciones próximamente</p>
+                        
+                        <div className="flex flex-col sm:flex-row items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 gap-4">
+                            <span className="text-sm font-bold text-gray-700">Estados activados: <span className="text-emerald-600">{activeStates.length} de 50</span></span>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <button onClick={() => setActiveStates(ALL_US_STATES)} className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:text-black shadow-sm transition-colors">Activar Todos</button>
+                                <button onClick={() => setActiveStates([])} className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:text-red-500 shadow-sm transition-colors">Apagar Todos</button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                            {FULL_US_STATES.map(state => {
+                                const isActive = activeStates.includes(state.abbr);
+                                return (
+                                    <button 
+                                        key={state.abbr}
+                                        onClick={() => setActiveStates(prev => isActive ? prev.filter(s => s !== state.abbr) : [...prev, state.abbr])}
+                                        className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all text-left ${isActive ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-white border-gray-100 hover:border-gray-200 opacity-60'}`}
+                                    >
+                                        <span className={`text-xs font-bold truncate pr-2 ${isActive ? 'text-emerald-900' : 'text-gray-500'}`}>{state.name}</span>
+                                        <div className={`w-3 h-3 rounded-full shrink-0 ${isActive ? 'bg-emerald-500' : 'bg-gray-200'}`}></div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                 </div>
@@ -3278,6 +3317,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             </div>
             {isAgentModalOpen && (
                 <AgentRegistrationForm 
+                    generalSettings={generalSettings}
                     initialData={editingAgent ? {
                         id: editingAgent.id,
                         fullName: editingAgent.name,
@@ -5050,7 +5090,8 @@ const App = () => {
             return (
                 <div className="min-h-screen bg-[#F5F5F7]">
                         <AgentRegistrationForm
-                            onCancel={() => setShowRegister(false)} 
+                            generalSettings={generalSettings}
+                            onCancel={() => setShowRegister(false)}
                             onSubmit={async (data) => {
                                 try {
                                     // Quitamos el ID vacío para que Firebase no se moleste y cree uno nuevo
@@ -5158,6 +5199,7 @@ const App = () => {
         }
         return (
             <AgentRegistrationForm 
+                generalSettings={generalSettings}
                 onCancel={() => setShowAgentFormFromHome(false)} 
             />
         );
@@ -5311,7 +5353,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} /> :
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
