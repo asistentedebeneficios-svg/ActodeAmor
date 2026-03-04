@@ -889,6 +889,7 @@ const FAQStep = ({ options, onContinue }) => {
 const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
+    const [age, setAge] = useState(''); // <-- NUEVO CAMPO EDAD
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [noEmail, setNoEmail] = useState(false);
@@ -929,14 +930,14 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         setAvailableSlots(slots); setTime(''); 
     }, [date, scheduleConfig]);
 
-    const isFormValid = name && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
+    const isFormValid = name && age && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
 
     const handleFinalSubmit = async (e) => {
         e.preventDefault();
         if(!isFormValid || status !== 'idle') return;
         setStatus('submitting');
         await new Promise(r => setTimeout(r, 1500));
-        onSubmit({ name, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
+        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
         setStatus('success');
         onSuccess();
     };
@@ -1028,11 +1029,12 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         <button onClick={() => window.location.reload()} className="mt-2 text-gray-400 font-medium hover:text-gray-600 text-xs md:text-sm underline transition-colors">Volver al inicio</button>
                     </div>
                 ) : (
-                <>
+               <>
                     <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><User size={16} className="text-rose-500"/> Mis Datos</h3>
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><User size={16} className="text-rose-500"/> Datos de Contacto</h3>
                         <div className="space-y-3">
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Nombre Completo</label><input type="text" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. Maria Perez" value={name} onChange={e => setName(e.target.value)} disabled={status !== 'idle'} /></div>
+                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Edad</label><input type="number" min="18" max="100" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: 55" value={age} onChange={e => setAge(e.target.value)} disabled={status !== 'idle'} /></div>
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: (555) 123-4567" value={phone} onChange={e => setPhone(formatPhoneNumber(e.target.value))} maxLength="14" disabled={status !== 'idle'} /></div>
                             <div>
                                 <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Estado (EE.UU.)</label>
@@ -1438,7 +1440,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
-                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">{lead.name}</h2>
+                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
+                            {lead.name} {lead.age ? <span className="text-gray-500 font-medium text-base md:text-lg">({lead.age} años)</span> : ''}
+                        </h2>
                         <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
                     </div>
                 </div>
