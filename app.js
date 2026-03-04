@@ -1046,7 +1046,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                         <p className="text-[10px] text-gray-400 mt-2 ml-1 leading-tight font-medium">
                                             Si su estado no aparece, es porque por el momento no contamos con cobertura en esa área.{' '}
                                             {generalSettings?.waitlistUrl && (
-                                                <a href={generalSettings.waitlistUrl} target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600 underline underline-offset-2 transition-colors">
+                                                <a href={generalSettings.waitlistUrl} target="_blank" rel="noopener noreferrer" className="text-black font-bold hover:text-gray-700 underline underline-offset-2 transition-colors">
                                                     Únase a nuestra lista de espera aquí.
                                                 </a>
                                             )}
