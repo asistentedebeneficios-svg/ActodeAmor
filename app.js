@@ -1173,7 +1173,7 @@ const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], all
                 <div className="flex justify-between items-start mb-5">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 leading-tight">Asignar Agente</h3>
-                        <p className="text-[10px] uppercase tracking-widest text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">Inteligencia Activada</p>
+                        <p className="text-[10px] uppercase tracking-widest text-green-600 font-bold mt-1 bg-green-50 inline-block px-2 py-0.5 rounded border border-green-100">Cumple con los requisitos</p>
                     </div>
                     <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
                 </div>
