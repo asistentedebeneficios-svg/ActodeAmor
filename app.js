@@ -1050,7 +1050,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                 />
                                 {age && !isAgeValid && (
                                     <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 animate-fade-in flex items-center gap-1">
-                                        <AlertTriangle size={10} strokeWidth={3}/> Solo aseguramos personas de 18 a 85 años.
+                                        <AlertTriangle size={10} strokeWidth={3}/> Edad para agendar: 18 a 85 años.
                                     </p>
                                 )}
                             </div>
