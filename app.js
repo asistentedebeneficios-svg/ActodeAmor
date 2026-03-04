@@ -930,7 +930,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         setAvailableSlots(slots); setTime(''); 
     }, [date, scheduleConfig]);
 
-    const isFormValid = name && age && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
+    const ageNum = parseInt(age, 10);
+    const isAgeValid = ageNum >= 18 && ageNum <= 85;
+    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
 
     const handleFinalSubmit = async (e) => {
         e.preventDefault();
@@ -1034,7 +1036,24 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><User size={16} className="text-rose-500"/> Datos de Contacto</h3>
                         <div className="space-y-3">
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Nombre Completo</label><input type="text" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. Maria Perez" value={name} onChange={e => setName(e.target.value)} disabled={status !== 'idle'} /></div>
-                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Edad</label><input type="number" min="18" max="100" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: 55" value={age} onChange={e => setAge(e.target.value)} disabled={status !== 'idle'} /></div>
+                            <div>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Edad</label>
+                                <input 
+                                    type="number" 
+                                    min="18" 
+                                    max="85" 
+                                    className={`w-full p-3 md:p-4 rounded-xl border text-sm md:text-base font-medium outline-none transition-all focus:ring-2 ${age && !isAgeValid ? 'border-red-400 bg-red-50 text-red-700 focus:bg-red-50 focus:ring-red-400' : 'border-gray-200 bg-gray-50 text-gray-700 focus:bg-white focus:ring-rose-500'}`} 
+                                    placeholder="Ej: 55" 
+                                    value={age} 
+                                    onChange={e => setAge(e.target.value)} 
+                                    disabled={status !== 'idle'} 
+                                />
+                                {age && !isAgeValid && (
+                                    <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 animate-fade-in flex items-center gap-1">
+                                        <AlertTriangle size={10} strokeWidth={3}/> Solo aseguramos personas de 18 a 85 años.
+                                    </p>
+                                )}
+                            </div>
                             <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: (555) 123-4567" value={phone} onChange={e => setPhone(formatPhoneNumber(e.target.value))} maxLength="14" disabled={status !== 'idle'} /></div>
                             <div>
                                 <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Estado (EE.UU.)</label>
