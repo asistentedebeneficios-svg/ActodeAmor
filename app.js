@@ -2182,6 +2182,7 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
     // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
     const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
     const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
+    
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -2402,25 +2403,6 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                                     />
                                 </div>
                             </div>
-                                    <input 
-                                        type="text" 
-                                        placeholder="https://hook.make.com/..."
-                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
-                                        value={localHooks.telegram}
-                                        onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Asignación de Agente (Correo)</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="https://hook.make.com/..."
-                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
-                                        value={localHooks.assignment}
-                                        onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
-                                    />
-                                </div>
-                            </div>
                             
                             <div className="mt-8 flex items-center gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl">
                                 <AlertTriangle size={18} className="text-amber-400 shrink-0" />
@@ -2432,7 +2414,7 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                     </div>
 
                     {/* SECCIÓN 4: MERCADOS OPERATIVOS */}
-                    <div className="md:col-span-12 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mb-12">
+                    <div className="md:col-span-12 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mb-2">
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm">
                                 <MapPin size={24} />
@@ -2464,14 +2446,15 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                                         <div className={`w-3 h-3 rounded-full shrink-0 ${isActive ? 'bg-emerald-500' : 'bg-gray-200'}`}></div>
                                     </button>
                                 );
-                              })}
+                            })}
                         </div>
                     </div>
-                    
+
                     {/* SECCIÓN 5: HORARIO LABORAL (Movido desde la Agenda) */}
                     <div className="md:col-span-12 mb-12">
                         <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
                     </div>
+
                 </div>
             </div>
         </div>
