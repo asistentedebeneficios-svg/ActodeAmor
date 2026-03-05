@@ -653,7 +653,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                         <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-4">
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-3">
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
                                 <div className="relative">
