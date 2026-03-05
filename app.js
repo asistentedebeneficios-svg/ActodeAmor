@@ -643,18 +643,17 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
 
     return (
         <>
-            {/* Contenedor principal sin scroll externo */}
-            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-                <div className="flex min-h-full w-full items-center justify-center p-4 py-10">
-                    <div className="bg-white w-full max-w-2xl rounded-3xl relative shadow-2xl animate-slide-up text-left">
-                        <button type="button" onClick={onCancel} className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
-                        
-                        <div className="p-6 md:p-8 border-b border-gray-100 pr-12">
-                            <h2 className="text-2xl font-bold text-gray-900">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
-                            <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
-                        </div>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto z-[100] animate-fade-in">
+                <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl w-full max-w-2xl mx-auto relative shadow-2xl animate-slide-up my-8">
+                    <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
+                    
+                    <div className="p-6 md:p-8 border-b border-gray-100">
+                        <h2 className="text-2xl font-bold text-gray-900">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
+                        <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
+                    </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
                                 <div className="relative">
