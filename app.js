@@ -2538,6 +2538,30 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
 };
                                                                    
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
+    
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
+    useEffect(() => {
+        let inactivityTimer;
+        const resetTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                onLogout(); // Expulsa al usuario al login
+            }, 30 * 60 * 1000); // 30 minutos
+        };
+
+        // Escucha cualquier interacción del usuario
+        const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        activityEvents.forEach(event => document.addEventListener(event, resetTimer));
+
+        resetTimer(); // Inicia el reloj
+
+        return () => {
+            clearTimeout(inactivityTimer);
+            activityEvents.forEach(event => document.removeEventListener(event, resetTimer));
+        };
+    }, []); 
+    // -----------------------------------------------------------------
+
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
@@ -3706,6 +3730,30 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 };
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
+    
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (10 MIN) ---
+    useEffect(() => {
+        let inactivityTimer;
+        const resetTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                onLogout(); // Expulsa al agente al login
+            }, 10 * 60 * 1000); // 10 minutos
+        };
+
+        // Escucha cualquier interacción del agente
+        const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        activityEvents.forEach(event => document.addEventListener(event, resetTimer));
+
+        resetTimer(); // Inicia el reloj
+
+        return () => {
+            clearTimeout(inactivityTimer);
+            activityEvents.forEach(event => document.removeEventListener(event, resetTimer));
+        };
+    }, []); 
+    // -----------------------------------------------------------------
+
     const regularPrice = generalSettings?.regularPrice ?? 45;
     const offerPrice = generalSettings?.offerPrice ?? 35;
     // Si está inactivo, le borramos el Marketplace de sus opciones
