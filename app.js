@@ -898,10 +898,10 @@ const LetterStep = ({ data, onContinue }) => {
 
     return (
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            {/* Importamos una tipografía premium tipo "Carta Real" solo para este paso */}
+            {/* Importamos tipografía Lora: Estilo carta clásica, pero extremadamente legible */}
             <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-                .font-playfair { font-family: 'Playfair Display', serif; }
+                @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+                .font-lora { font-family: 'Lora', serif; }
             `}} />
 
             {/* Diseño del papel texturizado/crema */}
@@ -913,10 +913,10 @@ const LetterStep = ({ data, onContinue }) => {
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta */}
-                <div className="font-playfair text-[#334155] space-y-6 leading-[1.8] pb-4 text-lg md:text-xl relative z-10">
+                {/* Texto de la carta - Fuente cambiada y color más oscuro/grueso para máxima legibilidad */}
+                <div className="font-lora space-y-6 leading-loose pb-4 text-lg md:text-xl relative z-10">
                     <p className="font-bold text-[#9F1239] text-xl md:text-2xl">{letter.salutation}</p>
-                    <p className="text-[#475569]">{letter.body}</p>
+                    <p className="font-medium text-gray-800">{letter.body}</p>
                     <p className="pt-4 font-bold text-[#9F1239] italic text-xl md:text-2xl">{letter.closing}</p>
                 </div>
                 
