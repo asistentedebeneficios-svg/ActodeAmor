@@ -388,22 +388,22 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
 const TermsModal = ({ type = 'prospect', onClose }) => {
     const isAgent = type === 'agent';
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2.5 rounded-xl ${isAgent ? 'bg-gray-100 text-gray-700' : 'bg-rose-50 text-rose-500'}`}><ShieldCheck size={20}/></div>
-                        <h2 className="text-lg md:text-xl font-bold text-gray-900">{isAgent ? 'Términos para Agentes' : 'Términos y Condiciones'}</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 md:p-8 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
+                <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className={`p-3 rounded-xl ${isAgent ? 'bg-gray-100 text-gray-700' : 'bg-rose-50 text-rose-500'}`}><ShieldCheck size={24}/></div>
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900">{isAgent ? 'Términos para Agentes' : 'Términos y Condiciones de Uso'}</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
+                    <button onClick={onClose} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X size={20}/></button>
                 </div>
-                <div className="p-6 md:p-8 overflow-y-auto text-sm text-gray-600 space-y-5 leading-relaxed">
+                <div className="p-6 md:p-10 overflow-y-auto text-sm md:text-base text-gray-600 space-y-6 md:space-y-8 leading-relaxed">
                     {isAgent ? (
                         <>
                             <p><strong>1. Uso de la Plataforma:</strong> El acceso a "Asistente de Beneficios" es exclusivo para especialistas con licencia estatal activa y vigente. Nos reservamos el derecho de auditar, suspender o revocar el acceso en cualquier momento ante la detección de uso indebido.</p>
                             <p><strong>2. Manejo de Prospectos (Leads):</strong> Los prospectos adquiridos en el Marketplace o asignados directamente son de uso exclusivo dentro de esta plataforma. Queda estrictamente prohibido revender, compartir o transferir datos de clientes a terceros u otras agencias.</p>
                             <p><strong>3. Privacidad y Seguridad:</strong> El agente se compromete a manejar toda la información personal, financiera y médica de los prospectos bajo las normativas más estrictas de HIPAA, TCPA y todas las leyes de privacidad aplicables.</p>
-                            <p><strong>4. Pagos y Reembolsos:</strong> Las compras de prospectos son definitivas. Solo se emitirán créditos si se demuestra mediante evidencia concluyente en las primeras 48 horas que el prospecto es incontactable por razones técnicas.</p>
+                            <p><strong>4. Pagos y Reembolsos:</strong> Las compras de prospectos son definitivas. <strong>No se emitirán reembolsos ni créditos</strong> si el agente no logra establecer comunicación con el prospecto. El proceso de contacto continuo, seguimiento y reagendamiento de citas queda expresamente bajo la responsabilidad del agente, entendiendo que adquiere la oportunidad de venta y no una venta garantizada.</p>
                             <p><strong>5. Conducta Profesional:</strong> Se exige total honestidad, ética y empatía. Quedan rotundamente prohibidas las prácticas de ventas engañosas, acoso o presiones indebidas a los clientes de esta plataforma.</p>
                         </>
                     ) : (
@@ -416,9 +416,9 @@ const TermsModal = ({ type = 'prospect', onClose }) => {
                         </>
                     )}
                 </div>
-                <div className="p-6 border-t border-gray-100 shrink-0">
-                    <button onClick={onClose} className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2 ${isAgent ? 'bg-black' : 'bg-[#E11D48]'}`}>
-                        <Check size={18}/> Acepto y Entiendo
+                <div className="p-6 md:p-8 border-t border-gray-100 shrink-0">
+                    <button onClick={onClose} className={`w-full py-4 text-white text-lg font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2 ${isAgent ? 'bg-black' : 'bg-[#E11D48]'}`}>
+                        <Check size={20}/> Acepto y Entiendo
                     </button>
                 </div>
             </div>
@@ -596,8 +596,9 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
     );
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto z-[100] animate-fade-in">
-            <div className="min-h-screen flex items-center justify-center p-4">
+        <>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto z-[100] animate-fade-in">
+                <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white rounded-3xl w-full max-w-2xl relative shadow-2xl animate-slide-up my-8">
                     <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
                     
@@ -741,8 +742,9 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                     </form>
                 </div>
             </div>
-            {showTermsModal && <TermsModal type="agent" onClose={() => setShowTermsModal(false)} />}
         </div>
+        {showTermsModal && <TermsModal type="agent" onClose={() => setShowTermsModal(false)} />}
+        </>
     );
 };
 
@@ -1197,7 +1199,12 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
                     <div className="pt-6 pb-8">
                         <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
-                        {status === 'idle' && <p className="text-center text-[10px] md:text-xs text-gray-400 mt-4 px-2 md:px-4 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>}
+                        {status === 'idle' && (
+                            <div className="mt-6 flex flex-col items-center gap-4">
+                                <p className="text-center text-[10px] md:text-xs text-gray-400 px-2 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>
+                                <button type="button" onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('funnelLeadData'); window.location.reload(); }} className="text-[11px] md:text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-800 pb-0.5">Volver a la pantalla principal</button>
+                            </div>
+                        )}
                     </div>
                 </>
                 )}
