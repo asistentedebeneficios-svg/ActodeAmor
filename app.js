@@ -4964,27 +4964,44 @@ const App = () => {
     const { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
     const currentStep = STEPS[stepIndex];
 
-    // --- AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas) ---
+    // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
     useEffect(() => {
         if (!leads || leads.length === 0 || !bulkUpdateLeads) return;
+        
         const checkExpirations = () => {
             const now = Date.now();
-            // 2 horas en milisegundos = 2 * 60 * 60 * 1000 = 7200000
-            const GRACE_PERIOD = 7200000; 
             
+            // 1. AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas)
+            const GRACE_PERIOD = 7200000; 
             const toArchive = leads.filter(l => {
                 if (l.status === 'archived' || !l.date || !l.time) return false;
                 const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-                // Solo la archiva si la hora actual es MAYOR a (la hora de la cita + 2 horas)
                 return timeInfo && (timeInfo.localMs + GRACE_PERIOD) < now;
             }).map(l => l.id);
 
             if (toArchive.length > 0) {
                 bulkUpdateLeads(toArchive, { status: 'archived' });
             }
+
+            // 2. AUTO-CANCELACIÓN DE OFERTAS EXPIRADAS
+            const expiredOffers = leads.filter(l => {
+                // Buscamos leads que estén pendientes de pago y cuya fecha de expiración ya pasó
+                return l.status === 'pending_payment' && l.offer && l.offer.expiresAt && l.offer.expiresAt <= now;
+            }).map(l => l.id);
+
+            if (expiredOffers.length > 0) {
+                // Las devolvemos a la bandeja principal ("new") y limpiamos el rastro de la oferta
+                bulkUpdateLeads(expiredOffers, { 
+                    status: 'new', 
+                    offer: null,
+                    lockedBy: null,
+                    lockedAt: null
+                });
+            }
         };
+
         checkExpirations();
-        const interval = setInterval(checkExpirations, 60000); // Revisa cada 60 segundos
+        const interval = setInterval(checkExpirations, 60000); // Revisa silenciosamente cada 60 segundos
         return () => clearInterval(interval);
     }, [leads, bulkUpdateLeads]);
 
