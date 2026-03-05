@@ -4337,12 +4337,32 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
                                     <div className="space-y-3 mb-8">
                                         {bundle.leads.map(l => (
-                                            <div key={l.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100/50">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                                                    <span className="text-sm font-bold text-gray-700">{l.name}</span>
+                                            <div key={l.id} className="flex flex-col bg-gray-50 p-4 rounded-2xl border border-gray-100/80 shadow-sm">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></div>
+                                                        <span className="text-sm font-bold text-gray-800">{l.name}</span>
+                                                    </div>
+                                                    <span className="text-[9px] font-bold bg-white text-gray-500 px-2 py-1 rounded shadow-sm uppercase tracking-widest border border-gray-200">{l.state}</span>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase">{l.state}</span>
+                                                
+                                                {/* Bloque Elegante de Fecha y Hora */}
+                                                <div className="pl-4 ml-1 border-l-2 border-gray-200/60">
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 capitalize mb-1.5">
+                                                        <CalendarDays size={12} className="text-gray-400"/>
+                                                        {l.date ? new Date(l.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : 'Sin fecha asignada'}
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="font-bold text-blue-600 flex items-center gap-1 text-[11px] bg-blue-50/50 px-2 py-0.5 rounded border border-blue-100/50">
+                                                            <Clock size={10}/> {l.localTime || l.time} <span className="text-[8px] uppercase tracking-widest font-normal text-blue-400">(Tú Hora)</span>
+                                                        </span>
+                                                        {l.localTime !== l.time && (
+                                                            <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                                                                <span className="text-gray-300">|</span> {l.time} <span className="text-[8px] uppercase tracking-widest bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 shadow-sm">en {l.state}</span>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
