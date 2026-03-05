@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -384,6 +384,48 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
     );
 };
 
+// --- NUEVO: MODALES ELEGANTES DE TÉRMINOS Y CONDICIONES ---
+const TermsModal = ({ type = 'prospect', onClose }) => {
+    const isAgent = type === 'agent';
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl ${isAgent ? 'bg-gray-100 text-gray-700' : 'bg-rose-50 text-rose-500'}`}><ShieldCheck size={20}/></div>
+                        <h2 className="text-lg md:text-xl font-bold text-gray-900">{isAgent ? 'Términos para Agentes' : 'Términos y Condiciones'}</h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X size={18}/></button>
+                </div>
+                <div className="p-6 md:p-8 overflow-y-auto text-sm text-gray-600 space-y-5 leading-relaxed">
+                    {isAgent ? (
+                        <>
+                            <p><strong>1. Uso de la Plataforma:</strong> El acceso a "Asistente de Beneficios" es exclusivo para especialistas con licencia estatal activa y vigente. Nos reservamos el derecho de auditar, suspender o revocar el acceso en cualquier momento ante la detección de uso indebido.</p>
+                            <p><strong>2. Manejo de Prospectos (Leads):</strong> Los prospectos adquiridos en el Marketplace o asignados directamente son de uso exclusivo dentro de esta plataforma. Queda estrictamente prohibido revender, compartir o transferir datos de clientes a terceros u otras agencias.</p>
+                            <p><strong>3. Privacidad y Seguridad:</strong> El agente se compromete a manejar toda la información personal, financiera y médica de los prospectos bajo las normativas más estrictas de HIPAA, TCPA y todas las leyes de privacidad aplicables.</p>
+                            <p><strong>4. Pagos y Reembolsos:</strong> Las compras de prospectos son definitivas. Solo se emitirán créditos si se demuestra mediante evidencia concluyente en las primeras 48 horas que el prospecto es incontactable por razones técnicas.</p>
+                            <p><strong>5. Conducta Profesional:</strong> Se exige total honestidad, ética y empatía. Quedan rotundamente prohibidas las prácticas de ventas engañosas, acoso o presiones indebidas a los clientes de esta plataforma.</p>
+                        </>
+                    ) : (
+                        <>
+                            <p><strong>1. Servicio de Conexión:</strong> Asistente de Beneficios es una plataforma gratuita que facilita la conexión entre familias y especialistas en seguros de vida licenciados en su respectivo estado.</p>
+                            <p><strong>2. Privacidad de Datos:</strong> Su información es estrictamente confidencial. Solo será compartida de manera segura con el especialista asignado a su caso. No vendemos sus datos a terceros ni realizamos llamadas de telemarketing masivo.</p>
+                            <p><strong>3. Exactitud de la Información:</strong> Al utilizar nuestros servicios, usted acepta que la información proporcionada es veraz, lo cual es fundamental para poder conectarlo con las opciones correctas de cobertura.</p>
+                            <p><strong>4. Sin Compromiso de Compra:</strong> Agendar una asesoría no le genera ninguna obligación de adquirir una póliza. Nuestro servicio es 100% consultivo e informativo.</p>
+                            <p><strong>5. Consentimiento de Comunicaciones:</strong> Al aceptar estos términos, usted otorga su consentimiento para recibir comunicaciones vía llamada, mensaje de texto (SMS) o correo exclusivamente de su asesor asignado y de Asistente de Beneficios en relación a su solicitud.</p>
+                        </>
+                    )}
+                </div>
+                <div className="p-6 border-t border-gray-100 shrink-0">
+                    <button onClick={onClose} className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2 ${isAgent ? 'bg-black' : 'bg-[#E11D48]'}`}>
+                        <Check size={18}/> Acepto y Entiendo
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- NUEVO: MODAL ELEGANTE DE CONVOCATORIA CERRADA ---
 const RegistrationClosedModal = ({ onClose }) => {
     return (
@@ -416,8 +458,10 @@ const RegistrationClosedModal = ({ onClose }) => {
 
 // --- COMPONENTS ---
 const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, generalSettings }) => {
-    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
-    const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
+    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
+    const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);    
     const [licenses, setLicenses] = useState(initialData && initialData.licenses ? initialData.licenses : [{ state: '', number: '', fileStr: '', fileName: '' }]);
     const [profilePicStr, setProfilePicStr] = useState(initialData ? initialData.photo : '');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -677,16 +721,29 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                         
                         {error && <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm"><AlertTriangle size={18} className="shrink-0" /><p>{error}</p></div>}
 
-                        <div className="pt-4 border-t border-gray-100">
-                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
-                                {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
-                            </button>
+                        <div className="pt-2">
+                            <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                                <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                                    <input type="checkbox" required checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-black checked:border-black transition-all" />
+                                    <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+                                </div>
+                                <span className="text-xs font-medium text-gray-600 leading-relaxed">
+                                    He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-black underline decoration-2 decoration-gray-300 hover:decoration-black cursor-pointer">Términos y Condiciones de Uso</span> para formar parte del equipo.
+                                </span>
+                            </label>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
+
+                        <div className="pt-4 border-t border-gray-100">
+                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError || !acceptedTerms} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                                {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {showTermsModal && <TermsModal type="agent" onClose={() => setShowTermsModal(false)} />}
+        </div>
+    );
 };
 
 const AdminLogin = ({ onClose, onLogin, onOpenRegister }) => {
@@ -887,8 +944,10 @@ const FAQStep = ({ options, onContinue }) => {
 };
 
 const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
-    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
-    const [name, setName] = useState('');
+    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
+    const [name, setName] = useState('');
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const [age, setAge] = useState(''); // <-- NUEVO CAMPO EDAD
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
@@ -931,8 +990,8 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     }, [date, scheduleConfig]);
 
     const ageNum = parseInt(age, 10);
-    const isAgeValid = ageNum >= 18 && ageNum <= 85;
-    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time;
+    const isAgeValid = ageNum >= 18 && ageNum <= 85;
+    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time && acceptedTerms;
 
     const handleFinalSubmit = async (e) => {
         e.preventDefault();
@@ -1123,16 +1182,29 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             )}
                         </div>
                     </div>
-                    
-                    <div className="pt-6 pb-8">
-                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
-                        {status === 'idle' && <p className="text-center text-[10px] md:text-xs text-gray-400 mt-4 px-2 md:px-4 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>}
+                    
+                    <div className="pt-4">
+                        <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                            <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                                <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} disabled={status !== 'idle'} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-rose-500 checked:border-rose-500 transition-all disabled:opacity-50" />
+                                <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+                            </div>
+                            <span className="text-[11px] md:text-xs font-medium text-gray-500 leading-relaxed">
+                                He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Términos y Condiciones de Uso</span>. Entiendo que seré contactado por un especialista licenciado.
+                            </span>
+                        </label>
                     </div>
-                </>
-                )}
-            </div>
-        </div>
-    );
+
+                    <div className="pt-6 pb-8">
+                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
+                        {status === 'idle' && <p className="text-center text-[10px] md:text-xs text-gray-400 mt-4 px-2 md:px-4 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>}
+                    </div>
+                </>
+                )}
+            </div>
+            {showTermsModal && <TermsModal type="prospect" onClose={() => setShowTermsModal(false)} />}
+        </div>
+    );
 };
 
 const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], allLeads = [] }) => {
@@ -5010,8 +5082,12 @@ const AboutUsPage = ({ onClose }) => {
 };
                                                                    
 const App = () => {
-    // --- MEMORIA DEL EMBUDO ---
-    const [stepIndex, setStepIndex] = useState(() => {
+    // --- MENU Y MODALES GLOBALES ---
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showProspectTermsFromMenu, setShowProspectTermsFromMenu] = useState(false);
+
+    // --- MEMORIA DEL EMBUDO ---
+    const [stepIndex, setStepIndex] = useState(() => {
         const savedStep = sessionStorage.getItem('funnelStepIndex');
         return savedStep !== null ? parseInt(savedStep, 10) : 0;
     });
@@ -5363,26 +5439,47 @@ const App = () => {
     }                                                                   
                                                                    
     if (stepIndex === 0) return (
-        <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
-            {/* CABECERA PÁGINA PRINCIPAL */}
-            <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-gray-50">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
-                            <ShieldCheck size={24} className="text-white" />
-                        </div>
-                        <span className="text-gray-900 font-bold tracking-tight">asistente<span className="font-light text-gray-400">debeneficios.com</span></span>
-                    </div>
-                    
-                    {/* BOTÓN CONÓCENOS (?) */}
-                    <button onClick={() => setShowAboutUs(true)} className="flex items-center gap-2 text-gray-500 hover:text-rose-600 transition-colors group">
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block group-hover:text-rose-600">Conócenos</span>
-                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm">
-                            <HelpCircle size={20} />
-                        </div>
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
+            {/* CABECERA PÁGINA PRINCIPAL Y MENÚ */}
+            <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                            <ShieldCheck size={24} className="text-white" />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight">asistente<span className="font-light text-gray-400">debeneficios.com</span></span>
+                    </div>
+                    
+                    {/* BOTÓN MENÚ DE HAMBURGUESA */}
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 text-gray-700 hover:text-rose-600 transition-colors group">
+                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block group-hover:text-rose-600">Menú</span>
+                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm">
+                            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                        </div>
+                    </button>
+
+                    {/* DROPDOWN MENU */}
+                    {isMenuOpen && (
+                        <>
+                            <div className="fixed inset-0 top-20 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsMenuOpen(false)}></div>
+                            <div className="absolute top-20 right-6 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up flex flex-col p-2">
+                                <button onClick={() => { setShowAboutUs(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
+                                    <HelpCircle size={16} className="text-rose-500" /> Quiénes somos
+                                </button>
+                                <button onClick={() => { setShowProspectTermsFromMenu(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
+                                    <FileText size={16} className="text-gray-400" /> Términos y Condiciones
+                                </button>
+                                <button onClick={() => { setShowAgentFormFromHome(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
+                                    <UserPlus size={16} className="text-blue-500" /> Únete al equipo
+                                </button>
+                                <button onClick={() => { window.location.href = 'mailto:soporte@asistentedebeneficios.com'; setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
+                                    <Mail size={16} className="text-green-500" /> Contáctanos
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </header>
             
             {/* Hero Section con Imágenes */}
             <div className="relative pt-32 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
@@ -5481,21 +5578,12 @@ const App = () => {
                     <Lock size={12}/> Sitio 100% seguro y encriptado
                 </div>
 
-                {/* ENLACE SUTIL PARA AGENTES */}
-                <div className="mt-8 pt-6 border-t border-gray-200/80 w-full max-w-xs text-center animate-fade-in">
-                    <p className="text-[11px] text-gray-400 font-medium">
-                        ¿Eres un especialista con licencia activa?{' '}
-                        <button 
-                            onClick={() => setShowAgentFormFromHome(true)} 
-                            className="text-gray-500 hover:text-rose-600 underline decoration-gray-300 hover:decoration-rose-300 underline-offset-2 transition-colors duration-300"
-                        >
-                            Únete a nuestro equipo
-                        </button>
-                    </p>
-                </div>
-            </footer>
-        </div>
-    );
+                </footer>
+            
+            {/* Modal de Términos (Llamado desde el menú) */}
+            {showProspectTermsFromMenu && <TermsModal type="prospect" onClose={() => setShowProspectTermsFromMenu(false)} />}
+        </div>
+    );
     return (
         <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
         
