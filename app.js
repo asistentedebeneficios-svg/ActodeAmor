@@ -4391,15 +4391,25 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                                             >
                                                 <X size={16}/> Rechazar
                                             </button>
-                                            <button 
+                                           <button 
+                                                disabled={isCheckingOut}
                                                 onClick={() => {
                                                     const items = [{ name: `Paquete Exclusivo ${bundle.id}`, price: bundle.price }];
                                                     setCart(bundle.leads.map(l => l.id));
                                                     handleCheckout(items, bundle.leads.map(l => l.id));
                                                 }}
-                                                className="flex-[2] sm:flex-none bg-black text-white px-6 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2"
+                                                className="flex-[2] sm:flex-none bg-black text-white px-6 py-3.5 rounded-2xl font-bold text-sm hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2 disabled:opacity-75 disabled:hover:scale-100 disabled:cursor-not-allowed"
                                             >
-                                                Aceptar y Pagar <ChevronRight size={16}/>
+                                                {isCheckingOut ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        Preparando Pago...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Aceptar y Pagar <ChevronRight size={16}/>
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>
