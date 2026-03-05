@@ -426,6 +426,42 @@ const TermsModal = ({ type = 'prospect', onClose }) => {
     );
 };
 
+// --- NUEVO: MODAL ELEGANTE DE CONTACTO ---
+const ContactUsModal = ({ onClose }) => {
+    const email = 'asistentedebeneficios@gmail.com';
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-3xl w-full max-w-lg flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden">
+                <div className="p-6 md:p-8 flex justify-end items-center shrink-0 border-b border-gray-100">
+                    <button onClick={onClose} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X size={20}/></button>
+                </div>
+                <div className="p-8 md:p-10 text-center space-y-6 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
+                        <Mail size={32} className="text-white" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-950 tracking-tight">Estamos aquí para ti</h2>
+                    <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-xs mx-auto">
+                        ¿Tienes preguntas, necesitas ayuda o simplemente quieres hablar con nosotros? Nuestro equipo está listo para asistirte de la mejor manera.
+                    </p>
+                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl w-full flex flex-col items-center gap-2 group transition-colors hover:border-green-200">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">NUESTRO CORREO ELECTRÓNICO</span>
+                        <span className="text-lg md:text-xl font-bold text-gray-900 break-all select-all font-mono">{email}</span>
+                        <div className="flex items-center gap-3 pt-2">
+                             <button onClick={() => navigator.clipboard.writeText(email)} className="text-xs font-bold text-green-600 hover:text-green-800 transition-colors">Copiar Dirección</button>
+                             <button onClick={() => window.location.href = `mailto:${email}`} className="text-xs font-bold text-green-600 hover:text-green-800 transition-colors">Enviar Correo</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-6 md:p-8 border-t border-gray-100 shrink-0">
+                    <button onClick={onClose} className="w-full py-4 text-white text-lg font-bold rounded-xl transition-all shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2 bg-black">
+                        <Check size={20}/> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- NUEVO: MODAL ELEGANTE DE CONVOCATORIA CERRADA ---
 const RegistrationClosedModal = ({ onClose }) => {
     return (
@@ -1185,24 +1221,26 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         </div>
                     </div>
                     
-                    <div className="pt-4">
-                        <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    {/* Compactación de espacio para Mac/Móvil */}
+                    <div className="py-4 md:py-3 px-2 sm:px-0">
+                        <label className="flex items-start gap-3 p-3 md:p-3.5 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                             <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                                 <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} disabled={status !== 'idle'} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-rose-500 checked:border-rose-500 transition-all disabled:opacity-50" />
                                 <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                             </div>
-                            <span className="text-[11px] md:text-xs font-medium text-gray-500 leading-relaxed">
+                            <span className="text-[10px] md:text-xs font-medium text-gray-500 leading-normal">
                                 He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Términos y Condiciones de Uso</span>. Entiendo que seré contactado por un especialista licenciado.
                             </span>
                         </label>
                     </div>
 
-                    <div className="pt-6 pb-8">
-                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 md:py-5 rounded-2xl font-bold text-lg md:text-xl shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
+                    {/* Compactación de la sección final */}
+                    <div className="pt-2 pb-6 md:pb-5">
+                        <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
                         {status === 'idle' && (
-                            <div className="mt-6 flex flex-col items-center gap-4">
-                                <p className="text-center text-[10px] md:text-xs text-gray-400 px-2 leading-relaxed">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>
-                                <button type="button" onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('funnelLeadData'); window.location.reload(); }} className="text-[11px] md:text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-800 pb-0.5">Volver a la pantalla principal</button>
+                            <div className="mt-4 flex flex-col items-center gap-3">
+                                <p className="text-center text-[10px] md:text-xs text-gray-400 px-2 leading-tight">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>
+                                <button type="button" onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('funnelLeadData'); window.location.reload(); }} className="text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-800 pb-0.5">Volver a la pantalla principal</button>
                             </div>
                         )}
                     </div>
@@ -5092,6 +5130,7 @@ const App = () => {
     // --- MENU Y MODALES GLOBALES ---
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showProspectTermsFromMenu, setShowProspectTermsFromMenu] = useState(false);
+    const [showContactUsModal, setShowContactUsModal] = useState(false);
 
     // --- MEMORIA DEL EMBUDO ---
     const [stepIndex, setStepIndex] = useState(() => {
@@ -5450,17 +5489,21 @@ const App = () => {
             {/* CABECERA PÁGINA PRINCIPAL Y MENÚ */}
             <header className="fixed top-0 left-0 w-full z-[100] bg-white/80 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
                             <ShieldCheck size={24} className="text-white" />
                         </div>
-                        <span className="text-gray-900 font-bold tracking-tight">asistente<span className="font-light text-gray-400">debeneficios.com</span></span>
+                        {/* Logo equilibrado en Mac/Móvil */}
+                        <span className="text-gray-900 font-bold tracking-tight text-lg sm:text-base leading-tight flex-wrap sm:flex-nowrap flex sm:items-baseline sm:gap-1">
+                            <span>asistente</span>
+                            <span className="font-light text-gray-400 text-base sm:text-xs">debeneficios.com</span>
+                        </span>
                     </div>
                     
-                    {/* BOTÓN MENÚ DE HAMBURGUESA */}
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 text-gray-700 hover:text-rose-600 transition-colors group">
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block group-hover:text-rose-600">Menú</span>
-                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm">
+                    {/* BOTÓN MENÚ DE HAMBURGUESA MEJORADO */}
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2.5 text-gray-700 hover:text-rose-600 transition-colors group">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest group-hover:text-rose-600 transition-colors">MENÚ</span>
+                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm shrink-0">
                             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
                         </div>
                     </button>
@@ -5478,8 +5521,8 @@ const App = () => {
                                 </button>
                                 <button onClick={() => { setShowAgentFormFromHome(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
                                     <UserPlus size={16} className="text-blue-500" /> Únete al equipo
-                                </button>
-                                <button onClick={() => { window.location.href = 'mailto:soporte@asistentedebeneficios.com'; setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
+                                00</button>
+                                <button onClick={() => { setShowContactUsModal(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
                                     <Mail size={16} className="text-green-500" /> Contáctanos
                                 </button>
                             </div>
@@ -5589,6 +5632,8 @@ const App = () => {
             
             {/* Modal de Términos (Llamado desde el menú) */}
             {showProspectTermsFromMenu && <TermsModal type="prospect" onClose={() => setShowProspectTermsFromMenu(false)} />}
+            {/* Modal de Contacto (Llamado desde el menú) */}
+            {showContactUsModal && <ContactUsModal onClose={() => setShowContactUsModal(false)} />}
         </div>
     );
     return (
