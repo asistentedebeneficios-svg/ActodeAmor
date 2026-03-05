@@ -384,10 +384,11 @@ const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCanc
     );
 };
 
-// --- NUEVO: MODALES ELEGANTES DE TÉRMINOS Y CONDICIONES ---
+// --- NUEVO: MODALES ELEGANTES DE TÉRMINOS Y CONDICIONES (CON PORTAL) ---
 const TermsModal = ({ type = 'prospect', onClose }) => {
     const isAgent = type === 'agent';
-    return (
+    
+    const modalContent = (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 md:p-8 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
             <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-slide-up border border-gray-100">
                 <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center shrink-0">
@@ -424,6 +425,8 @@ const TermsModal = ({ type = 'prospect', onClose }) => {
             </div>
         </div>
     );
+
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 
 // --- NUEVO: MODAL ELEGANTE DE CONTACTO ---
