@@ -897,27 +897,58 @@ const LetterStep = ({ data, onContinue }) => {
     const [isSigned, setIsSigned] = useState(false);
 
     return (
-        <div className="flex flex-col w-full pt-4 pb-10 min-h-0">
-            <div className="letter-paper p-6 md:p-8 rounded-2xl md:rounded-3xl border border-gray-200 relative mb-6 shadow-md mx-2 md:mx-0">
-                <div className="absolute top-4 right-4 text-rose-200 opacity-60"><Heart size={48} strokeWidth={1} /></div>
-                <div className="font-serif text-gray-800 space-y-4 leading-relaxed pb-4 text-base md:text-lg">
-                    <p className="font-bold text-lg md:text-xl text-rose-800">{letter.salutation}</p>
-                    <p>{letter.body}</p>
-                    <p className="pt-4 font-bold text-rose-800 italic text-lg md:text-xl">{letter.closing}</p>
+        <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
+            {/* Importamos una tipografía premium tipo "Carta Real" solo para este paso */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+                .font-playfair { font-family: 'Playfair Display', serif; }
+            `}} />
+
+            {/* Diseño del papel texturizado/crema */}
+            <div className="bg-[#FCFBF8] p-6 md:p-10 rounded-[2rem] border border-[#EBE5D9] relative mb-6 shadow-xl overflow-hidden">
+                {/* Detalle estético superior (franja roja membretada) */}
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
+                {/* Marca de agua gigante en el fondo */}
+                <div className="absolute -bottom-10 -right-10 text-[#E11D48] opacity-[0.03] pointer-events-none">
+                    <Heart size={200} fill="currentColor" />
                 </div>
                 
-                <div className="mt-8 pt-4 relative min-h-[100px] flex items-center justify-center border-t-2 border-dashed border-gray-300 cursor-pointer hover:bg-rose-50/30 transition-colors rounded-b-xl" onClick={!isSigned ? () => setIsSigned(true) : undefined}>
+                {/* Texto de la carta */}
+                <div className="font-playfair text-[#334155] space-y-6 leading-[1.8] pb-4 text-lg md:text-xl relative z-10">
+                    <p className="font-bold text-[#9F1239] text-xl md:text-2xl">{letter.salutation}</p>
+                    <p className="text-[#475569]">{letter.body}</p>
+                    <p className="pt-4 font-bold text-[#9F1239] italic text-xl md:text-2xl">{letter.closing}</p>
+                </div>
+                
+                {/* ÁREA DE ACCIÓN GIGANTE E INCONFUNDIBLE PARA ADULTOS MAYORES */}
+                <div 
+                    className={`mt-10 relative w-full flex items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-500 ${
+                        !isSigned 
+                        ? 'bg-rose-50/80 border-[3px] border-dashed border-[#E11D48] hover:bg-rose-100/80 shadow-inner' 
+                        : 'bg-white border border-gray-100 shadow-sm'
+                    }`} 
+                    onClick={!isSigned ? () => setIsSigned(true) : undefined}
+                >
                     {!isSigned ? (
-                        <div className="text-gray-400 font-handwriting text-xl md:text-2xl animate-pulse flex flex-col items-center">
-                            <span>Toque aquí para sellar su promesa</span>
+                        <div className="flex flex-col items-center justify-center text-center animate-pulse">
+                            <div className="w-16 h-16 md:w-20 md:h-20 bg-[#E11D48] text-white rounded-full flex items-center justify-center mb-4 shadow-lg shadow-rose-500/40">
+                                <PenTool size={32} />
+                            </div>
+                            <span className="text-[#E11D48] font-black text-2xl md:text-3xl uppercase tracking-widest mb-2">
+                                Tocar Aquí
+                            </span>
+                            <span className="text-rose-800 font-bold text-sm md:text-base">
+                                Para sellar su promesa familiar
+                            </span>
                         </div>
                     ) : (
-                        <div className="animate-stamp relative">
-                            <div className="border-4 border-rose-600 rounded-full w-20 h-20 md:w-24 md:h-24 flex items-center justify-center transform -rotate-12 opacity-80">
-                                <div className="border-2 border-rose-600 rounded-full w-16 h-16 md:w-20 md:h-20 flex flex-col items-center justify-center text-rose-700">
-                                    <Heart size={20} fill="currentColor" />
-                                    <span className="text-[8px] md:text-[10px] font-bold uppercase mt-1 tracking-widest">Promesa</span>
-                                    <span className="text-[6px] md:text-[8px] font-bold uppercase tracking-widest">Sellada</span>
+                        <div className="animate-stamp relative py-4">
+                            {/* Sello Rojo Estilo Notarial/Cera */}
+                            <div className="border-[5px] border-[#E11D48] rounded-full w-28 h-28 md:w-36 md:h-36 flex items-center justify-center transform -rotate-12 opacity-95 bg-white shadow-2xl">
+                                <div className="border-[3px] border-[#E11D48] rounded-full w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-[#E11D48] border-dashed">
+                                    <Heart size={32} fill="currentColor" className="mb-1" />
+                                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] leading-none">Promesa</span>
+                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] mt-1 text-rose-800">Sellada</span>
                                 </div>
                             </div>
                         </div>
@@ -925,11 +956,13 @@ const LetterStep = ({ data, onContinue }) => {
                 </div>
             </div>
             
-            <div className="shrink-0 animate-slide-up pb-8 px-4 md:px-0">
-                <p className="text-center text-gray-500 text-xs md:text-sm mb-4">
-                    {isSigned ? "Su compromiso ha quedado registrado." : "Selle la carta para continuar."}
+            <div className="shrink-0 animate-slide-up pb-8">
+                <p className="text-center text-gray-500 text-sm md:text-base font-medium mb-4">
+                    {isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
                 </p>
-                <button onClick={onContinue} disabled={!isSigned} className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${isSigned ? 'bg-[#E11D48] text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>Continuar <ChevronRight size={20}/></button>
+                <button onClick={onContinue} disabled={!isSigned} className={`w-full py-4 md:py-5 rounded-full font-bold text-lg md:text-xl shadow-xl transition-all flex items-center justify-center gap-2 ${isSigned ? 'bg-[#E11D48] text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
+                    Continuar <ChevronRight size={24}/>
+                </button>
             </div>
         </div>
     );
