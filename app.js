@@ -2539,14 +2539,14 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
                                                                    
 const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     
-    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) ---
     useEffect(() => {
         let inactivityTimer;
         const resetTimer = () => {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
                 onLogout(); // Expulsa al usuario al login
-            }, 30 * 60 * 1000); // 30 minutos
+            }, 60 * 60 * 1000); // 60 minutos
         };
 
         // Escucha cualquier interacción del usuario
@@ -3731,14 +3731,14 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
     
-    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (10 MIN) ---
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
     useEffect(() => {
         let inactivityTimer;
         const resetTimer = () => {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
                 onLogout(); // Expulsa al agente al login
-            }, 10 * 60 * 1000); // 10 minutos
+            }, 30 * 60 * 1000); // 30 minutos
         };
 
         // Escucha cualquier interacción del agente
