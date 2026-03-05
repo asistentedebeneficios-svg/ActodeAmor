@@ -5487,47 +5487,54 @@ const App = () => {
     if (stepIndex === 0) return (
         <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
             {/* CABECERA PÁGINA PRINCIPAL Y MENÚ */}
-            <header className="fixed top-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between relative">
-                    <div className="flex items-center gap-2 md:gap-3 shrink-0 min-w-0 pr-2">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-md shrink-0">
-                            <ShieldCheck className="text-white w-4 h-4 md:w-5 md:h-5" />
-                        </div>
-                        <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
+            <header className="fixed top-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
+                    
+                    {/* IZQUIERDA: LOGO Y NOMBRE */}
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center shadow-md shrink-0">
+                            {/* Solución: size estricto para que el icono nunca desaparezca */}
+                            <ShieldCheck size={20} className="text-white" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
                             asistente<span className="font-light text-gray-400">debeneficios.com</span>
                         </span>
-                    </div>
-                    
-                    {/* BOTÓN MENÚ DE HAMBURGUESA MEJORADO */}
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 text-gray-700 hover:text-rose-600 transition-colors group shrink-0">
-                        <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest hidden sm:block group-hover:text-rose-600 transition-colors">MENÚ</span>
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm">
-                            {isMenuOpen ? <X size={16} className="md:w-5 md:h-5" /> : <Menu size={16} className="md:w-5 md:h-5" />}
-                        </div>
-                    </button>
+                    </div>
+                    
+                    {/* DERECHA: BOTÓN MENÚ */}
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-3 text-gray-700 hover:text-rose-600 transition-colors group shrink-0 outline-none">
+                        <span className="text-xs font-bold uppercase tracking-widest hidden sm:block mt-0.5 group-hover:text-rose-600 transition-colors">MENÚ</span>
+                        <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-rose-50 group-hover:border-rose-200 transition-colors shadow-sm shrink-0">
+                            {/* Solución: size estricto en los iconos del menú */}
+                            {isMenuOpen ? <X size={20} className="text-rose-600" /> : <Menu size={20} />}
+                        </div>
+                    </button>
 
                     {/* DROPDOWN MENU */}
                     {isMenuOpen && (
                         <>
-                            <div className="fixed inset-0 top-20 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsMenuOpen(false)}></div>
-                            <div className="absolute top-20 right-6 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up flex flex-col p-2">
-                                <button onClick={() => { setShowAboutUs(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
-                                    <HelpCircle size={16} className="text-rose-500" /> Quiénes somos
+                            {/* Fondo oscuro para cerrar al hacer clic afuera */}
+                            <div className="fixed inset-0 top-16 md:top-20 bg-black/20 backdrop-blur-sm z-40" onClick={() => setIsMenuOpen(false)}></div>
+                            
+                            {/* Cuadro del menú flotante */}
+                            <div className="absolute top-[4.5rem] md:top-[5.5rem] right-4 md:right-8 w-[260px] bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-up flex flex-col p-2">
+                                <button onClick={() => { setShowAboutUs(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <HelpCircle size={18} className="text-rose-500 shrink-0 group-hover:scale-110 transition-transform" /> Quiénes somos
                                 </button>
-                                <button onClick={() => { setShowProspectTermsFromMenu(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
-                                    <FileText size={16} className="text-gray-400" /> Términos y Condiciones
+                                <button onClick={() => { setShowProspectTermsFromMenu(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <FileText size={18} className="text-gray-400 shrink-0 group-hover:scale-110 transition-transform" /> Términos y Condiciones
                                 </button>
-                                <button onClick={() => { setShowAgentFormFromHome(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
-                                    <UserPlus size={16} className="text-blue-500" /> Únete al equipo
-                                00</button>
-                                <button onClick={() => { setShowContactUsModal(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full">
-                                    <Mail size={16} className="text-green-500" /> Contáctanos
+                                <button onClick={() => { setShowAgentFormFromHome(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <UserPlus size={18} className="text-blue-500 shrink-0 group-hover:scale-110 transition-transform" /> Únete al equipo
+                                </button>
+                                <button onClick={() => { setShowContactUsModal(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <Mail size={18} className="text-green-500 shrink-0 group-hover:scale-110 transition-transform" /> Contáctanos
                                 </button>
                             </div>
                         </>
                     )}
-                </div>
-            </header>
+                </div>
+            </header>
             
             {/* Hero Section con Imágenes */}
             <div className="relative pt-32 pb-16 px-6 lg:px-12 bg-gradient-to-b from-rose-50/50 via-white to-white overflow-hidden">
