@@ -4416,7 +4416,6 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                                                 <X size={16}/> Rechazar
                                             </button>
                                            <button 
-                                                <button 
                                                 disabled={isCheckingOut}
                                                 onClick={() => {
                                                     const items = [{ name: `Paquete Exclusivo ${bundle.id}`, price: bundle.price }];
