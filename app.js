@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -426,7 +427,7 @@ const TermsModal = ({ type = 'prospect', onClose }) => {
         </div>
     );
 
-    return ReactDOM.createPortal(modalContent, document.body);
+    return createPortal(modalContent, document.body);
 };
 
 // --- NUEVO: MODAL ELEGANTE DE CONTACTO ---
