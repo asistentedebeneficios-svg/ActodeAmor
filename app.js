@@ -443,12 +443,22 @@ const ContactUsModal = ({ onClose }) => {
                     <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-xs mx-auto">
                         ¿Tienes preguntas, necesitas ayuda o simplemente quieres hablar con nosotros? Nuestro equipo está listo para asistirte de la mejor manera.
                     </p>
-                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl w-full flex flex-col items-center gap-2 group transition-colors hover:border-green-200">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">NUESTRO CORREO ELECTRÓNICO</span>
-                        <span className="text-lg md:text-xl font-bold text-gray-900 break-all select-all font-mono">{email}</span>
-                        <div className="flex items-center gap-3 pt-2">
-                             <button onClick={() => navigator.clipboard.writeText(email)} className="text-xs font-bold text-green-600 hover:text-green-800 transition-colors">Copiar Dirección</button>
-                             <button onClick={() => window.location.href = `mailto:${email}`} className="text-xs font-bold text-green-600 hover:text-green-800 transition-colors">Enviar Correo</button>
+                    <div className="p-6 bg-gray-50/50 border border-gray-100 rounded-[2rem] w-full flex flex-col items-center gap-3 group transition-all hover:bg-white hover:shadow-md hover:border-green-200">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contacto Oficial</span>
+                        
+                        {/* Correo estilizado: fuente sans, tamaño reducido y menos grosor */}
+                        <span className="text-base md:text-lg font-medium text-gray-800 break-all select-all tracking-tight">
+                            {email}
+                        </span>
+
+                        <div className="flex items-center gap-4 pt-1">
+                             <button onClick={() => navigator.clipboard.writeText(email)} className="text-[11px] font-bold text-gray-400 hover:text-green-600 transition-colors flex items-center gap-1.5">
+                                <Plus size={12}/> Copiar
+                             </button>
+                             <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
+                             <button onClick={() => window.location.href = `mailto:${email}`} className="text-[11px] font-bold text-green-600 hover:text-green-700 transition-colors flex items-center gap-1.5">
+                                <Mail size={12}/> Redactar
+                             </button>
                         </div>
                     </div>
                 </div>
@@ -633,17 +643,21 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto z-[100] animate-fade-in">
-                <div className="min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl w-full max-w-2xl relative shadow-2xl animate-slide-up my-8">
-                    <button onClick={onCancel} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors z-10"><X size={20}/></button>
+            {/* Contenedor principal sin scroll externo */}
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+                <div className="w-full max-w-2xl flex items-center justify-center h-full">
+                {/* Cuadro blanco con max-h-[90vh] para que nunca se salga de la pantalla */}
+                <div className="bg-white rounded-[2rem] w-full relative shadow-2xl animate-slide-up flex flex-col max-h-[90vh] overflow-hidden">
                     
-                    <div className="p-6 md:p-8 border-b border-gray-100">
-                        <h2 className="text-2xl font-bold text-gray-900">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
+                    {/* Cabecera FIJA del formulario */}
+                    <div className="p-6 md:p-8 border-b border-gray-100 shrink-0 bg-white relative z-20">
+                        <button type="button" onClick={onCancel} className="absolute top-6 md:top-8 right-6 md:right-8 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X size={20}/></button>
+                        <h2 className="text-2xl font-bold text-gray-900 pr-12 tracking-tight">{initialData ? 'Editar Solicitud' : 'Únete al Equipo'}</h2>
                         <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                    {/* El formulario ES el que hace el scroll internamente */}
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8 overflow-y-auto">
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
                                 <div className="relative">
