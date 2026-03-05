@@ -4044,6 +4044,30 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
 
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+    // --- NUEVO SENSOR: DESATASCAR BOTÓN SI EL USUARIO HACE "SWIPE BACK" ---
+    useEffect(() => {
+        // Detecta si la pestaña vuelve a estar visible
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                setIsCheckingOut(false);
+            }
+        };
+        // Detecta si el navegador sacó la página de su memoria caché (BFCache)
+        const handlePageShow = (event) => {
+            if (event.persisted) {
+                setIsCheckingOut(false);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('pageshow', handlePageShow);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('pageshow', handlePageShow);
+        };
+    }, []);
+
     const handleCheckout = async (directItems = null, directLeadIds = null) => {
         // Usamos los IDs que vienen del botón de Ofertas, o si no, usamos el carrito normal
         const checkoutLeadIds = directLeadIds || cart;
