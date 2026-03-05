@@ -1232,7 +1232,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     </div>
                     
                     {/* Compactación de espacio para Mac/Móvil */}
-                    <div className="py-4 md:py-3 px-2 sm:px-0">
+                    <div className="pt-2 pb-2 px-2 sm:px-0">
                         <label className="flex items-start gap-3 p-3 md:p-3.5 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                             <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                                 <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} disabled={status !== 'idle'} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-rose-500 checked:border-rose-500 transition-all disabled:opacity-50" />
@@ -1245,10 +1245,10 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     </div>
 
                     {/* Compactación de la sección final */}
-                    <div className="pt-2 pb-6 md:pb-5">
+                    <div className="pt-2 pb-2">
                         <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>{status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}</button>
                         {status === 'idle' && (
-                            <div className="mt-4 flex flex-col items-center gap-3">
+                            <div className="mt-2 flex flex-col items-center gap-2">
                                 <p className="text-center text-[10px] md:text-xs text-gray-400 px-2 leading-tight">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>
                                 <button type="button" onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('funnelLeadData'); window.location.reload(); }} className="text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-800 pb-0.5">Volver a la pantalla principal</button>
                             </div>
