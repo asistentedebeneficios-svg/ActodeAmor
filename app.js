@@ -5504,7 +5504,7 @@ const App = () => {
     }                                                                   
                                                                    
     if (stepIndex === 0) return (
-        <div className="min-h-screen w-full flex flex-col bg-white overflow-y-auto font-sans relative">
+        <div className="min-h-[100dvh] w-full flex flex-col bg-white overflow-y-auto font-sans relative">
             {/* CABECERA PÁGINA PRINCIPAL Y MENÚ */}
             <header className="fixed top-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
@@ -5661,7 +5661,7 @@ const App = () => {
         </div>
     );
     return (
-        <div className="min-h-screen w-full flex flex-col bg-[#FAFAFA] relative">
+        <div className="min-h-[100dvh] w-full flex flex-col bg-[#FAFAFA] relative">
         
             {reinforcement && (<div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 bg-immediate-red text-white text-center"><div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30"><reinforcement.icon size={48} fill="currentColor" className="text-white" /></div><h2 className="text-3xl font-bold mb-4">{reinforcement.title}</h2><p className="text-lg leading-relaxed opacity-90 mb-10 max-w-sm">"{reinforcement.text}"</p><button onClick={next} className="bg-white text-rose-600 px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">Continuar <ChevronRight size={20} /></button></div>)}
             
