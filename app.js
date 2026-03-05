@@ -947,7 +947,7 @@ const FAQStep = ({ options, onContinue }) => {
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900">Aquí están sus respuestas</h2>
                     <p className="text-sm md:text-base text-gray-500 mt-2">Información clara para su tranquilidad.</p>
                 </div>
-                <div className="space-y-4 md:space-y-6">
+                <div className="space-y-3 md:space-y-4">
                     {selectedAnswers.map(ans => (
                         <div key={ans.id} className="bg-white p-5 md:p-6 rounded-2xl border border-rose-100 shadow-sm animate-slide-up">
                             <h4 className="font-bold text-rose-700 text-base md:text-lg mb-2 flex items-center gap-2 border-b border-rose-50 pb-2"><ans.icon size={18}/> {ans.label}</h4>
@@ -1057,7 +1057,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     const minDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
 
     return (
-        <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
+        <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-4 pt-4 relative px-4 md:px-0">
              {status !== 'success' && (
                 <div className="text-center mb-6 md:mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Agendar Asesoría</h2>
