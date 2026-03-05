@@ -653,7 +653,7 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                         <p className="text-gray-500 text-sm mt-1">{initialData ? 'Corrige los datos del aspirante antes de aprobarlo.' : 'Completa tu perfil profesional para enviar la solicitud.'}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-4">
                         <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
                             <div className="flex items-end gap-6 mb-3">
                                 <div className="relative">
@@ -780,11 +780,11 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                             </label>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-100">
-                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError || !acceptedTerms} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
-                                {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
-                            </button>
-                        </div>
+                        <div className="pt-3 mt-2 border-t border-gray-100">
+                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError || !acceptedTerms} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                                {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
