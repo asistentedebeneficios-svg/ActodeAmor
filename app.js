@@ -3921,7 +3921,7 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
 // --- NUEVO: MODAL ELEGANTE DE SOPORTE PARA AGENTES ---
 const AgentSupportModal = ({ onClose }) => {
     const email = 'asistentedebeneficios@gmail.com';
-    return (
+    const modalContent = (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
             <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden relative">
                 <button onClick={onClose} className="absolute top-5 right-5 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors z-10"><X size={18}/></button>
@@ -3947,6 +3947,8 @@ const AgentSupportModal = ({ onClose }) => {
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
                                                                    
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
@@ -4400,8 +4402,8 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                 
                 {/* Aquí agregamos el botón de Soporte al lado del botón Salir */}
                 <div className="flex items-center gap-1 md:gap-3 shrink-0">
-                    <button onClick={() => setShowSupportModal(true)} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg shadow-sm">
-                        <HelpCircle size={14}/> <span className="hidden md:inline">Soporte</span>
+                    <button onClick={() => setShowSupportModal(true)} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
+                        <HelpCircle size={16}/> <span className="hidden md:inline">Soporte</span>
                     </button>
                     <div className="w-px h-4 bg-gray-200 hidden md:block"></div>
                     <button onClick={onLogout} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
