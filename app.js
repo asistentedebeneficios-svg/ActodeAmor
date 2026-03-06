@@ -897,11 +897,11 @@ const LetterStep = ({ data, onContinue }) => {
     const [isSigned, setIsSigned] = useState(false);
     const [isWritingComplete, setIsWritingComplete] = useState(false);
 
-    // Temporizador para el efecto de revelado hacia abajo
+    // Temporizador para el efecto de revelado hacia abajo ajustado a 15 segundos
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsWritingComplete(true);
-        }, 7000); // 7 segundos de "cámara lenta"
+        }, 15000); // <-- CAMBIO A 15 SEGUNDOS
         return () => clearTimeout(timer);
     }, []);
 
@@ -916,7 +916,7 @@ const LetterStep = ({ data, onContinue }) => {
                     100% { clip-path: inset(0 0 0 0); }
                 }
                 .animate-reveal-down {
-                    animation: revealDown 7s linear forwards;
+                    animation: revealDown 15s linear forwards; /* <-- CAMBIO A 15 SEGUNDOS */
                 }
             `}} />
 
@@ -928,7 +928,7 @@ const LetterStep = ({ data, onContinue }) => {
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta con el efecto de barrido hacia abajo */}
+                {/* Texto de la carta con el efecto de barrido hacia abajo más lento */}
                 <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px] animate-reveal-down">
                     <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl">{letter.salutation}</p>
                     <p className="text-xl md:text-2xl text-gray-800 tracking-wide">{letter.body}</p>
