@@ -1561,10 +1561,31 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
     
+    // --- ESTADO Y POLICÍA ---
+    const [tempStatus, setTempStatus] = useState(lead.agentStatus || 'activo');
+    const [showExitPolice, setShowExitPolice] = useState(false);
+    
     const [isEditingDateTime, setIsEditingDateTime] = useState(false);
     const [editDate, setEditDate] = useState(lead.date || '');
     const [editTime, setEditTime] = useState(lead.time || '');
     const [dialog, setDialog] = useState(null);
+
+    // FUNCIÓN INTERCEPTORA DE SALIDA
+    const handleAttemptClose = () => {
+        if (!isAgentView) {
+            onClose(); // Si eres Admin, sales directo
+            return;
+        }
+        setShowExitPolice(true); // Si eres Agente, alto ahí policía
+    };
+
+    const handleConfirmExit = async () => {
+        if (tempStatus !== lead.agentStatus) {
+            await onUpdate(lead.id, { agentStatus: tempStatus });
+        }
+        setShowExitPolice(false);
+        onClose();
+    };
 
     const TIME_SLOTS = [
         "12:00 a.m.", "01:00 a.m.", "02:00 a.m.", "03:00 a.m.", "04:00 a.m.", "05:00 a.m.",
@@ -1652,9 +1673,44 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up">
             <CustomDialog isOpen={!!dialog} {...dialog} />
 
+            {/* --- MODAL DEL POLICÍA DE ESTATUS (Solo para Agentes) --- */}
+            {showExitPolice && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden">
+                        <div className="p-6 text-center border-b border-gray-100 bg-gray-50/50">
+                            <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+                                <Activity size={28}/>
+                            </div>
+                            <h3 className="font-bold text-gray-900 text-lg">Antes de irte...</h3>
+                            <p className="text-sm text-gray-500 mt-2 font-medium">Confirma el estatus actual de este prospecto para mantener tus métricas al día.</p>
+                        </div>
+                        <div className="p-6 flex flex-col gap-4">
+                            <select 
+                                value={tempStatus} 
+                                onChange={(e) => setTempStatus(e.target.value)}
+                                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-gray-700 cursor-pointer shadow-sm transition-all"
+                            >
+                                <option value="activo">🔵 Activo / Pendiente</option>
+                                <option value="seguimiento">⏳ En Seguimiento</option>
+                                <option value="vendido">🏆 Venta Cerrada</option>
+                                <option value="descartado">❌ Descartado</option>
+                            </select>
+                            <div className="flex gap-3 mt-2">
+                                <button onClick={() => setShowExitPolice(false)} className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors shadow-sm">
+                                    Cancelar
+                                </button>
+                                <button onClick={handleConfirmExit} className="flex-1 px-4 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 hover:scale-[1.02] transition-all shadow-md">
+                                    Guardar y Salir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
-                    <button onClick={onClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
+                    <button onClick={handleAttemptClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
                         <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
                             {lead.name} {lead.age ? <span className="text-gray-500 font-medium text-base md:text-lg">({lead.age} años)</span> : ''}
