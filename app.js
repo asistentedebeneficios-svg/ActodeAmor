@@ -5304,9 +5304,6 @@ const AboutUsPage = ({ onClose }) => {
 
 // --- NUEVA PANTALLA: EVALUACIÓN DEL AGENTE POR EL CLIENTE ---
 const ClientReviewScreen = ({ leadId, db }) => {
-    const RUNTIME_PROJECT_ID = db?.app?.options?.projectId || 'unknown-project';
-    const ARTIFACT_APP_ID = typeof __app_id !== 'undefined' ? __app_id : null;
-
     const [lead, setLead] = useState(null);
     const [agent, setAgent] = useState(null);
     const [rating, setRating] = useState(0);
@@ -5315,53 +5312,20 @@ const ClientReviewScreen = ({ leadId, db }) => {
     const [status, setStatus] = useState('loading');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [leadDocPath, setLeadDocPath] = useState('');
-    const [agentDocPath, setAgentDocPath] = useState('');
-    const [reviewsCollectionPath, setReviewsCollectionPath] = useState('');
-    const [debugInfo, setDebugInfo] = useState('');
-
-    const tryCandidates = async (candidates, label) => {
-        const logs = [];
-
-        for (const item of candidates) {
-            try {
-                const snap = await getDoc(item.ref);
-                logs.push(`${label}: ${item.path} => OK (exists: ${snap.exists()})`);
-
-                if (snap.exists()) {
-                    return { snap, path: item.path, logs };
-                }
-            } catch (e) {
-                logs.push(`${label}: ${item.path} => ERROR (${e.message})`);
-            }
-        }
-
-        throw new Error(logs.join(' | '));
-    };
-
     useEffect(() => {
         const fetchReviewData = async () => {
             try {
-                const leadCandidates = [
-                    {
-                        path: `/leads/${leadId}`,
-                        ref: doc(db, 'leads', leadId)
-                    }
-                ];
+                const leadDoc = await getDoc(doc(db, 'leads', leadId));
 
-                if (ARTIFACT_APP_ID) {
-                    leadCandidates.push({
-                        path: `/artifacts/${ARTIFACT_APP_ID}/public/data/leads/${leadId}`,
-                        ref: doc(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'leads', leadId)
-                    });
+                if (!leadDoc.exists()) {
+                    setStatus('error');
+                    setErrorMessage('El ID del prospecto no existe en la base de datos.');
+                    return;
                 }
 
-                const leadResult = await tryCandidates(leadCandidates, 'LEAD');
-                const leadData = { id: leadResult.snap.id, ...leadResult.snap.data() };
+                const leadData = { id: leadDoc.id, ...leadDoc.data() };
 
                 if (leadData.reviewed) {
-                    setLeadDocPath(leadResult.path);
-                    setDebugInfo(leadResult.logs.join('\n'));
                     setStatus('already_submitted');
                     return;
                 }
@@ -5369,47 +5333,28 @@ const ClientReviewScreen = ({ leadId, db }) => {
                 if (!leadData.assignedTo) {
                     setStatus('error');
                     setErrorMessage('El prospecto no tiene ningún agente asignado.');
-                    setLeadDocPath(leadResult.path);
-                    setDebugInfo(leadResult.logs.join('\n'));
                     return;
                 }
 
-                const agentCandidates = [
-                    {
-                        path: `/agents/${leadData.assignedTo}`,
-                        ref: doc(db, 'agents', leadData.assignedTo)
-                    }
-                ];
+                const agentDoc = await getDoc(doc(db, 'agents', leadData.assignedTo));
 
-                if (ARTIFACT_APP_ID) {
-                    agentCandidates.push({
-                        path: `/artifacts/${ARTIFACT_APP_ID}/public/data/public_info/${leadData.assignedTo}`,
-                        ref: doc(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'public_info', leadData.assignedTo)
-                    });
-                }
-
-                const agentResult = await tryCandidates(agentCandidates, 'AGENT');
-
-                let selectedReviewsCollectionPath = '/reviews';
-                if (leadResult.path.startsWith('/artifacts/')) {
-                    selectedReviewsCollectionPath = `/artifacts/${ARTIFACT_APP_ID}/public/data/reviews`;
+                if (!agentDoc.exists()) {
+                    setStatus('error');
+                    setErrorMessage('El agente asignado a este prospecto ya no existe.');
+                    return;
                 }
 
                 setLead(leadData);
-                setAgent({ id: agentResult.snap.id, ...agentResult.snap.data() });
-                setLeadDocPath(leadResult.path);
-                setAgentDocPath(agentResult.path);
-                setReviewsCollectionPath(selectedReviewsCollectionPath);
-                setDebugInfo([...leadResult.logs, ...agentResult.logs].join('\n'));
+                setAgent({ id: agentDoc.id, ...agentDoc.data() });
                 setStatus('ready');
             } catch (e) {
                 setStatus('error');
-                setErrorMessage(e.message);
+                setErrorMessage(`Error al cargar la evaluación: ${e.message}`);
             }
         };
 
         fetchReviewData();
-    }, [leadId, db, ARTIFACT_APP_ID]);
+    }, [leadId, db]);
 
     const handleSubmit = async () => {
         if (rating === 0) return;
@@ -5417,37 +5362,23 @@ const ClientReviewScreen = ({ leadId, db }) => {
         setStatus('submitting');
 
         try {
-            const reviewsRef = reviewsCollectionPath.startsWith('/artifacts/')
-                ? collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'reviews')
-                : collection(db, 'reviews');
+            await addDoc(collection(db, 'reviews'), {
+                agentId: agent.id,
+                leadId: lead.id,
+                leadName: lead.name || '',
+                rating: Number(rating),
+                comment: comment || '',
+                timestamp: Date.now()
+            });
 
-            const leadRef = leadDocPath.startsWith('/artifacts/')
-                ? doc(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'leads', lead.id)
-                : doc(db, 'leads', lead.id);
-
-            try {
-                await addDoc(reviewsRef, {
-                    agentId: agent.id,
-                    leadId: lead.id,
-                    leadName: lead.name || '',
-                    rating: Number(rating),
-                    comment: comment || '',
-                    timestamp: Date.now()
-                });
-            } catch (e) {
-                throw new Error(`FALLÓ AL CREAR LA RESEÑA en ${reviewsCollectionPath}. Detalle: ${e.message}`);
-            }
-
-            try {
-                await updateDoc(leadRef, { reviewed: true });
-            } catch (e) {
-                throw new Error(`LA RESEÑA SÍ SE GUARDÓ, pero FALLÓ AL ACTUALIZAR el lead en ${leadDocPath}. Detalle: ${e.message}`);
-            }
+            await updateDoc(doc(db, 'leads', lead.id), {
+                reviewed: true
+            });
 
             setStatus('submitted');
         } catch (e) {
             setStatus('error');
-            setErrorMessage(e.message);
+            setErrorMessage(`Error al guardar la evaluación: ${e.message}`);
         }
     };
 
@@ -5466,7 +5397,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
         return (
             <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                    <Check size={40} className="text-green-600"/>
+                    <Check size={40} className="text-green-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Evaluación Recibida</h2>
                 <p className="text-gray-500">Ya has calificado a tu especialista anteriormente. ¡Gracias por tu tiempo!</p>
@@ -5478,25 +5409,14 @@ const ClientReviewScreen = ({ leadId, db }) => {
         return (
             <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center">
                 <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6">
-                    <X size={40} className="text-gray-400"/>
+                    <X size={40} className="text-gray-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido - PRUEBA NUEVA</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2>
                 <p className="text-gray-500 mb-6">Este enlace de evaluación ya no está disponible o es incorrecto.</p>
 
-                <div className="bg-red-50 text-red-700 p-4 rounded-xl text-xs font-mono text-left max-w-2xl w-full border border-red-200 shadow-inner whitespace-pre-wrap">
+                <div className="bg-red-50 text-red-700 p-4 rounded-xl text-xs font-mono text-left max-w-md w-full border border-red-200 shadow-inner">
                     <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Diagnóstico del Sistema:</span>
                     {errorMessage}
-                    <div className="mt-3 pt-3 border-t border-red-200 text-[11px] text-red-800">
-                        Proyecto Firebase detectado: {RUNTIME_PROJECT_ID}
-                    </div>
-                    <div className="mt-2 text-[11px] text-red-800">
-                        __app_id detectado: {ARTIFACT_APP_ID || 'NO DISPONIBLE'}
-                    </div>
-                    {debugInfo && (
-                        <div className="mt-3 pt-3 border-t border-red-200 text-[11px] text-red-800">
-                            {debugInfo}
-                        </div>
-                    )}
                 </div>
             </div>
         );
@@ -5506,7 +5426,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
         return (
             <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center animate-fade-in">
                 <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-500 rounded-[2rem] flex items-center justify-center mb-8 shadow-xl shadow-green-500/20">
-                    <Star size={48} className="text-white" fill="currentColor"/>
+                    <Star size={48} className="text-white" fill="currentColor" />
                 </div>
                 <h2 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">¡Muchas Gracias!</h2>
                 <p className="text-lg text-gray-500 max-w-md mx-auto leading-relaxed">
@@ -5581,16 +5501,8 @@ const ClientReviewScreen = ({ leadId, db }) => {
                         disabled={rating === 0}
                         className="w-full bg-black text-white py-4 sm:py-5 rounded-2xl font-bold text-base shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
                     >
-                        <Check size={20}/> Enviar Calificación
+                        <Check size={20} /> Enviar Calificación
                     </button>
-
-                    <div className="mt-6 text-[11px] text-gray-400 text-left w-full border-t pt-4">
-                        <div>Lead path: {leadDocPath || 'todavía no detectado'}</div>
-                        <div>Agent path: {agentDocPath || 'todavía no detectado'}</div>
-                        <div>Reviews path: {reviewsCollectionPath || 'todavía no detectado'}</div>
-                        <div>Firebase project: {RUNTIME_PROJECT_ID}</div>
-                        <div>__app_id: {ARTIFACT_APP_ID || 'NO DISPONIBLE'}</div>
-                    </div>
                 </div>
             </div>
         </div>
