@@ -1684,7 +1684,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             <h3 className="font-bold text-gray-900 text-lg">Antes de irte...</h3>
                             <p className="text-sm text-gray-500 mt-2 font-medium">Confirma el estatus actual de este prospecto para mantener tus métricas al día.</p>
                         </div>
-                        <div className="p-6 flex flex-col gap-4">
+                        <div className="p-6 flex flex-col gap-3">
                             <select 
                                 value={tempStatus} 
                                 onChange={(e) => setTempStatus(e.target.value)}
@@ -1695,12 +1695,21 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                     'bg-rose-50 border-rose-200 text-rose-700 focus:border-rose-500 focus:ring-rose-500/20'
                                 }`}
                             >
-                                <option value="activo" className="bg-white text-gray-800">Activo / Pendiente</option>
+                                <option value="activo" className="bg-white text-gray-800">Cita Programada</option>
                                 <option value="seguimiento" className="bg-white text-gray-800">En Seguimiento</option>
                                 <option value="vendido" className="bg-white text-gray-800">Venta Cerrada</option>
                                 <option value="descartado" className="bg-white text-gray-800">Descartado</option>
                             </select>
-                            <div className="flex gap-3 mt-2">
+                            
+                            {/* TEXTO DE AYUDA DINÁMICO E ELEGANTE */}
+                            <div className="min-h-[20px] px-2 text-center">
+                                {tempStatus === 'activo' && <p className="text-[11px] font-medium text-blue-600/80 italic animate-fade-in">Todavía no ha atendido al Prospecto.</p>}
+                                {tempStatus === 'seguimiento' && <p className="text-[11px] font-medium text-amber-600/80 italic animate-fade-in">Hay interés, pero el cliente necesita pensarlo o reagendar.</p>}
+                                {tempStatus === 'vendido' && <p className="text-[11px] font-medium text-emerald-600/80 italic animate-fade-in">¡Excelente! La póliza fue aprobada.</p>}
+                                {tempStatus === 'descartado' && <p className="text-[11px] font-medium text-rose-600/80 italic animate-fade-in">El prospecto no califica o dio un no definitivo.</p>}
+                            </div>
+
+                            <div className="flex gap-3 mt-3">
                                 <button onClick={() => setShowExitPolice(false)} className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors shadow-sm">
                                     Cancelar
                                 </button>
