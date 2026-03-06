@@ -3918,6 +3918,37 @@ const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
   };
 };
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
+// --- NUEVO: MODAL ELEGANTE DE SOPORTE PARA AGENTES ---
+const AgentSupportModal = ({ onClose }) => {
+    const email = 'asistentedebeneficios@gmail.com';
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden relative">
+                <button onClick={onClose} className="absolute top-5 right-5 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors z-10"><X size={18}/></button>
+                
+                <div className="p-8 md:p-10 text-center space-y-5 flex flex-col items-center pt-10">
+                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center shadow-inner border border-blue-100 mb-2">
+                        <HelpCircle size={32} className="text-blue-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Soporte al Agente</h2>
+                    <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                        Estamos aquí para servirte. Si tienes algún inconveniente o duda con tu cuenta, por favor escríbenos. Las peticiones serán atendidas con mucho gusto en el orden en que fueron recibidas.
+                    </p>
+                    
+                    <div className="w-full pt-4">
+                        <a href={`mailto:${email}`} className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-xl flex items-center justify-center gap-2 group">
+                            <Mail size={18} className="group-hover:scale-110 transition-transform" /> Enviar Correo
+                        </a>
+                        <p className="text-[11px] font-bold text-gray-400 mt-4 bg-gray-50 py-2 rounded-lg border border-gray-100 select-all tracking-wider">
+                            {email}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+                                                                   
 const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
     
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
@@ -3947,10 +3978,11 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
     const offerPrice = generalSettings?.offerPrice ?? 35;
     // Si está inactivo, le borramos el Marketplace de sus opciones
     const TABS = agent.status === 'inactive' ? ['clientes', 'agenda', 'historial'] : ['marketplace', 'ofertas', 'clientes', 'agenda', 'historial'];
-    const [viewingLead, setViewingLead] = useState(null);
-    const [dialog, setDialog] = useState(null);
-    
-    // --- MÁGIA: RELOJ INTERNO (Actualiza la pantalla cada SEGUNDO para los Countdowns) ---
+    const [viewingLead, setViewingLead] = useState(null);
+    const [dialog, setDialog] = useState(null);
+    const [showSupportModal, setShowSupportModal] = useState(false); // <-- ESTE ES EL ESTADO DEL MODAL DE SOPORTE
+    
+    // --- MÁGIA: RELOJ INTERNO (Actualiza la pantalla cada SEGUNDO para los Countdowns) ---
     const [timeTick, setTimeTick] = useState(0);
     useEffect(() => {
         const timer = setInterval(() => setTimeTick(t => t + 1), 1000); 
@@ -4365,9 +4397,15 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                         <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Portal Corporativo</p>
                     </div>
                 </div>
-                <button onClick={onLogout} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1 shrink-0">
-                    <LogOut size={14}/> <span className="hidden md:inline">Salir</span>
-                </button>
+                <div className="flex items-center gap-1 md:gap-3 shrink-0">
+                    <button onClick={() => setShowSupportModal(true)} className="text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 hover:bg-blue-100 rounded-lg">
+                        <HelpCircle size={14}/> <span className="hidden md:inline">Soporte</span>
+                    </button>
+                    <div className="w-px h-4 bg-gray-200 hidden md:block"></div>
+                    <button onClick={onLogout} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
+                        <LogOut size={14}/> <span className="hidden md:inline">Salir</span>
+                    </button>
+                </div>
             </div>
 
             {/* Pestañas de Navegación */}
