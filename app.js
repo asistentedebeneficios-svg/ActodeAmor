@@ -4483,25 +4483,23 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                     </div>
                     <div className="min-w-0">
                         <h2 className="font-semibold text-gray-900 text-sm tracking-tight truncate">{agent.name}</h2>
-                        
-                        {/* ESTRELLAS DEL AGENTE CLICKEABLES */}
-                        <div 
-                            onClick={() => setShowReviewsModal(true)} 
-                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-50 p-0.5 rounded transition-colors -ml-0.5 mt-0.5 mb-0.5"
-                            title="Ver mis reseñas"
-                        >
-                            <div className="flex text-amber-400">
-                                {[1,2,3,4,5].map(s => <Star key={s} size={10} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-400" : "text-gray-300"}/>)}
-                            </div>
-                            <span className="text-[10px] font-bold text-gray-700">{avgRating} <span className="font-normal text-gray-400">({agentReviews.length})</span></span>
-                        </div>
-
-                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold leading-none">Portal Corporativo</p>
+                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">Portal Corporativo</p>
                     </div>
                 </div>
                 
-                {/* Aquí agregamos el botón de Soporte al lado del botón Salir */}
-                <div className="flex items-center gap-1 md:gap-3 shrink-0">
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                    {/* ESTRELLAS DEL AGENTE: Botón Elegante Dorado */}
+                    {agentReviews.length > 0 && (
+                        <button 
+                            onClick={() => setShowReviewsModal(true)} 
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer mr-1 md:mr-2 shadow-sm"
+                            title="Ver mis reseñas"
+                        >
+                            <Star size={14} className="text-amber-500" fill="currentColor" />
+                            <span className="text-xs font-bold text-amber-700">{avgRating}</span>
+                        </button>
+                    )}
+
                     <button onClick={() => setShowSupportModal(true)} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
                         <HelpCircle size={16}/> <span className="hidden md:inline">Soporte</span>
                     </button>
