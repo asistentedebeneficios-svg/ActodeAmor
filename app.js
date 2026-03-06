@@ -5309,29 +5309,44 @@ const ClientReviewScreen = ({ leadId, db }) => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
-    const [status, setStatus] = useState('loading'); // loading, ready, submitted, error, already_submitted
+    const [status, setStatus] = useState('loading'); 
+    const [errorMessage, setErrorMessage] = useState(''); // NUEVO ESTADO PARA VER EL ERROR
 
     useEffect(() => {
         const fetchReviewData = async () => {
             try {
                 // 1. Buscamos al prospecto
                 const leadDoc = await getDoc(doc(db, 'leads', leadId));
-                if (!leadDoc.exists()) { setStatus('error'); return; }
+                if (!leadDoc.exists()) { 
+                    setStatus('error'); 
+                    setErrorMessage('El ID del prospecto no existe en la base de datos.');
+                    return; 
+                }
                 const leadData = { id: leadDoc.id, ...leadDoc.data() };
                 
                 // 2. Verificamos reglas de negocio
                 if (leadData.reviewed) { setStatus('already_submitted'); return; }
-                if (!leadData.assignedTo) { setStatus('error'); return; }
+                if (!leadData.assignedTo) { 
+                    setStatus('error'); 
+                    setErrorMessage('El prospecto no tiene ningún agente asignado.');
+                    return; 
+                }
 
                 // 3. Buscamos a su agente asignado
                 const agentDoc = await getDoc(doc(db, 'agents', leadData.assignedTo));
-                if (!agentDoc.exists()) { setStatus('error'); return; }
+                if (!agentDoc.exists()) { 
+                    setStatus('error'); 
+                    setErrorMessage('El agente asignado a este prospecto ya no existe.');
+                    return; 
+                }
 
                 setLead(leadData);
                 setAgent({ id: agentDoc.id, ...agentDoc.data() });
                 setStatus('ready');
             } catch (e) {
+                // CAPTURAMOS EL ERROR REAL DE FIREBASE O JAVASCRIPT
                 setStatus('error');
+                setErrorMessage(`Fallo técnico de Firebase: ${e.message}`);
             }
         };
         fetchReviewData();
@@ -5353,6 +5368,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
             setStatus('submitted');
         } catch (e) {
             setStatus('error');
+            setErrorMessage(`Error al guardar reseña: ${e.message}`);
         }
     };
 
@@ -5365,7 +5381,19 @@ const ClientReviewScreen = ({ leadId, db }) => {
     }
 
     if (status === 'error') {
-        return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center"><div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6"><X size={40} className="text-gray-400"/></div><h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2><p className="text-gray-500">Este enlace de evaluación ya no está disponible o es incorrecto.</p></div>;
+        return (
+            <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center">
+                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6"><X size={40} className="text-gray-400"/></div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2>
+                <p className="text-gray-500 mb-6">Este enlace de evaluación ya no está disponible o es incorrecto.</p>
+                
+                {/* CUADRO ROJO DE DIAGNÓSTICO */}
+                <div className="bg-red-50 text-red-700 p-4 rounded-xl text-xs font-mono text-left max-w-md w-full border border-red-200 shadow-inner">
+                    <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Detalle del Error:</span>
+                    {errorMessage}
+                </div>
+            </div>
+        );
     }
 
     if (status === 'submitted') {
