@@ -2089,7 +2089,7 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                     <div className="md:col-span-8 space-y-6 flex flex-col h-full">
                         {/* ... MANTENEMOS INTACTA TU PARTE DERECHA DE CARTERA ASIGNADA ... */}
                         <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
                                 <div>
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><ShoppingCart size={22} className="text-gray-400"/> Cartera Asignada</h3>
                                     <p className="text-sm text-gray-500 mt-1 font-medium">Gestionando <strong className="text-gray-900">{assignedLeads.length}</strong> prospectos</p>
@@ -2100,7 +2100,8 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                                 </div>
                             </div>
                             
-                            <div className="flex-1 overflow-y-auto pr-1 space-y-3 scrollbar-hide">
+                            {/* AQUÍ ESTÁ LA MAGIA DEL SCROLL CONTROLADO */}
+                            <div className="overflow-y-auto pr-2 space-y-3 scrollbar-hide max-h-[450px]">
                                 {assignedLeads.length > 0 ? (
                                     assignedLeads.map(lead => (
                                         <div key={lead.id} onClick={() => onLeadClick(lead)} className="p-4 md:p-5 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 hover:shadow-md cursor-pointer transition-all flex items-center justify-between group shadow-sm">
