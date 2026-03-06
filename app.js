@@ -4397,8 +4397,10 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                         <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Portal Corporativo</p>
                     </div>
                 </div>
+                
+                {/* Aquí agregamos el botón de Soporte al lado del botón Salir */}
                 <div className="flex items-center gap-1 md:gap-3 shrink-0">
-                    <button onClick={() => setShowSupportModal(true)} className="text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 hover:bg-blue-100 rounded-lg">
+                    <button onClick={() => setShowSupportModal(true)} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg shadow-sm">
                         <HelpCircle size={14}/> <span className="hidden md:inline">Soporte</span>
                     </button>
                     <div className="w-px h-4 bg-gray-200 hidden md:block"></div>
