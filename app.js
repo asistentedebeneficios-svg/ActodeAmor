@@ -5411,7 +5411,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
         return (
             <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center">
                 <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6"><X size={40} className="text-gray-400"/></div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido - PRUEBA NUEVA</h2>
                 <p className="text-gray-500 mb-6">Este enlace de evaluación ya no está disponible o es incorrecto.</p>
                 
                 {/* CUADRO ROJO DE DIAGNÓSTICO AVANZADO */}
