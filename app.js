@@ -273,6 +273,7 @@ const useFirebaseDatabase = () => {
         await batch.commit();
     };
     const deleteLead = async (id) => { if (user) await deleteDoc(doc(db, 'leads', id)); };
+    const deleteReview = async (id) => { if (user) await deleteDoc(doc(db, 'reviews', id)); };
     
     const saveAgent = async (agent) => {
         if (!user) return;
@@ -368,7 +369,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -1857,12 +1858,23 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     );
 };
 
-const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent }) => {
+const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent, onDeleteReview }) => {
     // Calculadora de estrellas estilo Amazon
     const agentReviews = reviews.filter(r => r.agentId === agent.id).sort((a,b) => b.timestamp - a.timestamp);
     const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
 
-    const [innerSearch, setInnerSearch] = useState('');
+    // --- NUEVO: FUNCIÓN PARA BORRAR RESEÑA ---
+    const handleDeleteReview = (rev) => {
+        setDialog({
+            title: 'Eliminar Reseña',
+            message: `¿Estás seguro de eliminar permanentemente la reseña de ${rev.leadName}? Esto ajustará las métricas del agente automáticamente.`,
+            type: 'danger',
+            onConfirm: async () => { await onDeleteReview(rev.id); setDialog(null); },
+            onCancel: () => setDialog(null)
+        });
+    };
+
+    const [innerSearch, setInnerSearch] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState(agent);
     
@@ -2151,21 +2163,24 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                                     </div>
                                 ) : (
                                     agentReviews && agentReviews.map(rev => (
-                                        <div key={rev.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <span className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                                                    <User size={14} className="text-gray-400"/> {rev.leadName}
-                                                </span>
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md border border-gray-200">
-                                                    {new Date(rev.timestamp).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="flex text-amber-400 mb-3 gap-0.5">
-                                                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "text-amber-400" : "text-gray-300"}/>)}
-                                            </div>
-                                            {rev.comment && <p className="text-gray-600 text-sm italic leading-relaxed bg-white p-3 rounded-xl border border-gray-100">"{rev.comment}"</p>}
+                                    <div key={rev.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative group">
+                                        <button onClick={() => handleDeleteReview(rev)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-1.5 bg-white rounded-lg shadow-sm border border-gray-200 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Eliminar Reseña">
+                                            <Trash2 size={14}/>
+                                        </button>
+                                        <div className="flex justify-between items-start mb-3 pr-8">
+                                            <span className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                                                <User size={14} className="text-gray-400"/> {rev.leadName}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md border border-gray-200">
+                                                {new Date(rev.timestamp).toLocaleDateString()}
+                                            </span>
                                         </div>
-                                    ))
+                                        <div className="flex text-amber-400 mb-3 gap-0.5">
+                                            {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "text-amber-400" : "text-gray-300"}/>)}
+                                        </div>
+                                        {rev.comment && <p className="text-gray-600 text-sm italic leading-relaxed bg-white p-3 rounded-xl border border-gray-100">"{rev.comment}"</p>}
+                                    </div>
+                                ))
                                 )}
                             </div>
                         </div>
@@ -2777,7 +2792,7 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
     );
 };
                                                                    
-const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
+const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onDeleteReview, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) ---
     useEffect(() => {
         let inactivityTimer;
@@ -3689,14 +3704,15 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             )}
 
             {viewingAgent && (
-                <AgentDetailView 
-                    agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
-                    leads={processedLeads} 
+                <AgentDetailView 
+                    agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
+                    leads={processedLeads} 
                     reviews={reviews}
                     onClose={() => setViewingAgent(null)} 
                     onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} 
                     onSaveAgent={handleSaveAgent}
                     onDeleteAgent={onDeleteAgent}
+                    onDeleteReview={onDeleteReview}
                 />
             )}                        
             <CustomDialog isOpen={!!dialog} {...dialog} />
@@ -4017,8 +4033,13 @@ const AgentSupportModal = ({ onClose }) => {
     return createPortal(modalContent, document.body);
 };
                                                                    
-const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) => {
+const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, generalSettings }) => {
     
+    // --- ESTRELLAS DEL AGENTE Y MODAL ---
+    const agentReviews = reviews.filter(r => r.agentId === agent.id).sort((a,b) => b.timestamp - a.timestamp);
+    const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
+    const [showReviewsModal, setShowReviewsModal] = useState(false);
+
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
     useEffect(() => {
         let inactivityTimer;
@@ -4462,7 +4483,20 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                     </div>
                     <div className="min-w-0">
                         <h2 className="font-semibold text-gray-900 text-sm tracking-tight truncate">{agent.name}</h2>
-                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Portal Corporativo</p>
+                        
+                        {/* ESTRELLAS DEL AGENTE CLICKEABLES */}
+                        <div 
+                            onClick={() => setShowReviewsModal(true)} 
+                            className="flex items-center gap-1 cursor-pointer hover:bg-gray-50 p-0.5 rounded transition-colors -ml-0.5 mt-0.5 mb-0.5"
+                            title="Ver mis reseñas"
+                        >
+                            <div className="flex text-amber-400">
+                                {[1,2,3,4,5].map(s => <Star key={s} size={10} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-400" : "text-gray-300"}/>)}
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-700">{avgRating} <span className="font-normal text-gray-400">({agentReviews.length})</span></span>
+                        </div>
+
+                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold leading-none">Portal Corporativo</p>
                     </div>
                 </div>
                 
@@ -4957,10 +4991,56 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                 </div>
             )}
 
+            {/* MODAL DE RESEÑAS DEL AGENTE (Solo Lectura) */}
+            {showReviewsModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    <div className="bg-white rounded-3xl w-full max-w-md flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden relative max-h-[80vh]">
+                        <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center border border-amber-100">
+                                    <Star size={20} fill="currentColor"/>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 leading-tight">Mis Reseñas</h3>
+                                    <p className="text-[10px] text-gray-500">Calificación Global: {avgRating} de 5.0</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowReviewsModal(false)} className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-full text-gray-500 transition-colors shadow-sm"><X size={16}/></button>
+                        </div>
+                        <div className="p-5 overflow-y-auto space-y-4 bg-gray-50/30">
+                            {agentReviews.length === 0 ? (
+                                <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200">
+                                    <Star size={24} className="text-gray-300 mx-auto mb-2"/>
+                                    <p className="text-gray-400 font-bold text-sm">Aún no tienes reseñas.</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">Tus clientes recibirán el enlace pronto.</p>
+                                </div>
+                            ) : (
+                                agentReviews.map(rev => (
+                                    <div key={rev.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                                                <User size={12} className="text-gray-400"/> {rev.leadName}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                                {new Date(rev.timestamp).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex text-amber-400 mb-2 gap-0.5">
+                                            {[1,2,3,4,5].map(s => <Star key={s} size={12} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "text-amber-400" : "text-gray-200"}/>)}
+                                        </div>
+                                        {rev.comment && <p className="text-gray-600 text-xs italic leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100">"{rev.comment}"</p>}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* AQUI RENDERIZAMOS EL MODAL DE SOPORTE */}
             {showSupportModal && <AgentSupportModal onClose={() => setShowSupportModal(false)} />}
-        </div>
-    );
+        </div>
+    );
 };
 
 const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
@@ -5571,9 +5651,9 @@ const App = () => {
     });
     
     const [showLogin, setShowLogin] = useState(false);
-    const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
-    const currentStep = STEPS[stepIndex];
+    const [showRegister, setShowRegister] = useState(false);
+    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
+    const currentStep = STEPS[stepIndex];
 
     // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
     if (isReviewRoute && reviewLeadId) {
@@ -5813,15 +5893,15 @@ const App = () => {
         const isSuperAdmin = adminUIDs.includes(user.uid);
 
         if (currentAgent) {
-            return <AgentPortal leads={leads} agent={currentAgent} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
+            return <AgentPortal leads={leads} agent={currentAgent} reviews={reviews} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
         }
 
         if (isSuperAdmin) {
-            return (
-                <AdminDashboard 
-                    leads={leads} 
-                    agents={agents} 
-                    agentRequests={agentRequests}
+            return (
+                <AdminDashboard 
+                    leads={leads} 
+                    agents={agents} 
+                    agentRequests={agentRequests}
                     reviews={reviews}
                     onApproveRequest={approveAgentRequest}
                     onRejectRequest={rejectAgentRequest}
@@ -5832,7 +5912,8 @@ const App = () => {
                     onUpdateLead={updateLead}
                     bulkUpdateLeads={bulkUpdateLeads}
                     bulkDeleteLeads={bulkDeleteLeads}
-                    onDeleteLead={deleteLead} 
+                    onDeleteLead={deleteLead}
+                    onDeleteReview={deleteReview} 
                     onSaveAgent={saveAgent} 
                     onDeleteAgent={deleteAgent}
                     onUpdateSchedule={updateSchedule}
