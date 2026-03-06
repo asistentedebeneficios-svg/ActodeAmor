@@ -3363,34 +3363,41 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                         {/* CONTENIDO 2: AGENTES ACTIVOS E INACTIVOS (NUEVO DISEÑO APPLE) */}
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {currentViewAgents.map(agent => (
-                                <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between gap-5 group ${agent.status === 'inactive' ? 'border-gray-200 opacity-60 grayscale-[50%]' : 'border-gray-100'}`}>
-                                    
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400 group-hover:border-rose-200 transition-colors">
-                                            {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0 flex-1 pr-2">
-                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
-                                                <span className="truncate">{agent.name}</span>
-                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
-                                            </h3>
-                                            {/* RATING ESTILO AMAZON */}
-                                            {agentReviews.length > 0 && (
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    <div className="flex text-amber-400">
-                                                        {[1,2,3,4,5].map(s => <Star key={s} size={12} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-400" : "text-gray-300"}/>)}
-                                                    </div>
-                                                    <span className="text-[10px] font-bold text-gray-700">{avgRating} <span className="font-normal text-gray-400">({agentReviews.length})</span></span>
+                                {currentViewAgents.map(agent => {
+                                    // CALCULAMOS EL RATING INDIVIDUAL PARA ESTE AGENTE EN EL MAP
+                                    const agReviews = reviews.filter(r => r.agentId === agent.id);
+                                    const agAvgRating = agReviews.length > 0 ? (agReviews.reduce((acc, r) => acc + r.rating, 0) / agReviews.length).toFixed(1) : 0;
+
+                                    return (
+                                        <div key={agent.id} onClick={() => setViewingAgent(agent)} className={`bg-white p-5 md:p-6 rounded-3xl shadow-soft border cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between gap-5 group ${agent.status === 'inactive' ? 'border-gray-200 opacity-60 grayscale-[50%]' : 'border-gray-100'}`}>
+                                            
+                                            <div className="flex items-center gap-4 min-w-0">
+                                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center font-bold text-xl md:text-2xl border border-gray-200 overflow-hidden shadow-sm shrink-0 text-gray-400 group-hover:border-rose-200 transition-colors">
+                                                    {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
                                                 </div>
-                                            )}
-                                            
-                                            <div className="flex flex-col gap-1.5 mt-2">
-                                                {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
-                                                {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
+                                                <div className="min-w-0 flex-1 pr-2">
+                                                    <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
+                                                        <span className="truncate">{agent.name}</span>
+                                                        {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
+                                                    </h3>
+                                                    {/* RATING ESTILO AMAZON */}
+                                                    {agReviews.length > 0 && (
+                                                        <div className="flex items-center gap-1.5 mt-1">
+                                                            <div className="flex text-amber-400">
+                                                                {[1,2,3,4,5].map(s => <Star key={s} size={12} fill={s <= Math.round(agAvgRating) ? "currentColor" : "none"} className={s <= Math.round(agAvgRating) ? "text-amber-400" : "text-gray-300"}/>)}
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-gray-700">{agAvgRating} <span className="font-normal text-gray-400">({agReviews.length})</span></span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="flex flex-col gap-1.5 mt-2">
+                                                        {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
+                                                        {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                    );
+                                })}
 
                                     <div className="mt-1">
                                         <div className="flex items-center gap-1.5 mb-2">
