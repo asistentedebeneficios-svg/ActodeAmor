@@ -895,10 +895,54 @@ const HeartProgress = ({ percentage, isBeating }) => {
 const LetterStep = ({ data, onContinue }) => {
     const letter = generateUserLetter(data);
     const [isSigned, setIsSigned] = useState(false);
+    
+    // --- MAGIA: ESTADOS Y REFERENCIAS PARA EL AUDIO ---
+    const audioRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = 0.25; // Volumen suave para no asustar (25%)
+            // Intentamos reproducir automáticamente
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch(e => {
+                console.log("Autoplay bloqueado por el navegador hasta que haya interacción");
+            });
+        }
+        
+        // Limpiamos el audio si el usuario avanza al siguiente paso
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+        };
+    }, []);
+
+    const toggleAudio = (e) => {
+        e.stopPropagation(); // Evita que se pulse la carta sin querer
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+                setIsPlaying(false);
+            } else {
+                audioRef.current.play();
+                setIsPlaying(true);
+            }
+        }
+    };
 
     return (
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            {/* Importamos tipografía Caveat: Manuscrita, súper emotiva y MUY legible */}
+            {/* AUDIO OCULTO: Pista de piano suave libre de derechos */}
+            <audio 
+                ref={audioRef} 
+                src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=piano-moment-9835.mp3" 
+                loop 
+            />
+
+            {/* Importamos tipografía Caveat */}
             <style dangerouslySetInnerHTML={{__html: `
                 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap');
                 .font-handwritten { font-family: 'Caveat', cursive; }
@@ -906,21 +950,35 @@ const LetterStep = ({ data, onContinue }) => {
 
             {/* Diseño del papel texturizado/crema */}
             <div className="bg-[#FCFBF8] p-6 md:p-10 rounded-[2rem] border border-[#EBE5D9] relative mb-6 shadow-xl overflow-hidden">
-                {/* Detalle estético superior (franja roja membretada) */}
+                {/* Detalle estético superior */}
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
+                
+                {/* BOTÓN ELEGANTE DE AUDIO (Flotante arriba a la derecha) */}
+                <button 
+                    onClick={toggleAudio}
+                    className="absolute top-6 right-6 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm border border-[#EBE5D9] rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-all shadow-sm"
+                    title={isPlaying ? "Silenciar música" : "Reproducir música"}
+                >
+                    {isPlaying ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                    ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                    )}
+                </button>
+
                 {/* Marca de agua gigante en el fondo */}
                 <div className="absolute -bottom-10 -right-10 text-[#E11D48] opacity-[0.03] pointer-events-none">
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta - Ahora parece escrita a mano pero muy clara */}
-                <div className="font-handwritten space-y-4 leading-relaxed pb-4 text-2xl md:text-3xl relative z-10">
+                {/* Texto de la carta */}
+                <div className="font-handwritten space-y-4 leading-relaxed pb-4 text-2xl md:text-3xl relative z-10 mt-4">
                     <p className="font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.salutation}</p>
                     <p className="font-medium text-gray-800 tracking-wide">{letter.body}</p>
                     <p className="pt-4 font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.closing}</p>
                 </div>
                 
-                {/* ÁREA DE ACCIÓN GIGANTE E INCONFUNDIBLE PARA ADULTOS MAYORES */}
+                {/* ÁREA DE ACCIÓN GIGANTE */}
                 <div 
                     className={`mt-10 relative w-full flex items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-500 ${
                         !isSigned 
@@ -943,7 +1001,6 @@ const LetterStep = ({ data, onContinue }) => {
                         </div>
                     ) : (
                         <div className="animate-stamp relative py-4">
-                            {/* Sello Rojo Estilo Notarial/Cera */}
                             <div className="border-[5px] border-[#E11D48] rounded-full w-28 h-28 md:w-36 md:h-36 flex items-center justify-center transform -rotate-12 opacity-95 bg-white shadow-2xl">
                                 <div className="border-[3px] border-[#E11D48] rounded-full w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-[#E11D48] border-dashed">
                                     <Heart size={32} fill="currentColor" className="mb-1" />
