@@ -3364,7 +3364,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                         {(agentSubTab === 'activos' || agentSubTab === 'inactivos') && (
                             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {currentViewAgents.map(agent => {
-                                    // CALCULAMOS EL RATING INDIVIDUAL PARA ESTE AGENTE EN EL MAP
+                                    // AQUÍ CALCULAMOS EL RATING DE CADA AGENTE INDIVIDUALMENTE
                                     const agReviews = reviews.filter(r => r.agentId === agent.id);
                                     const agAvgRating = agReviews.length > 0 ? (agReviews.reduce((acc, r) => acc + r.rating, 0) / agReviews.length).toFixed(1) : 0;
 
@@ -3396,34 +3396,33 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div className="mt-1">
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <MapPin size={12} className="text-gray-400"/>
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estados Activos</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {agent.license ? [...new Set(
+                                                        agent.license.split(',').map(item => {
+                                                            const match = item.match(/\(([^)]+)\)/); // Busca lo que está entre paréntesis
+                                                            const abbr = match ? match[1] : item.trim();
+                                                            const stateObj = FULL_US_STATES.find(s => s.abbr === abbr);
+                                                            return stateObj ? stateObj.name : abbr;
+                                                        })
+                                                    )].map((stateName, idx) => (
+                                                        <span key={idx} className="bg-white text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 shadow-sm transition-all group-hover:border-rose-300 group-hover:text-rose-600">
+                                                            {stateName}
+                                                        </span>
+                                                    )) : (
+                                                        <span className="text-[10px] text-gray-400 italic">Sin estados</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
                                     );
                                 })}
-
-                                    <div className="mt-1">
-                                        <div className="flex items-center gap-1.5 mb-2">
-                                            <MapPin size={12} className="text-gray-400"/>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Estados Activos</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {agent.license ? [...new Set(
-                                                agent.license.split(',').map(item => {
-                                                    const match = item.match(/\(([^)]+)\)/); // Busca lo que está entre paréntesis
-                                                    const abbr = match ? match[1] : item.trim();
-                                                    const stateObj = FULL_US_STATES.find(s => s.abbr === abbr);
-                                                    return stateObj ? stateObj.name : abbr;
-                                                })
-                                            )].map((stateName, idx) => (
-                                                <span key={idx} className="bg-white text-gray-700 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-200 shadow-sm transition-all group-hover:border-rose-300 group-hover:text-rose-600">
-                                                    {stateName}
-                                                </span>
-                                            )) : (
-                                                <span className="text-[10px] text-gray-400 italic">Sin estados</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                </div>
-                                ))}
                                 {currentViewAgents.length === 0 && <div className="col-span-full text-center py-20 text-gray-400 font-medium">No se encontraron agentes {agentSubTab}.</div>}
                             </div>
                         )}
