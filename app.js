@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -2091,7 +2091,7 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                         <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
                                 <div>
-                                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><ShoppingCart size={22} className="text-gray-400"/> Cartera Asignada</h3>
+                                    <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg md:text-xl"><Briefcase size={22} className="text-gray-400"/> Cartera Asignada</h3>
                                     <p className="text-sm text-gray-500 mt-1 font-medium">Gestionando <strong className="text-gray-900">{assignedLeads.length}</strong> prospectos</p>
                                 </div>
                                 <div className="relative w-full sm:w-72">
