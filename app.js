@@ -898,10 +898,10 @@ const LetterStep = ({ data, onContinue }) => {
 
     return (
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            {/* Importamos tipografía Lora: Estilo carta clásica, pero extremadamente legible */}
+            {/* Importamos tipografía Caveat: Manuscrita, súper emotiva y MUY legible */}
             <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
-                .font-lora { font-family: 'Lora', serif; }
+                @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap');
+                .font-handwritten { font-family: 'Caveat', cursive; }
             `}} />
 
             {/* Diseño del papel texturizado/crema */}
@@ -913,11 +913,11 @@ const LetterStep = ({ data, onContinue }) => {
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta - Fuente cambiada y color más oscuro/grueso para máxima legibilidad */}
-                <div className="font-lora space-y-6 leading-loose pb-4 text-lg md:text-xl relative z-10">
-                    <p className="font-bold text-[#9F1239] text-xl md:text-2xl">{letter.salutation}</p>
-                    <p className="font-medium text-gray-800">{letter.body}</p>
-                    <p className="pt-4 font-bold text-[#9F1239] italic text-xl md:text-2xl">{letter.closing}</p>
+                {/* Texto de la carta - Ahora parece escrita a mano pero muy clara */}
+                <div className="font-handwritten space-y-4 leading-relaxed pb-4 text-2xl md:text-3xl relative z-10">
+                    <p className="font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.salutation}</p>
+                    <p className="font-medium text-gray-800 tracking-wide">{letter.body}</p>
+                    <p className="pt-4 font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.closing}</p>
                 </div>
                 
                 {/* ÁREA DE ACCIÓN GIGANTE E INCONFUNDIBLE PARA ADULTOS MAYORES */}
@@ -934,10 +934,10 @@ const LetterStep = ({ data, onContinue }) => {
                             <div className="w-16 h-16 md:w-20 md:h-20 bg-[#E11D48] text-white rounded-full flex items-center justify-center mb-4 shadow-lg shadow-rose-500/40">
                                 <PenTool size={32} />
                             </div>
-                            <span className="text-[#E11D48] font-black text-2xl md:text-3xl uppercase tracking-widest mb-2">
+                            <span className="text-[#E11D48] font-black text-2xl md:text-3xl uppercase tracking-widest mb-2 font-sans">
                                 Tocar Aquí
                             </span>
-                            <span className="text-rose-800 font-bold text-sm md:text-base">
+                            <span className="text-rose-800 font-bold text-sm md:text-base font-sans">
                                 Para sellar su promesa familiar
                             </span>
                         </div>
@@ -947,8 +947,8 @@ const LetterStep = ({ data, onContinue }) => {
                             <div className="border-[5px] border-[#E11D48] rounded-full w-28 h-28 md:w-36 md:h-36 flex items-center justify-center transform -rotate-12 opacity-95 bg-white shadow-2xl">
                                 <div className="border-[3px] border-[#E11D48] rounded-full w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center text-[#E11D48] border-dashed">
                                     <Heart size={32} fill="currentColor" className="mb-1" />
-                                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] leading-none">Promesa</span>
-                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] mt-1 text-rose-800">Sellada</span>
+                                    <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] leading-none font-sans">Promesa</span>
+                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] mt-1 text-rose-800 font-sans">Sellada</span>
                                 </div>
                             </div>
                         </div>
