@@ -894,16 +894,36 @@ const HeartProgress = ({ percentage, isBeating }) => {
 
 const LetterStep = ({ data, onContinue }) => {
     const letter = generateUserLetter(data);
-    const [isSigned, setIsSigned] = useState(false);
     
-    // --- MAGIA: ESTADOS Y REFERENCIAS PARA EL AUDIO ---
+    // --- MAGIA 1: CONSTRUIR EL TEXTO COMPLETO ---
+    const fullText = `${letter.salutation}\n\n${letter.body}\n\n${letter.closing}`;
+    
+    // --- ESTADOS ---
+    const [displayedText, setDisplayedText] = useState("");
+    const [isSigned, setIsSigned] = useState(false);
     const audioRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
+    // --- MAGIA 2: EFECTO MÁQUINA DE ESCRIBIR (Typewriter) ---
+    useEffect(() => {
+        if (displayedText.length < fullText.length) {
+            // Calculamos velocidad para que dure aprox 7.5 segundos (7500ms)
+            // independientemente de lo larga que sea la carta.
+            const totalAnimationTime = 7500; 
+            const charDelay = totalAnimationTime / fullText.length;
+
+            const timer = setTimeout(() => {
+                setDisplayedText(fullText.substring(0, displayedText.length + 1));
+            }, charDelay);
+            
+            return () => clearTimeout(timer); // Limpieza
+        }
+    }, [displayedText, fullText]);
+
+    // Lógica del Audio (Piano Suave)
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = 0.25; // Volumen suave para no asustar (25%)
-            // Intentamos reproducir automáticamente
+            audioRef.current.volume = 0.25; 
             audioRef.current.play().then(() => {
                 setIsPlaying(true);
             }).catch(e => {
@@ -911,7 +931,6 @@ const LetterStep = ({ data, onContinue }) => {
             });
         }
         
-        // Limpiamos el audio si el usuario avanza al siguiente paso
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -921,7 +940,7 @@ const LetterStep = ({ data, onContinue }) => {
     }, []);
 
     const toggleAudio = (e) => {
-        e.stopPropagation(); // Evita que se pulse la carta sin querer
+        e.stopPropagation();
         if (audioRef.current) {
             if (isPlaying) {
                 audioRef.current.pause();
@@ -933,12 +952,16 @@ const LetterStep = ({ data, onContinue }) => {
         }
     };
 
+    // Procesamos el texto que se está escribiendo para aplicar estilos diferentes
+    const paragraphs = displayedText.split('\n\n');
+    const isWritingComplete = displayedText.length === fullText.length;
+
     return (
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            {/* AUDIO OCULTO: Pista de piano suave libre de derechos */}
+            {/* AUDIO OCULTO: Pista de piano suave, emotiva y poética */}
             <audio 
                 ref={audioRef} 
-                src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=piano-moment-9835.mp3" 
+                src="https://cdn.pixabay.com/audio/2023/10/16/audio_f5f6d70a3c.mp3?filename=sad-piano-soft-piano-24227.mp3" 
                 loop 
             />
 
@@ -953,7 +976,7 @@ const LetterStep = ({ data, onContinue }) => {
                 {/* Detalle estético superior */}
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
                 
-                {/* BOTÓN ELEGANTE DE AUDIO (Flotante arriba a la derecha) */}
+                {/* BOTÓN ELEGANTE DE AUDIO */}
                 <button 
                     onClick={toggleAudio}
                     className="absolute top-6 right-6 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm border border-[#EBE5D9] rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-all shadow-sm"
@@ -971,32 +994,56 @@ const LetterStep = ({ data, onContinue }) => {
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta */}
-                <div className="font-handwritten space-y-4 leading-relaxed pb-4 text-2xl md:text-3xl relative z-10 mt-4">
-                    <p className="font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.salutation}</p>
-                    <p className="font-medium text-gray-800 tracking-wide">{letter.body}</p>
-                    <p className="pt-4 font-bold text-[#9F1239] text-3xl md:text-4xl">{letter.closing}</p>
+                {/* Texto de la carta - Se escribe poco a poco */}
+                <div className="font-handwritten space-y-4 leading-relaxed pb-4 relative z-10 mt-4 min-h-[150px]">
+                    {paragraphs.map((text, index) => {
+                        let textStyle = "text-2xl md:text-3xl ";
+                        
+                        // Estilo para el saludo y despedida (más grande y rojo)
+                        if (index === 0 || (isWritingComplete && index === paragraphs.length - 1)) {
+                            textStyle = "font-bold text-[#9F1239] text-3xl md:text-4xl";
+                        } else {
+                            // Estilo para el cuerpo (gris)
+                            textStyle += "font-medium text-gray-800 tracking-wide";
+                        }
+                        
+                        // Renderizamos el párrafo actual. Añadimos margen extra si es el último para que no choque con el botón.
+                        return (
+                            <p 
+                                key={index} 
+                                className={`${textStyle} ${index === 2 && paragraphs.length === 3 ? 'pt-4' : ''}`}
+                            >
+                                {text}
+                                {/* Cursor parpadeante solo al final mientras escribe */}
+                                {!isWritingComplete && index === paragraphs.length - 1 && (
+                                    <span className="animate-pulse inline-block w-2 h-7 bg-gray-400 ml-1"></span>
+                                )}
+                            </p>
+                        );
+                    })}
                 </div>
                 
-                {/* ÁREA DE ACCIÓN GIGANTE */}
+                {/* ÁREA DE ACCIÓN GIGANTE - Bloqueada hasta que la carta termine de escribirse */}
                 <div 
-                    className={`mt-10 relative w-full flex items-center justify-center p-8 rounded-3xl cursor-pointer transition-all duration-500 ${
-                        !isSigned 
-                        ? 'bg-rose-50/80 border-[3px] border-dashed border-[#E11D48] hover:bg-rose-100/80 shadow-inner' 
+                    className={`mt-10 relative w-full flex items-center justify-center p-8 rounded-3xl transition-all duration-500 ${
+                        !isWritingComplete
+                        ? 'bg-gray-100 border border-gray-200 opacity-50 cursor-not-allowed'
+                        : !isSigned 
+                        ? 'bg-rose-50/80 border-[3px] border-dashed border-[#E11D48] hover:bg-rose-100/80 shadow-inner cursor-pointer' 
                         : 'bg-white border border-gray-100 shadow-sm'
                     }`} 
-                    onClick={!isSigned ? () => setIsSigned(true) : undefined}
+                    onClick={(!isSigned && isWritingComplete) ? () => setIsSigned(true) : undefined}
                 >
                     {!isSigned ? (
-                        <div className="flex flex-col items-center justify-center text-center animate-pulse">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-[#E11D48] text-white rounded-full flex items-center justify-center mb-4 shadow-lg shadow-rose-500/40">
+                        <div className={`flex flex-col items-center justify-center text-center ${isWritingComplete ? 'animate-pulse' : 'text-gray-400'}`}>
+                            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mb-4 shadow-lg ${isWritingComplete ? 'bg-[#E11D48] text-white shadow-rose-500/40' : 'bg-gray-200 text-gray-400 shadow-none'}`}>
                                 <PenTool size={32} />
                             </div>
-                            <span className="text-[#E11D48] font-black text-2xl md:text-3xl uppercase tracking-widest mb-2 font-sans">
-                                Tocar Aquí
+                            <span className={`font-black text-2xl md:text-3xl uppercase tracking-widest mb-2 font-sans ${isWritingComplete ? 'text-[#E11D48]' : 'text-gray-400'}`}>
+                                {isWritingComplete ? "Tocar Aquí" : "Espere por favor..."}
                             </span>
-                            <span className="text-rose-800 font-bold text-sm md:text-base font-sans">
-                                Para sellar su promesa familiar
+                            <span className={`font-bold text-sm md:text-base font-sans ${isWritingComplete ? 'text-rose-800' : 'text-gray-400'}`}>
+                                {isWritingComplete ? "Para sellar su promesa familiar" : "La carta se está escribiendo"}
                             </span>
                         </div>
                     ) : (
@@ -1015,9 +1062,13 @@ const LetterStep = ({ data, onContinue }) => {
             
             <div className="shrink-0 animate-slide-up pb-8">
                 <p className="text-center text-gray-500 text-sm md:text-base font-medium mb-4">
-                    {isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
+                    {!isWritingComplete ? "Leyendo carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
                 </p>
-                <button onClick={onContinue} disabled={!isSigned} className={`w-full py-4 md:py-5 rounded-full font-bold text-lg md:text-xl shadow-xl transition-all flex items-center justify-center gap-2 ${isSigned ? 'bg-[#E11D48] text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
+                <button 
+                    onClick={onContinue} 
+                    disabled={!isSigned || !isWritingComplete} 
+                    className={`w-full py-4 md:py-5 rounded-full font-bold text-lg md:text-xl shadow-xl transition-all flex items-center justify-center gap-2 ${isSigned && isWritingComplete ? 'bg-[#E11D48] text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                >
                     Continuar <ChevronRight size={24}/>
                 </button>
             </div>
