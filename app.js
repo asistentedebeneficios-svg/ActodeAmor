@@ -110,8 +110,8 @@ const getReinforcementMessage = (stepId, selections) => {
 };
 
 const generateUserLetter = (data) => {
-    const insuredArray = data.policy_for || ['me'];
-    let salutation = "A mis seres amados,", body = "", closing = "Con amor eterno,";
+    const insuredArray = data.policy_for || ['me'];
+    let salutation = "A mis seres amados,", body = "", closing = "Con mucho amor,";
 
     if (insuredArray.length > 1) {
         salutation = "A mi querida familia,";
@@ -894,127 +894,48 @@ const HeartProgress = ({ percentage, isBeating }) => {
 
 const LetterStep = ({ data, onContinue }) => {
     const letter = generateUserLetter(data);
-    
-    // --- MAGIA 1: CONSTRUIR EL TEXTO COMPLETO ---
-    const fullText = `${letter.salutation}\n\n${letter.body}\n\n${letter.closing}`;
-    
-    // --- ESTADOS ---
-    const [displayedText, setDisplayedText] = useState("");
     const [isSigned, setIsSigned] = useState(false);
-    const audioRef = useRef(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isWritingComplete, setIsWritingComplete] = useState(false);
 
-    // --- MAGIA 2: EFECTO MÁQUINA DE ESCRIBIR (Typewriter) ---
+    // Temporizador para el efecto de revelado hacia abajo
     useEffect(() => {
-        if (displayedText.length < fullText.length) {
-            const totalAnimationTime = 7500; 
-            const charDelay = totalAnimationTime / fullText.length;
-
-            const timer = setTimeout(() => {
-                setDisplayedText(fullText.substring(0, displayedText.length + 1));
-            }, charDelay);
-            
-            return () => clearTimeout(timer);
-        }
-    }, [displayedText, fullText]);
-
-    // Lógica del Audio (Piano Clásico Wikipedia - 100% confiable)
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = 0.25; 
-            audioRef.current.play().then(() => {
-                setIsPlaying(true);
-            }).catch(e => {
-                console.log("Navegador bloqueó autoplay. El usuario debe tocar el botón de música.");
-            });
-        }
-        
-        return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-            }
-        };
+        const timer = setTimeout(() => {
+            setIsWritingComplete(true);
+        }, 7000); // 7 segundos de "cámara lenta"
+        return () => clearTimeout(timer);
     }, []);
-
-    const toggleAudio = (e) => {
-        e.stopPropagation();
-        if (audioRef.current) {
-            if (isPlaying) {
-                audioRef.current.pause();
-                setIsPlaying(false);
-            } else {
-                audioRef.current.play();
-                setIsPlaying(true);
-            }
-        }
-    };
-
-    const paragraphs = displayedText.split('\n\n');
-    const isWritingComplete = displayedText.length === fullText.length;
 
     return (
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            {/* AUDIO OCULTO: Gymnopédie No. 1 (Piano Clásico Libre de Derechos) */}
-            <audio 
-                ref={audioRef} 
-                src="https://upload.wikimedia.org/wikipedia/commons/2/29/Satie_-_Gymnop%C3%A9die_No._1.ogg" 
-                loop 
-            />
-
-            {/* Importamos tipografía Crimson Text: Súper formal, seria pero con estilo cursiva */}
             <style dangerouslySetInnerHTML={{__html: `
                 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
                 .font-letter { font-family: 'Crimson Text', serif; }
+                
+                @keyframes revealDown {
+                    0% { clip-path: inset(0 0 100% 0); }
+                    100% { clip-path: inset(0 0 0 0); }
+                }
+                .animate-reveal-down {
+                    animation: revealDown 7s linear forwards;
+                }
             `}} />
 
             {/* Diseño del papel texturizado/crema */}
             <div className="bg-[#FCFBF8] p-6 md:p-10 rounded-[2rem] border border-[#EBE5D9] relative mb-6 shadow-xl overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
                 
-                {/* BOTÓN ELEGANTE DE AUDIO */}
-                <button 
-                    onClick={toggleAudio}
-                    className="absolute top-5 right-5 z-20 px-3 py-1.5 bg-white/80 backdrop-blur-sm border border-[#EBE5D9] rounded-full flex items-center justify-center gap-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-sm text-[10px] uppercase font-bold tracking-widest font-sans"
-                    title={isPlaying ? "Silenciar música" : "Reproducir música"}
-                >
-                    {isPlaying ? (
-                        <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse text-rose-500"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg> Música On</>
-                    ) : (
-                        <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg> Música Off</>
-                    )}
-                </button>
-
                 <div className="absolute -bottom-10 -right-10 text-[#E11D48] opacity-[0.03] pointer-events-none">
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta - Fuente seria, formal, cursiva pero muy legible */}
-                <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-6 min-h-[150px]">
-                    {paragraphs.map((text, index) => {
-                        let textStyle = "text-xl md:text-2xl ";
-                        
-                        if (index === 0 || (isWritingComplete && index === paragraphs.length - 1)) {
-                            textStyle = "font-semibold text-[#9F1239] text-2xl md:text-3xl";
-                        } else {
-                            textStyle += "text-gray-800 tracking-wide";
-                        }
-                        
-                        return (
-                            <p 
-                                key={index} 
-                                className={`${textStyle} ${index === 2 && paragraphs.length === 3 ? 'pt-4' : ''}`}
-                            >
-                                {text}
-                                {!isWritingComplete && index === paragraphs.length - 1 && (
-                                    <span className="animate-pulse inline-block w-1.5 h-6 bg-gray-400 ml-1 align-middle"></span>
-                                )}
-                            </p>
-                        );
-                    })}
+                {/* Texto de la carta con el efecto de barrido hacia abajo */}
+                <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px] animate-reveal-down">
+                    <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl">{letter.salutation}</p>
+                    <p className="text-xl md:text-2xl text-gray-800 tracking-wide">{letter.body}</p>
+                    <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl pt-4">{letter.closing}</p>
                 </div>
                 
-                {/* ÁREA DE ACCIÓN REDUCIDA DE TAMAÑO PERO IGUAL DE EVIDENTE */}
+                {/* ÁREA DE ACCIÓN REDUCIDA */}
                 <div 
                     className={`mt-8 md:mt-10 relative w-full flex items-center justify-center p-5 md:p-6 rounded-3xl transition-all duration-500 ${
                         !isWritingComplete
@@ -1027,19 +948,18 @@ const LetterStep = ({ data, onContinue }) => {
                 >
                     {!isSigned ? (
                         <div className={`flex flex-col items-center justify-center text-center ${isWritingComplete ? 'animate-pulse' : 'text-gray-400'}`}>
-                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-3 shadow-sm ${isWritingComplete ? 'bg-[#E11D48] text-white shadow-rose-500/40' : 'bg-gray-200 text-gray-400 shadow-none'}`}>
+                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-3 shadow-sm transition-colors ${isWritingComplete ? 'bg-[#E11D48] text-white shadow-rose-500/40' : 'bg-gray-200 text-gray-400 shadow-none'}`}>
                                 <PenTool size={24} />
                             </div>
                             <span className={`font-black text-lg md:text-xl uppercase tracking-widest mb-1 font-sans ${isWritingComplete ? 'text-[#E11D48]' : 'text-gray-400'}`}>
                                 {isWritingComplete ? "Tocar Aquí" : "Espere..."}
                             </span>
                             <span className={`font-bold text-xs md:text-sm font-sans ${isWritingComplete ? 'text-rose-800' : 'text-gray-400'}`}>
-                                {isWritingComplete ? "Para sellar la promesa" : "Escribiendo carta"}
+                                {isWritingComplete ? "Para sellar la promesa" : "Leyendo carta..."}
                             </span>
                         </div>
                     ) : (
                         <div className="animate-stamp relative py-2">
-                            {/* Sello Reducido de Tamaño */}
                             <div className="border-[4px] border-[#E11D48] rounded-full w-24 h-24 md:w-28 md:h-28 flex items-center justify-center transform -rotate-12 opacity-95 bg-white shadow-xl">
                                 <div className="border-2 border-[#E11D48] rounded-full w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center text-[#E11D48] border-dashed">
                                     <Heart size={24} fill="currentColor" className="mb-1" />
@@ -1054,7 +974,7 @@ const LetterStep = ({ data, onContinue }) => {
             
             <div className="shrink-0 animate-slide-up pb-8">
                 <p className="text-center text-gray-500 text-sm md:text-base font-medium mb-4">
-                    {!isWritingComplete ? "Leyendo carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
+                    {!isWritingComplete ? "Por favor lea la carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
                 </p>
                 <button 
                     onClick={onContinue} 
