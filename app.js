@@ -5310,13 +5310,19 @@ const ClientReviewScreen = ({ leadId, db }) => {
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
     const [status, setStatus] = useState('loading'); 
-    const [errorMessage, setErrorMessage] = useState(''); // NUEVO ESTADO PARA VER EL ERROR
+    const [errorMessage, setErrorMessage] = useState(''); 
 
     useEffect(() => {
         const fetchReviewData = async () => {
             try {
-                // 1. Buscamos al prospecto
-                const leadDoc = await getDoc(doc(db, 'leads', leadId));
+                // 1. Buscamos al prospecto (Con Rayos X)
+                let leadDoc;
+                try {
+                    leadDoc = await getDoc(doc(db, 'leads', leadId));
+                } catch(e) {
+                    throw new Error(`Firebase bloqueó la lectura del PROSPECTO. Reglas no actualizadas aún. (Error: ${e.message})`);
+                }
+                
                 if (!leadDoc.exists()) { 
                     setStatus('error'); 
                     setErrorMessage('El ID del prospecto no existe en la base de datos.');
@@ -5332,8 +5338,14 @@ const ClientReviewScreen = ({ leadId, db }) => {
                     return; 
                 }
 
-                // 3. Buscamos a su agente asignado
-                const agentDoc = await getDoc(doc(db, 'agents', leadData.assignedTo));
+                // 3. Buscamos a su agente asignado (Con Rayos X)
+                let agentDoc;
+                try {
+                    agentDoc = await getDoc(doc(db, 'agents', leadData.assignedTo));
+                } catch(e) {
+                    throw new Error(`Firebase bloqueó la lectura del AGENTE. Reglas no actualizadas aún. (Error: ${e.message})`);
+                }
+                
                 if (!agentDoc.exists()) { 
                     setStatus('error'); 
                     setErrorMessage('El agente asignado a este prospecto ya no existe.');
@@ -5344,9 +5356,8 @@ const ClientReviewScreen = ({ leadId, db }) => {
                 setAgent({ id: agentDoc.id, ...agentDoc.data() });
                 setStatus('ready');
             } catch (e) {
-                // CAPTURAMOS EL ERROR REAL DE FIREBASE O JAVASCRIPT
                 setStatus('error');
-                setErrorMessage(`Fallo técnico de Firebase: ${e.message}`);
+                setErrorMessage(e.message);
             }
         };
         fetchReviewData();
@@ -5368,7 +5379,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
             setStatus('submitted');
         } catch (e) {
             setStatus('error');
-            setErrorMessage(`Error al guardar reseña: ${e.message}`);
+            setErrorMessage(`Error al guardar reseña en Firebase: ${e.message}`);
         }
     };
 
@@ -5387,9 +5398,9 @@ const ClientReviewScreen = ({ leadId, db }) => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2>
                 <p className="text-gray-500 mb-6">Este enlace de evaluación ya no está disponible o es incorrecto.</p>
                 
-                {/* CUADRO ROJO DE DIAGNÓSTICO */}
+                {/* CUADRO ROJO DE DIAGNÓSTICO AVANZADO */}
                 <div className="bg-red-50 text-red-700 p-4 rounded-xl text-xs font-mono text-left max-w-md w-full border border-red-200 shadow-inner">
-                    <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Detalle del Error:</span>
+                    <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Diagnóstico del Sistema:</span>
                     {errorMessage}
                 </div>
             </div>
