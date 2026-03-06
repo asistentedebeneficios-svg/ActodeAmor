@@ -1688,12 +1688,17 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             <select 
                                 value={tempStatus} 
                                 onChange={(e) => setTempStatus(e.target.value)}
-                                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-gray-700 cursor-pointer shadow-sm transition-all"
+                                className={`w-full p-4 border rounded-xl outline-none focus:ring-2 font-bold cursor-pointer shadow-sm transition-all duration-300 ${
+                                    tempStatus === 'activo' ? 'bg-blue-50 border-blue-200 text-blue-700 focus:border-blue-500 focus:ring-blue-500/20' :
+                                    tempStatus === 'seguimiento' ? 'bg-amber-50 border-amber-200 text-amber-700 focus:border-amber-500 focus:ring-amber-500/20' :
+                                    tempStatus === 'vendido' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 focus:border-emerald-500 focus:ring-emerald-500/20' :
+                                    'bg-rose-50 border-rose-200 text-rose-700 focus:border-rose-500 focus:ring-rose-500/20'
+                                }`}
                             >
-                                <option value="activo">🔵 Activo / Pendiente</option>
-                                <option value="seguimiento">⏳ En Seguimiento</option>
-                                <option value="vendido">🏆 Venta Cerrada</option>
-                                <option value="descartado">❌ Descartado</option>
+                                <option value="activo" className="bg-white text-gray-800">Activo / Pendiente</option>
+                                <option value="seguimiento" className="bg-white text-gray-800">En Seguimiento</option>
+                                <option value="vendido" className="bg-white text-gray-800">Venta Cerrada</option>
+                                <option value="descartado" className="bg-white text-gray-800">Descartado</option>
                             </select>
                             <div className="flex gap-3 mt-2">
                                 <button onClick={() => setShowExitPolice(false)} className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors shadow-sm">
