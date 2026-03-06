@@ -5364,24 +5364,40 @@ const ClientReviewScreen = ({ leadId, db }) => {
     }, [leadId, db]);
 
     const handleSubmit = async () => {
-        if (rating === 0) return;
-        setStatus('submitting');
+    if (rating === 0) return;
+
+    setStatus('submitting');
+
+    try {
+        // PASO 1: guardar la reseña
         try {
             await addDoc(collection(db, 'reviews'), {
                 agentId: agent.id,
                 leadId: lead.id,
-                leadName: lead.name,
+                leadName: lead.name || '',
                 rating,
-                comment,
+                comment: comment || '',
                 timestamp: Date.now()
             });
-            await updateDoc(doc(db, 'leads', lead.id), { reviewed: true });
-            setStatus('submitted');
         } catch (e) {
-            setStatus('error');
-            setErrorMessage(`Error al guardar reseña en Firebase: ${e.message}`);
+            throw new Error(`FALLÓ AL CREAR LA RESEÑA en /reviews. Detalle: ${e.message}`);
         }
-    };
+
+        // PASO 2: marcar el prospecto como evaluado
+        try {
+            await updateDoc(doc(db, 'leads', lead.id), {
+                reviewed: true
+            });
+        } catch (e) {
+            throw new Error(`LA RESEÑA SÍ SE GUARDÓ, pero FALLÓ AL ACTUALIZAR el lead en /leads/${lead.id}. Detalle: ${e.message}`);
+        }
+
+        setStatus('submitted');
+    } catch (e) {
+        setStatus('error');
+        setErrorMessage(e.message);
+    }
+};
 
     if (status === 'loading' || status === 'submitting') {
         return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans"><div className="w-10 h-10 border-4 border-gray-200 border-t-rose-500 rounded-full animate-spin mb-4"></div><p className="text-gray-500 font-bold">{status === 'loading' ? 'Preparando evaluación...' : 'Enviando...'}</p></div>;
