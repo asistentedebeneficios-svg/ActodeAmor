@@ -4888,10 +4888,13 @@ const AgentPortal = ({ leads, agent, onUpdateLead, onLogout, generalSettings }) 
                             </div>
                         )}
                     </div>
-                </div>
-            )}
-        </div>
-    );
+                </div>
+            )}
+
+            {/* AQUI RENDERIZAMOS EL MODAL DE SOPORTE */}
+            {showSupportModal && <AgentSupportModal onClose={() => setShowSupportModal(false)} />}
+        </div>
+    );
 };
 
 const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
