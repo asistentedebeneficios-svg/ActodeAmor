@@ -3,7 +3,7 @@ import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 // --- CONSTANTS ---
@@ -152,10 +152,11 @@ const db = getFirestore(app);
 
 // --- HOOKS ---
 const useFirebaseDatabase = () => {
-    const [leads, setLeads] = useState([]);
-    const [agents, setAgents] = useState([]);
-    const [agentRequests, setAgentRequests] = useState([]); // NUEVO: Estado para las solicitudes
-    const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
+    const [leads, setLeads] = useState([]);
+    const [agents, setAgents] = useState([]);
+    const [agentRequests, setAgentRequests] = useState([]); 
+    const [reviews, setReviews] = useState([]); // NUEVO: Estado para reseñas
+    const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
     const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false });
     const [user, setUser] = useState(null);
@@ -207,10 +208,16 @@ const useFirebaseDatabase = () => {
         });
 
         let unsubLeads = () => {};
-        let unsubAgents = () => {};
-        let unsubRequests = () => {}; // NUEVO: Limpieza de solicitudes
+        let unsubAgents = () => {};
+        let unsubRequests = () => {}; 
+        let unsubReviews = () => {}; // NUEVO: Limpieza de reseñas
 
-        if (!user.isAnonymous) {
+        if (!user.isAnonymous) {
+            // Descargamos las reseñas para el panel de Admin
+            const reviewsQuery = collection(db, 'reviews');
+            unsubReviews = onSnapshot(reviewsQuery, (snapshot) => {
+                setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            }, (err) => { if (err.code !== 'permission-denied') console.error("Reviews error:", err); });
             const leadsQuery = collection(db, 'leads'); 
             unsubLeads = onSnapshot(leadsQuery, (snapshot) => {
                 setLeads(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -236,11 +243,11 @@ const useFirebaseDatabase = () => {
                 setAgentRequests(reqs);
             }, (err) => {
                 if (err.code !== 'permission-denied') console.error("Requests error:", err);
-            });
-        }
+            });
+        }
 
-        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
-    }, [user]);
+        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
+    }, [user]);
 
     const addLead = async (lead) => {
         try {
@@ -361,7 +368,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -1850,8 +1857,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     );
 };
 
-const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDeleteAgent }) => {
-    const [innerSearch, setInnerSearch] = useState('');
+const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent }) => {
+    // Calculadora de estrellas estilo Amazon
+    const agentReviews = reviews.filter(r => r.agentId === agent.id).sort((a,b) => b.timestamp - a.timestamp);
+    const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
+
+    const [innerSearch, setInnerSearch] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState(agent);
     
@@ -2111,19 +2122,58 @@ const AgentDetailView = ({ agent, leads, onClose, onLeadClick, onSaveAgent, onDe
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center p-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                                        <div className="bg-white w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><ShoppingCart size={24} className="text-gray-300"/></div>
-                                        <p className="font-bold text-gray-600 text-base">Cartera vacía</p>
-                                        <p className="text-sm text-gray-400 mt-1">Este agente aún no tiene prospectos asignados.</p>
+                                    <div className="text-center p-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                                        <div className="bg-white w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><ShoppingCart size={24} className="text-gray-300"/></div>
+                                        <p className="font-bold text-gray-600 text-base">Cartera vacía</p>
+                                        <p className="text-sm text-gray-400 mt-1">Este agente aún no tiene prospectos asignados.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* --- LISTA DE RESEÑAS DEL AGENTE ESTILO AMAZON --- */}
+                        <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col mt-6">
+                            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                                <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center border border-amber-100">
+                                    <Star size={24} fill="currentColor"/>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 text-lg md:text-xl tracking-tight">Reseñas de Clientes</h3>
+                                    <p className="text-sm text-gray-500 mt-1 font-medium">Testimonios verificados</p>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                                {agentReviews && agentReviews.length === 0 ? (
+                                    <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <p className="text-gray-400 font-bold text-sm">Aún no hay reseñas.</p>
                                     </div>
+                                ) : (
+                                    agentReviews && agentReviews.map(rev => (
+                                        <div key={rev.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                                                    <User size={14} className="text-gray-400"/> {rev.leadName}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white px-2 py-1 rounded-md border border-gray-200">
+                                                    {new Date(rev.timestamp).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <div className="flex text-amber-400 mb-3 gap-0.5">
+                                                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "text-amber-400" : "text-gray-300"}/>)}
+                                            </div>
+                                            {rev.comment && <p className="text-gray-600 text-sm italic leading-relaxed bg-white p-3 rounded-xl border border-gray-100">"{rev.comment}"</p>}
+                                        </div>
+                                    ))
                                 )}
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
@@ -2726,8 +2776,7 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
     );
 };
                                                                    
-const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
-    
+const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) ---
     useEffect(() => {
         let inactivityTimer;
@@ -3322,12 +3371,21 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
                                             {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="min-w-0 flex-1 pr-2">
-                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
-                                                <span className="truncate">{agent.name}</span>
-                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
-                                            </h3>
-                                            
-                                            <div className="flex flex-col gap-1.5 mt-2">
+                                            <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
+                                                <span className="truncate">{agent.name}</span>
+                                                {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
+                                            </h3>
+                                            {/* RATING ESTILO AMAZON */}
+                                            {agentReviews.length > 0 && (
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                    <div className="flex text-amber-400">
+                                                        {[1,2,3,4,5].map(s => <Star key={s} size={12} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-400" : "text-gray-300"}/>)}
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-gray-700">{avgRating} <span className="font-normal text-gray-400">({agentReviews.length})</span></span>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex flex-col gap-1.5 mt-2">
                                                 {agent.phone && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Phone size={12} className="text-gray-400 shrink-0"/> {agent.phone}</span>}
                                                 {agent.email && <span className="text-[11px] md:text-xs text-gray-500 font-medium flex items-center gap-2 truncate"><Mail size={12} className="text-gray-400 shrink-0"/> {agent.email}</span>}
                                             </div>
@@ -3624,9 +3682,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], onApproveRequest, o
             )}
 
             {viewingAgent && (
-                <AgentDetailView 
-                    agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
-                    leads={processedLeads} 
+                <AgentDetailView 
+                    agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
+                    leads={processedLeads} 
+                    reviews={reviews}
                     onClose={() => setViewingAgent(null)} 
                     onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} 
                     onSaveAgent={handleSaveAgent}
@@ -5242,6 +5301,114 @@ const AboutUsPage = ({ onClose }) => {
         </div>
     );
 };
+
+// --- NUEVA PANTALLA: EVALUACIÓN DEL AGENTE POR EL CLIENTE ---
+const ClientReviewScreen = ({ leadId, db }) => {
+    const [lead, setLead] = useState(null);
+    const [agent, setAgent] = useState(null);
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [status, setStatus] = useState('loading'); // loading, ready, submitted, error, already_submitted
+
+    useEffect(() => {
+        const fetchReviewData = async () => {
+            try {
+                // 1. Buscamos al prospecto
+                const leadDoc = await getDoc(doc(db, 'leads', leadId));
+                if (!leadDoc.exists()) { setStatus('error'); return; }
+                const leadData = { id: leadDoc.id, ...leadDoc.data() };
+                
+                // 2. Verificamos reglas de negocio
+                if (leadData.reviewed) { setStatus('already_submitted'); return; }
+                if (!leadData.assignedTo) { setStatus('error'); return; }
+
+                // 3. Buscamos a su agente asignado
+                const agentDoc = await getDoc(doc(db, 'agents', leadData.assignedTo));
+                if (!agentDoc.exists()) { setStatus('error'); return; }
+
+                setLead(leadData);
+                setAgent({ id: agentDoc.id, ...agentDoc.data() });
+                setStatus('ready');
+            } catch (e) {
+                setStatus('error');
+            }
+        };
+        fetchReviewData();
+    }, [leadId, db]);
+
+    const handleSubmit = async () => {
+        if (rating === 0) return;
+        setStatus('submitting');
+        try {
+            await addDoc(collection(db, 'reviews'), {
+                agentId: agent.id,
+                leadId: lead.id,
+                leadName: lead.name,
+                rating,
+                comment,
+                timestamp: Date.now()
+            });
+            await updateDoc(doc(db, 'leads', lead.id), { reviewed: true });
+            setStatus('submitted');
+        } catch (e) {
+            setStatus('error');
+        }
+    };
+
+    if (status === 'loading' || status === 'submitting') {
+        return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans"><div className="w-10 h-10 border-4 border-gray-200 border-t-rose-500 rounded-full animate-spin mb-4"></div><p className="text-gray-500 font-bold">{status === 'loading' ? 'Preparando evaluación...' : 'Enviando...'}</p></div>;
+    }
+    
+    if (status === 'already_submitted') {
+        return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center"><div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6"><Check size={40} className="text-green-600"/></div><h2 className="text-2xl font-bold text-gray-900 mb-2">Evaluación Recibida</h2><p className="text-gray-500">Ya has calificado a tu especialista anteriormente. ¡Gracias por tu tiempo!</p></div>;
+    }
+
+    if (status === 'error') {
+        return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center"><div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6"><X size={40} className="text-gray-400"/></div><h2 className="text-2xl font-bold text-gray-900 mb-2">Enlace no válido</h2><p className="text-gray-500">Este enlace de evaluación ya no está disponible o es incorrecto.</p></div>;
+    }
+
+    if (status === 'submitted') {
+        return <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col items-center justify-center font-sans p-6 text-center animate-fade-in"><div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-500 rounded-[2rem] flex items-center justify-center mb-8 shadow-xl shadow-green-500/20"><Star size={48} className="text-white" fill="currentColor"/></div><h2 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">¡Muchas Gracias!</h2><p className="text-lg text-gray-500 max-w-md mx-auto leading-relaxed">Tu opinión nos ayuda a mantener el nivel de excelencia que tu familia merece.</p></div>;
+    }
+
+    return (
+        <div className="min-h-[100dvh] bg-[#F5F5F7] flex flex-col font-sans p-4 sm:p-8 animate-fade-in">
+            <div className="w-full max-w-lg mx-auto bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl border border-gray-100 mt-10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-rose-50 to-white pointer-events-none"></div>
+                
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-500 mb-6 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100">Control de Calidad</span>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-2 text-balance">¿Cómo fue tu experiencia?</h2>
+                    <p className="text-gray-500 text-sm mb-8">Por favor evalúa la atención que recibiste de tu especialista asignado.</p>
+                    
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center mb-4">
+                        {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : <User size={40} className="text-gray-400"/>}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">{agent.name}</h3>
+                    <p className="text-xs text-gray-400 uppercase tracking-widest mt-1 mb-8">Especialista Licenciado</p>
+
+                    <div className="flex gap-2 sm:gap-3 mb-8">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button key={star} onClick={() => setRating(star)} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} className="transition-transform hover:scale-110 active:scale-95 focus:outline-none">
+                                <Star size={40} className={`transition-colors duration-300 ${star <= (hoverRating || rating) ? 'text-amber-400' : 'text-gray-200'}`} fill={star <= (hoverRating || rating) ? "currentColor" : "none"} />
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="w-full text-left mb-8">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Déjale un mensaje (Opcional)</label>
+                        <textarea rows="3" placeholder="Excelente atención, muy paciente..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all text-sm text-gray-800 resize-none" value={comment} onChange={e => setComment(e.target.value)}></textarea>
+                    </div>
+
+                    <button onClick={handleSubmit} disabled={rating === 0} className="w-full bg-black text-white py-4 sm:py-5 rounded-2xl font-bold text-base shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2">
+                        <Check size={20}/> Enviar Calificación
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
                                                                    
 const App = () => {
     // --- MENU Y MODALES GLOBALES ---
@@ -5275,21 +5442,18 @@ const App = () => {
     // --- NUEVO: Estado de verificación para evitar el pestañeo ---
     const [isVerifying, setIsVerifying] = useState(true); 
     
-    // --- NUEVO: Detector de Enlace Exclusivo para Agentes ---
-    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+    // --- RUTAS INTELIGENTES ---
+    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+    const [isReviewRoute, setIsReviewRoute] = useState(window.location.hash.startsWith('#evaluar/'));
+    const reviewLeadId = isReviewRoute ? window.location.hash.split('/')[1] : null;
 
-    // Escuchar si la URL cambia o si entran por el subdominio
-    useEffect(() => {
-        // Verificación de seguridad inmediata
-        if (window.location.hostname.startsWith('portal.')) {
-            setIsPortalRoute(true);
-        }
+    useEffect(() => {
+        if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
 
-        const handleHashChange = () => {
-            // Se activa si tiene el #portal O si el subdominio es portal.
-            const isPortal = window.location.hash === '#portal' || window.location.hostname.startsWith('portal.');
-            setIsPortalRoute(isPortal);
-        };
+        const handleHashChange = () => {
+            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+            setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
+        };
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -5301,9 +5465,14 @@ const App = () => {
     });
     
     const [showLogin, setShowLogin] = useState(false);
-    const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
-    const currentStep = STEPS[stepIndex];
+    const [showRegister, setShowRegister] = useState(false);
+    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
+    const currentStep = STEPS[stepIndex];
+
+    // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
+    if (isReviewRoute && reviewLeadId) {
+        return <ClientReviewScreen leadId={reviewLeadId} db={db} />;
+    }
 
     // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
     useEffect(() => {
@@ -5542,11 +5711,12 @@ const App = () => {
         }
 
         if (isSuperAdmin) {
-            return (
-                <AdminDashboard 
-                    leads={leads} 
-                    agents={agents} 
-                    agentRequests={agentRequests}
+            return (
+                <AdminDashboard 
+                    leads={leads} 
+                    agents={agents} 
+                    agentRequests={agentRequests}
+                    reviews={reviews}
                     onApproveRequest={approveAgentRequest}
                     onRejectRequest={rejectAgentRequest}
                     onUpdateAgentRequest={updateAgentRequest}
