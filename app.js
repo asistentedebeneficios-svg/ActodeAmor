@@ -5436,7 +5436,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
                     </div>
 
                     <div className="w-full text-left mb-8">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Déjale un mensaje (Opcional)</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Déjanos un mensaje (Opcional)</label>
                         <textarea rows="3" placeholder="Excelente atención, muy paciente..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 outline-none focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all text-sm text-gray-800 resize-none" value={comment} onChange={e => setComment(e.target.value)}></textarea>
                     </div>
 
