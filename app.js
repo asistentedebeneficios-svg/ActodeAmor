@@ -4292,6 +4292,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     
     // --- NUEVO: ESTADOS PARA LOS BUSCADORES Y FILTROS ---
     const [clientSearchTerm, setClientSearchTerm] = useState('');
+    const [selectedStatusFilters, setSelectedStatusFilters] = useState([]);
+    const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
     const [marketplaceStateFilters, setMarketplaceStateFilters] = useState([]); // Ahora es un arreglo múltiple
     const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false); // Controla el menú flotante
 
@@ -4940,27 +4942,110 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                             <button onClick={() => setShowArchived(true)} className={`flex-1 lg:flex-none px-4 md:px-5 py-2 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap ${showArchived ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Citas pasadas ({archivedClients.length})</button>
                         </div>
                         
-                        {/* NUEVO: Buscador Interno de Clientes */}
-                        <div className="relative w-full lg:w-72 group shrink-0">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
-                            <input 
-                                type="text" 
-                                placeholder="Buscar cliente, teléfono o estado..." 
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all text-sm font-medium shadow-sm" 
-                                value={clientSearchTerm} 
-                                onChange={e => setClientSearchTerm(e.target.value)} 
-                            />
+                        {/* CONTENEDOR DERECHO: Filtros y Buscador */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto z-30">
+                            
+                            {/* FILTRO MÚLTIPLE ELEGANTE (Solo Citas Pasadas) */}
+                            {showArchived && (
+                                <div className="relative w-full sm:w-60 shrink-0">
+                                    <button 
+                                        onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)} 
+                                        className="w-full pl-4 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 shadow-sm transition-all flex items-center justify-between"
+                                    >
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                                            <span className="truncate">
+                                                {selectedStatusFilters.length === 0 
+                                                    ? 'Filtrar por Estatus...' 
+                                                    : `${selectedStatusFilters.length} Seleccionado(s)`}
+                                            </span>
+                                        </div>
+                                        <ChevronRight size={12} className={`text-gray-400 shrink-0 transition-transform ${isStatusFilterOpen ? '-rotate-90' : 'rotate-90'}`} />
+                                    </button>
+
+                                    {/* Menú Flotante de Checkboxes Premium */}
+                                    {isStatusFilterOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setIsStatusFilterOpen(false)}></div>
+                                            <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-slide-up z-50">
+                                                <div className="p-2 flex flex-col gap-1">
+                                                    {[
+                                                        { id: 'vendido', label: 'Venta Cerrada', color: 'emerald' },
+                                                        { id: 'seguimiento', label: 'En Seguimiento', color: 'amber' },
+                                                        { id: 'descartado', label: 'Descartado', color: 'rose' },
+                                                        { id: 'activo', label: 'Cita Programada', color: 'blue' }
+                                                    ].map(st => {
+                                                        const count = archivedClients.filter(c => (c.agentStatus || 'activo') === st.id).length;
+                                                        const isSelected = selectedStatusFilters.includes(st.id);
+                                                        
+                                                        return (
+                                                            <label key={st.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="custom-checkbox shrink-0"
+                                                                    checked={isSelected} 
+                                                                    onChange={() => {
+                                                                        setSelectedStatusFilters(prev => 
+                                                                            prev.includes(st.id) ? prev.filter(f => f !== st.id) : [...prev, st.id]
+                                                                        );
+                                                                    }} 
+                                                                />
+                                                                <span className="text-sm font-semibold text-gray-700 flex-1 flex justify-between items-center group-hover:text-black transition-colors">
+                                                                    {st.label}
+                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border transition-colors ${isSelected ? `bg-${st.color}-50 text-${st.color}-600 border-${st.color}-200` : 'bg-gray-100 text-gray-500 border-transparent'}`}>
+                                                                        {count}
+                                                                    </span>
+                                                                </span>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                                {selectedStatusFilters.length > 0 && (
+                                                    <div className="p-2 border-t border-gray-100 bg-gray-50">
+                                                        <button 
+                                                            onClick={() => setSelectedStatusFilters([])} 
+                                                            className="w-full py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-colors shadow-sm"
+                                                        >
+                                                            Limpiar Filtro
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Buscador Interno de Clientes */}
+                            <div className="relative w-full lg:w-64 group shrink-0">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
+                                <input 
+                                    type="text" 
+                                    placeholder="Buscar cliente o teléfono..." 
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 transition-all text-sm font-medium shadow-sm" 
+                                    value={clientSearchTerm} 
+                                    onChange={e => setClientSearchTerm(e.target.value)} 
+                                />
+                            </div>
                         </div>
                     </div>
                     
-                    {currentClientsList.length === 0 ? (
-                        <div className="text-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><Calendar size={24} className="text-gray-300"/></div>
-                            <p className="text-gray-500 font-medium text-sm">{!showArchived ? 'No tienes próximas citas agendadas.' : 'No tienes citas pasadas registradas.'}</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
-                            {currentClientsList.map(lead => {
+                    {(() => {
+                        // APLICAMOS EL FILTRO MÚLTIPLE EN TIEMPO REAL
+                        const displayClients = currentClientsList.filter(client => {
+                            if (!showArchived || selectedStatusFilters.length === 0) return true;
+                            const status = client.agentStatus || 'activo';
+                            return selectedStatusFilters.includes(status);
+                        });
+
+                        return displayClients.length === 0 ? (
+                            <div className="text-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><Calendar size={24} className="text-gray-300"/></div>
+                                <p className="text-gray-500 font-medium text-sm">{!showArchived ? 'No tienes próximas citas agendadas.' : 'No se encontraron citas con ese filtro.'}</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+                                {displayClients.map(lead => {
                                 let fDate = "Sin fecha";
                                 if (lead.date) {
                                     fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
