@@ -2094,6 +2094,21 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                                         {agent.name}
                                         {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded uppercase tracking-widest border border-gray-200">Inactivo</span>}
                                     </h3>
+                                    
+                                    {/* NUEVO: ESTRELLAS DEL AGENTE (CON SCROLL SUAVE) */}
+                                    {agentReviews.length > 0 && (
+                                        <button 
+                                            onClick={() => document.getElementById('seccion-resenas').scrollIntoView({ behavior: 'smooth' })}
+                                            className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer shadow-sm group"
+                                            title="Ver reseñas"
+                                        >
+                                            <div className="flex text-amber-500">
+                                                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-500" : "text-amber-200"}/>)}
+                                            </div>
+                                            <span className="text-xs font-bold text-amber-700 group-hover:text-amber-800 transition-colors">{avgRating} <span className="font-normal opacity-70">({agentReviews.length})</span></span>
+                                        </button>
+                                    )}
+
                                     {agent.bio && <p className="text-sm text-gray-500 italic mt-3 bg-gray-50 p-4 rounded-xl border border-gray-100 text-balance leading-relaxed">"{agent.bio}"</p>}
                                     
                                     <div className="w-full space-y-3 text-sm mt-6 text-left">
@@ -2254,7 +2269,7 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                         </div>
 
                         {/* --- LISTA DE RESEÑAS DEL AGENTE ESTILO AMAZON --- */}
-                        <div className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col mt-6">
+                        <div id="seccion-resenas" className="bg-white p-5 md:p-8 rounded-3xl shadow-soft border border-gray-100 flex-1 flex flex-col mt-6 scroll-mt-24">
                             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
                                 <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center border border-amber-100">
                                     <Star size={24} fill="currentColor"/>
