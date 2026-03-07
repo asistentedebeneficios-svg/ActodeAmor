@@ -1725,41 +1725,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
                 <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
                     <button onClick={handleAttemptClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
-                    <div className="flex flex-col justify-center min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                            <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
-                                {lead.name} {lead.age ? <span className="text-gray-500 font-medium text-base md:text-lg">({lead.age} años)</span> : ''}
-                            </h2>
-                            
-                            {/* BADGE DESPLEGABLE PREMIUM */}
-                            <div className="relative shrink-0 mt-0.5 md:mt-0">
-                                <select
-                                    value={lead.agentStatus || 'activo'}
-                                    onChange={(e) => {
-                                        setTempStatus(e.target.value); // Sincroniza con el Policía
-                                        onUpdate(lead.id, { agentStatus: e.target.value }); // Guarda en Firebase al instante
-                                    }}
-                                    className={`appearance-none text-[9px] md:text-[10px] font-bold pl-2.5 pr-6 py-1 rounded uppercase tracking-widest border outline-none cursor-pointer shadow-sm transition-all duration-300 ${
-                                        (!lead.agentStatus || lead.agentStatus === 'activo') ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 focus:ring-2 focus:ring-blue-500/20' :
-                                        lead.agentStatus === 'seguimiento' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 focus:ring-2 focus:ring-amber-500/20' :
-                                        lead.agentStatus === 'vendido' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 focus:ring-2 focus:ring-emerald-500/20' :
-                                        'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 focus:ring-2 focus:ring-rose-500/20'
-                                    }`}
-                                >
-                                    <option value="activo" className="bg-white text-gray-800 normal-case tracking-normal">Cita Programada</option>
-                                    <option value="seguimiento" className="bg-white text-gray-800 normal-case tracking-normal">En Seguimiento</option>
-                                    <option value="vendido" className="bg-white text-gray-800 normal-case tracking-normal">Venta Cerrada</option>
-                                    <option value="descartado" className="bg-white text-gray-800 normal-case tracking-normal">Descartado</option>
-                                </select>
-                                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={
-                                        (!lead.agentStatus || lead.agentStatus === 'activo') ? 'text-blue-500' :
-                                        lead.agentStatus === 'seguimiento' ? 'text-amber-500' :
-                                        lead.agentStatus === 'vendido' ? 'text-emerald-500' : 'text-rose-500'
-                                    }><path d="m6 9 6 6 6-6"/></svg>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="truncate">
+                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
+                            {lead.name} {lead.age ? <span className="text-gray-500 font-medium text-base md:text-lg">({lead.age} años)</span> : ''}
+                        </h2>
                         <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
                     </div>
                 </div>
@@ -1799,10 +1768,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                 'bg-white text-rose-700 border-rose-200 focus:ring-2 focus:ring-rose-500/20'
                                             }`}
                                         >
-                                            <option value="activo" className="text-gray-800">🔵 Cita Programada</option>
-                                            <option value="seguimiento" className="text-gray-800">⏳ En Seguimiento</option>
-                                            <option value="vendido" className="text-gray-800">🏆 Venta Cerrada</option>
-                                            <option value="descartado" className="text-gray-800">❌ Descartado</option>
+                                            <option value="activo" className="text-gray-800">Cita Programada</option>
+                                            <option value="seguimiento" className="text-gray-800">En Seguimiento</option>
+                                            <option value="vendido" className="text-gray-800">Venta Cerrada</option>
+                                            <option value="descartado" className="text-gray-800">Descartado</option>
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={
