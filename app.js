@@ -5350,8 +5350,8 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
 
                         <div className="grid sm:grid-cols-2 gap-6 md:gap-8 text-left">
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
-                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><ShoppingCart size={24}/></div>
-                                <div><h3 className="text-white font-bold text-base mb-1">Leads Exclusivos</h3><p className="text-xs text-gray-400 leading-relaxed">Acceso a Marketplace en tiempo real con clientes de alta intención.</p></div>
+                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0 text-rose-400 group-hover:scale-110 transition-transform"><Users size={24}/></div>
+                                <div><h3 className="text-white font-bold text-base mb-1">Citas Exclusivas</h3><p className="text-xs text-gray-400 leading-relaxed">Acceso en tiempo real con clientes de alta intención.</p></div>
                             </div>
                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group text-center sm:text-left">
                                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-400 group-hover:scale-110 transition-transform"><CalendarDays size={24}/></div>
