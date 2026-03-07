@@ -2095,17 +2095,17 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                                         {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded uppercase tracking-widest border border-gray-200">Inactivo</span>}
                                     </h3>
                                     
-                                    {/* NUEVO: ESTRELLAS DEL AGENTE (CON SCROLL SUAVE) */}
+                                    {/* NUEVO: ESTRELLAS DEL AGENTE (SIN FONDO, SCROLL SUAVE) */}
                                     {agentReviews.length > 0 && (
                                         <button 
                                             onClick={() => document.getElementById('seccion-resenas').scrollIntoView({ behavior: 'smooth' })}
-                                            className="flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer shadow-sm group"
+                                            className="flex items-center gap-1.5 mt-1 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
                                             title="Ver reseñas"
                                         >
-                                            <div className="flex text-amber-500">
-                                                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-500" : "text-amber-200"}/>)}
+                                            <div className="flex text-amber-400 gap-0.5">
+                                                {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} className={s <= Math.round(avgRating) ? "text-amber-400" : "text-gray-300"}/>)}
                                             </div>
-                                            <span className="text-xs font-bold text-amber-700 group-hover:text-amber-800 transition-colors">{avgRating} <span className="font-normal opacity-70">({agentReviews.length})</span></span>
+                                            <span className="text-[11px] font-bold text-gray-700">{avgRating} <span className="font-normal text-gray-400">({agentReviews.length})</span></span>
                                         </button>
                                     )}
 
