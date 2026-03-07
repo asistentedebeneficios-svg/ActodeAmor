@@ -4970,9 +4970,26 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                         <div className="flex items-center gap-3 min-w-0 pr-2">
                                             <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-semibold text-sm border border-gray-200 shrink-0 shadow-sm">{lead.name.charAt(0)}</div>
                                             <div className="min-w-0 flex flex-col gap-1.5">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <h4 className={`font-bold text-sm truncate ${showArchived ? 'text-gray-500' : 'text-gray-900'}`}>{lead.name}</h4>
-                                                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold border border-blue-100 text-[10px]"><Calendar size={10}/> {fDate}</span>
+                                                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded flex items-center gap-1 font-semibold border border-blue-100 text-[10px] shrink-0"><Calendar size={10}/> {fDate}</span>
+                                                    
+                                                    {/* ETIQUETAS DE ESTATUS PREMIUM (Visibles en la lista) */}
+                                                    {lead.agentStatus === 'vendido' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                                                            Venta Cerrada
+                                                        </span>
+                                                    )}
+                                                    {lead.agentStatus === 'seguimiento' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 shrink-0">
+                                                            En Seguimiento
+                                                        </span>
+                                                    )}
+                                                    {lead.agentStatus === 'descartado' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-100 shrink-0">
+                                                            Descartado
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 
                                                 {/* BLOQUE DE DOBLE HORARIO Y TELÉFONO */}
