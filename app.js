@@ -5099,7 +5099,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                 )
                             })}
                         </div>
-                    )}
+                    )
+                    })()}
                 </div>
             )}
 
