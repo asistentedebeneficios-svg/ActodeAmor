@@ -1775,6 +1775,45 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><User size={16} className="text-rose-500"/> Ficha Técnica</h3>
                             <div className="space-y-5">
+                                
+                                <div className={`flex flex-col rounded-2xl p-4 md:p-5 border transition-colors duration-300 shadow-sm ${
+                                    (!lead.agentStatus || lead.agentStatus === 'activo') ? 'bg-blue-50/60 border-blue-100' :
+                                    lead.agentStatus === 'seguimiento' ? 'bg-amber-50/60 border-amber-100' :
+                                    lead.agentStatus === 'vendido' ? 'bg-emerald-50/60 border-emerald-100' :
+                                    'bg-rose-50/60 border-rose-100'
+                                }`}>
+                                    <span className="text-[10px] uppercase font-bold tracking-widest block mb-2 text-gray-500">
+                                        Estatus de la Gestión
+                                    </span>
+                                    <div className="relative">
+                                        <select
+                                            value={lead.agentStatus || 'activo'}
+                                            onChange={(e) => {
+                                                setTempStatus(e.target.value);
+                                                onUpdate(lead.id, { agentStatus: e.target.value });
+                                            }}
+                                            className={`appearance-none w-full font-bold text-sm md:text-base pl-4 pr-10 py-3.5 rounded-xl outline-none cursor-pointer shadow-sm transition-all duration-300 border ${
+                                                (!lead.agentStatus || lead.agentStatus === 'activo') ? 'bg-white text-blue-700 border-blue-200 focus:ring-2 focus:ring-blue-500/20' :
+                                                lead.agentStatus === 'seguimiento' ? 'bg-white text-amber-700 border-amber-200 focus:ring-2 focus:ring-amber-500/20' :
+                                                lead.agentStatus === 'vendido' ? 'bg-white text-emerald-700 border-emerald-200 focus:ring-2 focus:ring-emerald-500/20' :
+                                                'bg-white text-rose-700 border-rose-200 focus:ring-2 focus:ring-rose-500/20'
+                                            }`}
+                                        >
+                                            <option value="activo" className="text-gray-800">🔵 Cita Programada</option>
+                                            <option value="seguimiento" className="text-gray-800">⏳ En Seguimiento</option>
+                                            <option value="vendido" className="text-gray-800">🏆 Venta Cerrada</option>
+                                            <option value="descartado" className="text-gray-800">❌ Descartado</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={
+                                                (!lead.agentStatus || lead.agentStatus === 'activo') ? 'text-blue-400' :
+                                                lead.agentStatus === 'seguimiento' ? 'text-amber-400' :
+                                                lead.agentStatus === 'vendido' ? 'text-emerald-400' : 'text-rose-400'
+                                            }><path d="m6 9 6 6 6-6"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="flex flex-col bg-gray-50 rounded-2xl p-4 md:p-5 border border-gray-100/50">
                                     <div className="border-b border-gray-200/80 pb-4 mb-4">
                                         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1.5">Estado</span>
