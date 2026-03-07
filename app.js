@@ -4614,15 +4614,15 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                 </div>
                 
                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                    {/* ESTRELLAS DEL AGENTE: Botón Elegante Dorado */}
+                    {/* ESTRELLAS DEL AGENTE: Botón Elegante (Sin Fondo) */}
                     {agentReviews.length > 0 && (
                         <button 
                             onClick={() => setShowReviewsModal(true)} 
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer mr-1 md:mr-2 shadow-sm"
+                            className="flex items-center gap-1.5 mr-1 md:mr-2 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
                             title="Ver mis reseñas"
                         >
-                            <Star size={14} className="text-amber-500" fill="currentColor" />
-                            <span className="text-xs font-bold text-amber-700">{avgRating}</span>
+                            <Star size={16} className="text-amber-400" fill="currentColor" />
+                            <span className="text-[13px] font-bold text-gray-700">{avgRating}</span>
                         </button>
                     )}
 
