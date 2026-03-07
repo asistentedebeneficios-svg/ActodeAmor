@@ -4621,8 +4621,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                             className="flex items-center gap-1.5 mr-1 md:mr-2 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
                             title="Ver mis reseñas"
                         >
-                            <Star size={16} className="text-amber-400" fill="currentColor" />
-                            <span className="text-[13px] font-bold text-gray-700">{avgRating}</span>
+                            <Star size={18} className="text-amber-400" fill="currentColor" />
+                            <span className="text-sm font-bold text-gray-700 leading-none mt-[2px]">{avgRating}</span>
                         </button>
                     )}
 
