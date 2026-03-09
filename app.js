@@ -1731,7 +1731,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     <button onClick={handleAttemptClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
                     <div className="truncate">
                         <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
-                            {lead.name} {lead.age ? <span className="text-gray-500 font-medium text-base md:text-lg">({lead.age} años)</span> : ''}
+                            {lead.name}
                         </h2>
                         <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
                     </div>
@@ -1885,6 +1885,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
                             <div className="space-y-4">
+                                {lead.age && (
+                                    <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                        <span className="text-sm text-gray-500 font-medium">Edad del solicitante</span>
+                                        <span className="font-bold text-gray-900 text-sm text-right">{lead.age} años</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Cobertura para</span>
                                     <span className="font-bold text-gray-900 text-sm text-right">{getLabelsForArray('policy_for', lead.policy_for)}</span>
