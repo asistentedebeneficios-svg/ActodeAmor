@@ -2935,6 +2935,10 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
 };
                                                                    
 const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApproveRequest, onRejectRequest, onUpdateAgentRequest, schedule, webhooks, generalSettings, onUpdateLead, bulkUpdateLeads, bulkDeleteLeads, onDeleteLead, onDeleteReview, onSaveAgent, onDeleteAgent, onUpdateSchedule, onUpdateWebhooks, onUpdateGeneralSettings, onClose, onLogout }) => {    
+    
+    // NUEVO: ESTADO PARA EL MODAL DE SALIDA
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) ---
     useEffect(() => {
         let inactivityTimer;
@@ -3279,6 +3283,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 
     return (
         <div className="fixed inset-0 bg-apple-gray z-50 flex flex-col animate-fade-in font-sans">
+            <CustomDialog 
+                isOpen={showLogoutConfirm} 
+                title="Cerrar Sesión" 
+                message="¿Estás seguro de que deseas salir del panel de administración?" 
+                type="warning" 
+                onConfirm={onLogout} 
+                onCancel={() => setShowLogoutConfirm(false)} 
+            />
             
             {/* VISOR DE IMÁGENES EN PANTALLA COMPLETA (LIGHTBOX) */}
             {previewImage && (
@@ -3319,7 +3331,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                             <span>Auto</span>
                         </button>
                         <button onClick={() => setShowFullSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
-                        <button onClick={onLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
+                        <button onClick={() => setShowLogoutConfirm(true)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
                     </div>
                 </div>
                 
@@ -3341,7 +3353,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                      </button>
                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
                      <button onClick={() => setShowFullSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
-                     <button onClick={onLogout} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
+                     <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
             </div>
 
@@ -4177,6 +4189,9 @@ const AgentSupportModal = ({ onClose }) => {
                                                                    
 const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, generalSettings }) => {
     
+    // NUEVO: ESTADO PARA EL MODAL DE SALIDA
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     // --- ESTRELLAS DEL AGENTE Y MODAL ---
     const agentReviews = reviews.filter(r => r.agentId === agent.id).sort((a,b) => b.timestamp - a.timestamp);
     const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
@@ -4619,6 +4634,14 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     return (
         <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="min-h-screen bg-[#F5F5F7] flex flex-col font-sans animate-fade-in relative pb-24 overflow-x-hidden">
             <CustomDialog isOpen={!!dialog} {...dialog} />        
+            <CustomDialog 
+                isOpen={showLogoutConfirm} 
+                title="Cerrar Sesión" 
+                message="¿Estás seguro de que deseas salir de tu portal?" 
+                type="warning" 
+                onConfirm={onLogout} 
+                onCancel={() => setShowLogoutConfirm(false)} 
+            />
             {/* Header Minimalista */}
             <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
                 <div className="flex items-center gap-3">
@@ -4648,7 +4671,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                         <HelpCircle size={16}/> <span className="hidden md:inline">Soporte</span>
                     </button>
                     <div className="w-px h-4 bg-gray-200 hidden md:block"></div>
-                    <button onClick={onLogout} className="text-xs font-semibold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1.5 px-2 py-1">
+                    <button onClick={() => setShowLogoutConfirm(true)} className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5 px-2 py-1">
                         <LogOut size={14}/> <span className="hidden md:inline">Salir</span>
                     </button>
                 </div>
