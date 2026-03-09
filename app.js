@@ -5351,7 +5351,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-2">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 -ml-1">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         {/* Subimos a text-sm para móvil y text-lg para PC, dándole mucha más presencia a la marca */}
                         <span className="text-white font-bold tracking-tight text-sm sm:text-lg truncate">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
@@ -5533,7 +5533,7 @@ const AboutUsPage = ({ onClose }) => {
                     </button>
                     <div className="flex items-center gap-1.5 opacity-100">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         <span className="text-gray-900 font-bold tracking-tight text-sm sm:text-base">asistente<span className="font-light text-gray-500">debeneficios</span></span>
                     </div>
@@ -5871,7 +5871,7 @@ const App = () => {
             link.rel = 'icon';
             document.head.appendChild(link);
         }
-        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/ICONO.png';
+        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png';
         document.title = 'Asistente de Beneficios';
     }, []);
 
@@ -6245,7 +6245,7 @@ const App = () => {
                     {/* IZQUIERDA: LOGO Y NOMBRE */}
                     <div className="flex items-center gap-1.5 md:gap-2 overflow-hidden">
                         <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center shrink-0 -ml-1">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
                             asistente<span className="font-light text-gray-400">debeneficios.com</span>
