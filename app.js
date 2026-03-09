@@ -5211,7 +5211,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                         Redirigiendo a Stripe...
                                     </span>
                                     <span className="text-[9px] md:text-[10px] text-rose-400 font-medium mt-1">
-                                        ⚠️ Termina tu compra pronto. Te quedan {Math.floor(timeLeft / 60)} min.
+                                        ℹ️ Termina tu compra pronto. Te quedan {Math.floor(timeLeft / 60)} min.
                                     </span>
                                 </div>
                             </div>
