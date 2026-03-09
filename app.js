@@ -2900,16 +2900,30 @@ const OfferPreviewModal = ({ offerSetup, agents, generalSettings, onClose, onSen
                 </div>
 
                 <div className="mb-8">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total a Cobrar ($)</label>
-                    <input 
-                        type="number" 
-                        className="w-full text-center text-4xl font-black text-gray-900 bg-white border-b-2 border-dashed border-gray-300 focus:border-rose-500 outline-none pb-2 transition-colors"
-                        value={price}
-                        onChange={e => setPrice(e.target.value)}
-                    />
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Total a Cobrar</label>
+                    <div className="flex items-center justify-center border-b-2 border-dashed border-gray-300 focus-within:border-rose-500 transition-colors pb-2 w-full">
+                        <span className="text-3xl font-black text-gray-400 mr-1">$</span>
+                        <input 
+                            type="number" 
+                            min="0"
+                            className="text-center text-4xl font-black text-gray-900 bg-transparent outline-none w-28 md:w-32"
+                            value={price}
+                            onChange={e => {
+                                const val = e.target.value;
+                                // Solo permite actualizar si está vacío (para borrar) o si es un número mayor o igual a cero
+                                if (val === '' || Number(val) >= 0) {
+                                    setPrice(val);
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
 
-                <button onClick={() => onSendOffer(price)} className="w-full bg-black text-white py-4 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                <button 
+                    onClick={() => onSendOffer(price)} 
+                    disabled={price === '' || Number(price) < 0}
+                    className="w-full bg-black text-white py-4 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                >
                     <Check size={18}/> Enviar Oferta al Agente
                 </button>
                 <p className="text-[10px] text-gray-400 mt-4 leading-relaxed">
