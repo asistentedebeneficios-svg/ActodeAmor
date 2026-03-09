@@ -5871,7 +5871,7 @@ const App = () => {
             link.rel = 'icon';
             document.head.appendChild(link);
         }
-        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png';
+        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/ICONO.png';
         document.title = 'Asistente de Beneficios';
     }, []);
 
@@ -5880,10 +5880,20 @@ const App = () => {
     const [showProspectTermsFromMenu, setShowProspectTermsFromMenu] = useState(false);
     const [showContactUsModal, setShowContactUsModal] = useState(false);
 
-    // --- MEMORIA DEL EMBUDO ---
-    const [stepIndex, setStepIndex] = useState(() => {
+    // --- MEMORIA DEL EMBUDO ---
+    const [stepIndex, setStepIndex] = useState(() => {
+        // NUEVO: Detector de enlaces directos para campañas de Meta Ads
+        const isDirectCampaign = window.location.href.toLowerCase().includes('proteger');
+        
         const savedStep = sessionStorage.getItem('funnelStepIndex');
-        return savedStep !== null ? parseInt(savedStep, 10) : 0;
+        const parsedSavedStep = savedStep !== null ? parseInt(savedStep, 10) : 0;
+        
+        // Si el enlace tiene la palabra clave y es una sesión nueva, salta al paso 1
+        if (isDirectCampaign && parsedSavedStep === 0) {
+            return 1; 
+        }
+        
+        return parsedSavedStep;
     });
     const [leadData, setLeadData] = useState(() => {
         const savedData = sessionStorage.getItem('funnelLeadData');
