@@ -5349,8 +5349,8 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
             {/* CABECERA PREMIUM */}
             <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-2">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-2">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 -ml-1">
                             <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         {/* Subimos a text-sm para móvil y text-lg para PC, dándole mucha más presencia a la marca */}
@@ -5531,11 +5531,11 @@ const AboutUsPage = ({ onClose }) => {
                         <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors shrink-0"/> 
                         <span className="hidden sm:inline">Volver</span>
                     </button>
-                    <div className="flex items-center gap-2 opacity-90">
-                        <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-1.5 opacity-100">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                             <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
-                        <span className="text-gray-900 font-bold tracking-tight text-sm">asistente<span className="font-light text-gray-500">debeneficios</span></span>
+                        <span className="text-gray-900 font-bold tracking-tight text-sm sm:text-base">asistente<span className="font-light text-gray-500">debeneficios</span></span>
                     </div>
                 </div>
             </header>
@@ -6243,8 +6243,8 @@ const App = () => {
                 <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
                     
                     {/* IZQUIERDA: LOGO Y NOMBRE */}
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-1.5 md:gap-2 overflow-hidden">
+                        <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center shrink-0 -ml-1">
                             <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
