@@ -5199,7 +5199,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                     <div className="w-px h-4 bg-white/20"></div>
                                     <span className="text-rose-400 font-mono font-bold text-[11px] md:text-sm flex items-center gap-1 whitespace-nowrap"><Clock size={12}/> {formatTime(timeLeft)}</span>
                                 </div>
-                                <button onClick={handleCheckout} className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-lg">
+                                <button onClick={() => handleCheckout(null, null)} className="bg-white text-black px-4 md:px-6 py-2.5 rounded-xl md:rounded-full text-xs md:text-sm font-bold hover:bg-gray-100 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-lg">
                                     Pagar ${cartTotal} <ChevronRight size={14}/>
                                 </button>
                             </>
