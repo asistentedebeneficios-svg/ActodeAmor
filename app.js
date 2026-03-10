@@ -3890,7 +3890,32 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     allLeads={processedLeads} 
                     onClose={() => setIsBulkAgentSelectOpen(false)}
                     onSelect={(agentId, assignableLeads) => { 
-                        if (!agentId) return;
+                        
+                        // 👇 NUEVA LÓGICA DE DESASIGNACIÓN EN LOTE 👇
+                        if (!agentId) {
+                            setDialog({
+                                title: 'Quitar Asignación',
+                                message: `¿Estás seguro de quitar la asignación a estos ${selectedLeads.length} prospectos?`,
+                                type: 'warning',
+                                onConfirm: () => {
+                                    const now = Date.now();
+                                    selectedLeads.forEach(id => {
+                                        const lead = processedLeads.find(l => l.id === id);
+                                        if (lead) {
+                                            const timeInfo = getAgentLocalDateTime(lead.date, lead.time, lead.state);
+                                            const isFuture = timeInfo ? timeInfo.localMs > now : true;
+                                            onUpdateLead(id, { assignedTo: '', status: isFuture ? 'new' : 'archived' });
+                                        }
+                                    });
+                                    setSelectedLeads([]);
+                                    setIsBulkAgentSelectOpen(false);
+                                    setDialog(null);
+                                },
+                                onCancel: () => setDialog(null)
+                            });
+                            return;
+                        }
+                        // 👆 FIN NUEVA LÓGICA 👆
 
                         const selectedAgent = agents.find(a => a.id === agentId);
                         const assignableIds = assignableLeads.map(l => l.id);
@@ -3938,7 +3963,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                 message: '¿Estás seguro de quitar la asignación actual?',
                                 type: 'warning',
                                 onConfirm: () => {
-                                    onUpdateLead(individualAgentSelectLeadId, { assignedTo: '' }); 
+                                    const now = Date.now();
+                                    const timeInfo = getAgentLocalDateTime(leadToAssign.date, leadToAssign.time, leadToAssign.state);
+                                    const isFuture = timeInfo ? timeInfo.localMs > now : true;
+
+                                    onUpdateLead(individualAgentSelectLeadId, { 
+                                        assignedTo: '',
+                                        status: isFuture ? 'new' : 'archived'
+                                    }); 
                                     setIndividualAgentSelectLeadId(null); 
                                     setDialog(null);
                                 },
