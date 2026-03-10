@@ -2783,25 +2783,15 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Nuevo Lead (Telegram)</label>
+                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Webhook Maestro (Make)</label>
                                     <input 
                                         type="text" 
                                         placeholder="https://hook.make.com/..."
                                         className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
-                                        value={localHooks.telegram}
-                                        onChange={e => setLocalHooks({...localHooks, telegram: e.target.value})}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-3 ml-1">Asignación (Correo)</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="https://hook.make.com/..."
-                                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:bg-white/10 focus:border-blue-500 transition-all text-sm font-medium"
-                                        value={localHooks.assignment}
-                                        onChange={e => setLocalHooks({...localHooks, assignment: e.target.value})}
+                                        value={localHooks.master || localHooks.telegram || ''}
+                                        onChange={e => setLocalHooks({...localHooks, master: e.target.value, telegram: e.target.value})}
                                     />
                                 </div>
                                 <div>
@@ -3231,10 +3221,16 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             time: leadObj.localTime || leadObj.time
         };
 
-        fetch(webhooks.assignment, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lead: translatedLead, agent: agentObj })
-        }).catch(e => console.error("Error Webhook Correo:", e));
+        const url = webhooks.master || webhooks.telegram || webhooks.assignment;
+        if (url) {
+            fetch(url, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    evento: 'asignacion_agente', 
+                    datos: { lead: translatedLead, agent: agentObj } 
+                })
+            }).catch(e => console.error("Error Webhook Asignación:", e));
+        }
     };
 
     const handleBulkAction = (action) => {
@@ -6085,6 +6081,7 @@ const App = () => {
                 // Armamos el "Maletín VIP" solo para Make
                 const webhookPayload = {
                     ...finalData,
+                    age: finalData.age || 'No especificada',
                     date: formattedDate,
                     callType: callTypeMap[finalData.callType] || finalData.callType,
                     policy_for: translatedPolicy,
@@ -6092,13 +6089,19 @@ const App = () => {
                     coverage_amount: formattedCoverage
                 };
 
-                // Enviamos los datos embellecidos
-                fetch(webhooks.telegram, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(webhookPayload)
-                });
-            } catch (err) { console.error("Error Webhook Telegram:", err); }
+                // Enviamos los datos al Webhook Maestro con su etiqueta
+                const url = webhooks.master || webhooks.telegram;
+                if (url) {
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            evento: 'nuevo_prospecto',
+                            datos: webhookPayload
+                        })
+                    });
+                }
+            } catch (err) { console.error("Error Webhook:", err); }
         }
     };
     const completeSuccess = () => { 
@@ -6135,15 +6138,27 @@ const App = () => {
                             generalSettings={generalSettings}
                             onCancel={() => setShowRegister(false)}
                             onSubmit={async (data) => {
-                                try {
-                                    // Quitamos el ID vacío para que Firebase no se moleste y cree uno nuevo
-                                    const { id, ...datosLimpios } = data;
-                                    await addDoc(collection(db, 'agent_requests'), { ...datosLimpios, status: 'pending', timestamp: Date.now() }); 
-                                } catch (e) { 
-                                    console.error("Error crítico de guardado:", e); 
-                                    throw e; 
-                                }
-                            }}
+                                try {
+                                    // Quitamos el ID vacío para que Firebase no se moleste y cree uno nuevo
+                                    const { id, ...datosLimpios } = data;
+                                    await addDoc(collection(db, 'agent_requests'), { ...datosLimpios, status: 'pending', timestamp: Date.now() }); 
+                                    
+                                    // Disparo al Webhook Maestro: Nuevo Agente
+                                    const url = webhooks?.master || webhooks?.telegram;
+                                    if (url) {
+                                        fetch(url, {
+                                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ 
+                                                evento: 'nuevo_agente', 
+                                                datos: datosLimpios 
+                                            })
+                                        }).catch(e => console.error("Error Webhook Agente:", e));
+                                    }
+                                } catch (e) { 
+                                    console.error("Error crítico de guardado:", e); 
+                                    throw e; 
+                                }
+                            }}
                         />
                     </div>
             );
