@@ -6260,17 +6260,35 @@ const App = () => {
         );
     } // <-- Aquí cerramos el if general de showAdmin
     // --- PANTALLA: FORMULARIO DE AGENTE DESDE LA HOME ---
-    if (showAgentFormFromHome) {
-        if (generalSettings?.acceptingAgents === false) {
-            return <RegistrationClosedModal onClose={() => setShowAgentFormFromHome(false)} />;
-        }
-        return (
-            <AgentRegistrationForm 
-                generalSettings={generalSettings}
-                onCancel={() => setShowAgentFormFromHome(false)} 
-            />
-        );
-    }
+    if (showAgentFormFromHome) {
+        if (generalSettings?.acceptingAgents === false) {
+            return <RegistrationClosedModal onClose={() => setShowAgentFormFromHome(false)} />;
+        }
+        return (
+            <AgentRegistrationForm 
+                generalSettings={generalSettings}
+                onCancel={() => setShowAgentFormFromHome(false)} 
+                onSubmit={async (data) => {
+                    try {
+                        const { id, ...datosLimpios } = data;
+                        await addDoc(collection(db, 'agent_requests'), { ...datosLimpios, status: 'pending', timestamp: Date.now() }); 
+                        
+                        // Disparo al Webhook Maestro: Nuevo Agente
+                        const url = webhooks?.master || webhooks?.telegram;
+                        if (url) {
+                            fetch(url, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ evento: 'nuevo_agente', datos: datosLimpios })
+                            }).catch(e => console.error("Error Webhook Agente:", e));
+                        }
+                    } catch (e) { 
+                        console.error("Error crítico de guardado:", e); 
+                        throw e; 
+                    }
+                }}
+            />
+        );
+    }
 
 // --- PANTALLA: QUIÉNES SOMOS ---
     if (showAboutUs) {
