@@ -3321,7 +3321,9 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             <div className="glass-panel px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row justify-between items-center z-20 gap-3 shadow-sm">
                 <div className="flex items-center justify-between w-full md:w-auto">
                     <div className="flex items-center gap-3">
-                        <div className="bg-black text-white p-2 rounded-xl shadow-md"><ShieldCheck size={20} /></div>
+                        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/ICONO3.1.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                        </div>
                         <div className="leading-tight">
                             <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
