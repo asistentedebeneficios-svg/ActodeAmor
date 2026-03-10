@@ -2749,22 +2749,30 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                         <h3 className="text-2xl font-bold text-gray-900 mb-6">Precios</h3>
                         <div className="space-y-6">
                             <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Regular por Cita ($)</label>
-                                <input 
-                                    type="number" 
-                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 outline-none focus:bg-white focus:border-amber-400 transition-all"
-                                    value={regPrice}
-                                    onChange={e => setRegPrice(e.target.value)}
-                                />
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Regular por Cita</label>
+                                <div className="relative flex items-center">
+                                    <span className="absolute left-5 font-black text-gray-400 text-xl pointer-events-none">$</span>
+                                    <input 
+                                        type="number" 
+                                        className="w-full pl-10 pr-14 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-black text-gray-900 text-xl outline-none focus:bg-white focus:border-amber-400 transition-all"
+                                        value={regPrice}
+                                        onChange={e => setRegPrice(e.target.value)}
+                                    />
+                                    <span className="absolute right-5 font-bold text-gray-400 text-xs tracking-widest pointer-events-none">USD</span>
+                                </div>
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Oferta / Urgente ($)</label>
-                                <input 
-                                    type="number" 
-                                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-rose-600 outline-none focus:bg-white focus:border-rose-400 transition-all"
-                                    value={offPrice}
-                                    onChange={e => setOffPrice(e.target.value)}
-                                />
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">Precio Oferta / Urgente</label>
+                                <div className="relative flex items-center">
+                                    <span className="absolute left-5 font-black text-rose-400 text-xl pointer-events-none">$</span>
+                                    <input 
+                                        type="number" 
+                                        className="w-full pl-10 pr-14 py-4 bg-rose-50/30 border border-rose-100 rounded-2xl font-black text-rose-600 text-xl outline-none focus:bg-white focus:border-rose-400 transition-all"
+                                        value={offPrice}
+                                        onChange={e => setOffPrice(e.target.value)}
+                                    />
+                                    <span className="absolute right-5 font-bold text-rose-400 text-xs tracking-widest pointer-events-none">USD</span>
+                                </div>
                             </div>
                         </div>
                     </div>
