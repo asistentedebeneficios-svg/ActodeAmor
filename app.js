@@ -3326,7 +3326,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                         </div>
                         <div className="leading-tight">
                             <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seguros</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">asistentedebeneficios.com</p>
                         </div>
                     </div>
                     {/* Botones Móvil */}
