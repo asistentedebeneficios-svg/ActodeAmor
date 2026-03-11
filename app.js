@@ -1759,31 +1759,88 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         Estatus de la Gestión
                                     </span>
                                     <div className="relative">
-                                        <select
-                                            value={lead.agentStatus || 'activo'}
-                                            onChange={(e) => {
-                                                setTempStatus(e.target.value);
-                                                onUpdate(lead.id, { agentStatus: e.target.value });
-                                            }}
-                                            className={`appearance-none w-full font-bold text-sm md:text-base pl-4 pr-10 py-3.5 rounded-xl outline-none cursor-pointer shadow-sm transition-all duration-300 border ${
-                                                (!lead.agentStatus || lead.agentStatus === 'activo') ? 'bg-white text-blue-700 border-blue-200 focus:ring-2 focus:ring-blue-500/20' :
-                                                lead.agentStatus === 'seguimiento' ? 'bg-white text-amber-700 border-amber-200 focus:ring-2 focus:ring-amber-500/20' :
-                                                lead.agentStatus === 'vendido' ? 'bg-white text-emerald-700 border-emerald-200 focus:ring-2 focus:ring-emerald-500/20' :
-                                                'bg-white text-rose-700 border-rose-200 focus:ring-2 focus:ring-rose-500/20'
-                                            }`}
-                                        >
-                                            <option value="activo" className="text-gray-800">Cita Programada</option>
-                                            <option value="seguimiento" className="text-gray-800">En Seguimiento</option>
-                                            <option value="vendido" className="text-gray-800">Venta Cerrada</option>
-                                            <option value="descartado" className="text-gray-800">Descartado</option>
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={
-                                                (!lead.agentStatus || lead.agentStatus === 'activo') ? 'text-blue-400' :
-                                                lead.agentStatus === 'seguimiento' ? 'text-amber-400' :
-                                                lead.agentStatus === 'vendido' ? 'text-emerald-400' : 'text-rose-400'
-                                            }><path d="m6 9 6 6 6-6"/></svg>
-                                        </div>
+                                        {lead.agentStatus === 'vendido' && isAgentView ? (
+                                            /* --- ESTADO BLOQUEADO: VENTA CERRADA DEFINITIVA (SOLO AGENTES) --- */
+                                            <div className="bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-bold text-sm md:text-base px-4 py-3.5 rounded-xl shadow-sm flex items-center justify-between cursor-not-allowed">
+                                                <span className="flex items-center gap-2">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                    Venta Cerrada
+                                                </span>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                            </div>
+                                        ) : (
+                                            /* --- SELECT NORMAL PARA DEMÁS ESTATUS (Y PARA EL ADMIN SIEMPRE) --- */
+                                            <>
+                                                <select
+                                                    value={lead.agentStatus || 'activo'}
+                                                    onChange={(e) => {
+                                                        const newStatus = e.target.value;
+                                                        
+                                                        if (newStatus === 'vendido' && isAgentView) {
+                                                            // 1. INTERCEPTOR: LANZAR ADVERTENCIA (Solo al Agente)
+                                                            setDialog({
+                                                                title: 'Sellar Venta Cerrada',
+                                                                message: '¿Estás seguro de marcar a este cliente como Venta Cerrada?\n\nEsta acción es DEFINITIVA y bloqueará la ficha técnica. El sistema le pedirá al cliente tu calificación.',
+                                                                type: 'info',
+                                                                onConfirm: async () => {
+                                                                    setTempStatus('vendido');
+                                                                    await onUpdate(lead.id, { agentStatus: 'vendido' });
+                                                                    
+                                                                    // 🔥 DISPARADOR SILENCIOSO PARA MAKE 🔥
+                                                                    if (lead.email && lead.email !== 'No proporcionado') {
+                                                                        try {
+                                                                            const whDoc = await getDoc(doc(db, 'settings', 'webhooks'));
+                                                                            if (whDoc.exists()) {
+                                                                                const hooks = whDoc.data();
+                                                                                const url = hooks.master || hooks.telegram;
+                                                                                if (url) {
+                                                                                    fetch(url, {
+                                                                                        method: 'POST',
+                                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                                        body: JSON.stringify({ 
+                                                                                            evento: 'venta_cerrada', 
+                                                                                            datos: { lead: lead, agent: agents.find(a => a.id === lead.assignedTo) || null } 
+                                                                                        })
+                                                                                    }).catch(err => console.error(err));
+                                                                                }
+                                                                            }
+                                                                        } catch (error) { console.error(error); }
+                                                                    }
+                                                                    setDialog(null);
+                                                                },
+                                                                onCancel: () => {
+                                                                    setTempStatus(lead.agentStatus || 'activo');
+                                                                    setDialog(null);
+                                                                }
+                                                            });
+                                                        } else {
+                                                            // 2. ACTUALIZACIÓN NORMAL (O si el Admin está haciendo el cambio)
+                                                            setTempStatus(newStatus);
+                                                            onUpdate(lead.id, { agentStatus: newStatus });
+                                                        }
+                                                    }}
+                                                    className={`appearance-none w-full font-bold text-sm md:text-base pl-4 pr-10 py-3.5 rounded-xl outline-none cursor-pointer shadow-sm transition-all duration-300 border ${
+                                                        (!lead.agentStatus || lead.agentStatus === 'activo') ? 'bg-white text-blue-700 border-blue-200 focus:ring-2 focus:ring-blue-500/20' :
+                                                        lead.agentStatus === 'seguimiento' ? 'bg-white text-amber-700 border-amber-200 focus:ring-2 focus:ring-amber-500/20' :
+                                                        lead.agentStatus === 'vendido' ? 'bg-emerald-50 text-emerald-700 border-emerald-500 focus:ring-2 focus:ring-emerald-500/20' :
+                                                        'bg-white text-rose-700 border-rose-200 focus:ring-2 focus:ring-rose-500/20'
+                                                    }`}
+                                                >
+                                                    <option value="activo" className="text-gray-800">Cita Programada</option>
+                                                    <option value="seguimiento" className="text-gray-800">En Seguimiento</option>
+                                                    <option value="vendido" className="text-gray-800">Venta Cerrada</option>
+                                                    <option value="descartado" className="text-gray-800">Descartado</option>
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={
+                                                        (!lead.agentStatus || lead.agentStatus === 'activo') ? 'text-blue-400' :
+                                                        lead.agentStatus === 'seguimiento' ? 'text-amber-400' :
+                                                        lead.agentStatus === 'vendido' ? 'text-emerald-500' :
+                                                        'text-rose-400'
+                                                    }><path d="m6 9 6 6 6-6"/></svg>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
