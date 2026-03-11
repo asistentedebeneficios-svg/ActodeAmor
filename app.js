@@ -5884,7 +5884,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
                     <Check size={40} className="text-green-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Evaluación Recibida</h2>
-                <p className="text-gray-500">Ya has calificado a tu especialista anteriormente. ¡Gracias por tu tiempo!</p>
+                <p className="text-gray-500">Ya ha calificado a su especialista anteriormente. ¡Gracias por su tiempo!</p>
             </div>
         );
     }
