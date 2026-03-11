@@ -909,11 +909,11 @@ const LetterStep = ({ data, onContinue }) => {
     const [isSigned, setIsSigned] = useState(false);
     const [isWritingComplete, setIsWritingComplete] = useState(false);
 
-    // Temporizador para el efecto de revelado hacia abajo ajustado a 15 segundos
+    // Temporizador para el efecto de Fade-In ajustado a 3 segundos
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsWritingComplete(true);
-        }, 15000); // <-- CAMBIO A 15 SEGUNDOS
+        }, 3000); // <-- CAMBIO A 3 SEGUNDOS
         return () => clearTimeout(timer);
     }, []);
 
@@ -923,12 +923,12 @@ const LetterStep = ({ data, onContinue }) => {
                 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
                 .font-letter { font-family: 'Crimson Text', serif; }
                 
-                @keyframes revealDown {
-                    0% { clip-path: inset(0 0 100% 0); }
-                    100% { clip-path: inset(0 0 0 0); }
+                @keyframes letterFadeIn {
+                    0% { opacity: 0; }
+                    100% { opacity: 1; }
                 }
-                .animate-reveal-down {
-                    animation: revealDown 15s linear forwards; /* <-- CAMBIO A 15 SEGUNDOS */
+                .animate-letter-fade {
+                    animation: letterFadeIn 3s ease-in-out forwards; /* <-- FADE IN DE 3 SEGUNDOS */
                 }
             `}} />
 
@@ -940,8 +940,8 @@ const LetterStep = ({ data, onContinue }) => {
                     <Heart size={200} fill="currentColor" />
                 </div>
                 
-                {/* Texto de la carta con el efecto de barrido hacia abajo más lento */}
-                <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px] animate-reveal-down">
+                {/* Texto de la carta con el efecto de aparecer suavemente (Fade-in) */}
+                <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px] animate-letter-fade">
                     <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl">{letter.salutation}</p>
                     <p className="text-xl md:text-2xl text-gray-800 tracking-wide">{letter.body}</p>
                     <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl pt-4">{letter.closing}</p>
@@ -5927,15 +5927,15 @@ const ClientReviewScreen = ({ leadId, db }) => {
 
                 <div className="relative z-10 flex flex-col items-center text-center">
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-500 mb-6 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100">
-                        Control de Calidad
+                        Su opinión es valiosa
                     </span>
 
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-2 text-balance">
-                        ¿Cómo fue tu experiencia?
+                        ¿Cómo fue su experiencia?
                     </h2>
 
                     <p className="text-gray-500 text-sm mb-8">
-                        Por favor evalúa la atención que recibiste de tu especialista asignado.
+                        Por favor evalúe la atención que recibió de su especialista asignado.
                     </p>
 
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100 flex items-center justify-center mb-4">
@@ -5952,7 +5952,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
                     {/* INSTRUCCIÓN CLARA PARA ADULTOS MAYORES */}
                     <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full mb-5 shadow-sm animate-pulse">
                         <p className="text-xs sm:text-sm font-extrabold text-amber-700 tracking-wide flex items-center gap-2">
-                            👆 Toca de 1 a 5 estrellas aquí abajo
+                            👇 Por favor, elija entre 1 a 5 estrellas.
                         </p>
                     </div>
 
@@ -5976,7 +5976,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
 
                     <div className="w-full text-left mb-8">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                            Déjale un mensaje (Opcional)
+                            Déjenos un mensaje (Opcional)
                         </label>
                         <textarea
                             rows="3"
