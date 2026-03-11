@@ -1952,7 +1952,9 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 <div className="px-1">
                                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Teléfono y Correo</span>
                                     <p className="font-bold text-gray-900 text-lg">{lead.phone}</p>
-                                    <p className="font-medium text-gray-600 text-sm">{lead.email}</p>
+                                    <p className={`text-sm ${lead.email === 'No proporcionado' ? 'font-medium italic text-gray-400' : 'font-medium text-gray-600'}`}>
+                                        {lead.email === 'No proporcionado' ? 'Email no proporcionado' : lead.email}
+                                    </p>
                                 </div>
                                 <div className="px-1">
                                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest block mb-1">Método Preferido</span>
