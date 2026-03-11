@@ -105,7 +105,7 @@ const getReinforcementMessage = (stepId, selections) => {
     }
     if (stepId === 'motivation') return { title: "Paz Mental", text: "Transformas una futura preocupación en un recuerdo de amor.", icon: Star };
     if (stepId === 'coverage_amount') return { title: "Vas por buen camino", text: "El costo promedio de un funeral supera los $9,000. Tu elección ayudará a cubrir esa diferencia.", icon: DollarSign };
-    if (stepId === 'budget') return { title: "Una inversión de amor", text: "Cuidar a su familia no requiere una fortuna. Con este esfuerzo mensual, les garantizará paz mental y tranquilidad para siempre.", icon: Heart };
+    if (stepId === 'budget') return { title: "Una inversión de amor", text: "Cuidar a su familia no requiere una fortuna. Con esta pequeña inversión mensual, les garantizará paz mental y tranquilidad para siempre.", icon: Heart };
     return null;
 };
 
