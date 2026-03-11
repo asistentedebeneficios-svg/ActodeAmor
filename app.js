@@ -1576,16 +1576,38 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
     // FUNCIÓN INTERCEPTORA DE SALIDA
     const handleAttemptClose = () => {
-        if (!isAgentView) {
-            onClose(); // Si eres Admin, sales directo
+        // Si eres Admin, O si el agente ya cerró la venta definitivamente, sales directo
+        if (!isAgentView || lead.agentStatus === 'vendido') {
+            onClose(); 
             return;
         }
-        setShowExitPolice(true); // Si eres Agente, alto ahí policía
+        setShowExitPolice(true); // Si eres Agente y la venta sigue abierta, alto ahí policía
     };
 
     const handleConfirmExit = async () => {
         if (tempStatus !== lead.agentStatus) {
             await onUpdate(lead.id, { agentStatus: tempStatus });
+            
+            // 🔥 DISPARADOR SILENCIOSO PARA MAKE (SOLO SI SE VA COMO VENDIDO) 🔥
+            if (tempStatus === 'vendido' && lead.email && lead.email !== 'No proporcionado') {
+                try {
+                    const whDoc = await getDoc(doc(db, 'settings', 'webhooks'));
+                    if (whDoc.exists()) {
+                        const hooks = whDoc.data();
+                        const url = hooks.master || hooks.telegram;
+                        if (url) {
+                            fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    evento: 'venta_cerrada', 
+                                    datos: { lead: lead, agent: agents.find(a => a.id === lead.assignedTo) || null } 
+                                })
+                            }).catch(err => console.error(err));
+                        }
+                    }
+                } catch (error) { console.error(error); }
+            }
         }
         setShowExitPolice(false);
         onClose();
@@ -1705,12 +1727,20 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 <option value="descartado" className="bg-white text-gray-800">Descartado</option>
                             </select>
                             
-                            {/* TEXTO DE AYUDA DINÁMICO E ELEGANTE */}
-                            <div className="min-h-[20px] px-2 text-center">
-                                {tempStatus === 'activo' && <p className="text-[11px] font-medium text-blue-600/80 italic animate-fade-in">Todavía no ha atendido al Prospecto.</p>}
-                                {tempStatus === 'seguimiento' && <p className="text-[11px] font-medium text-amber-600/80 italic animate-fade-in">Hay interés, pero el cliente necesita pensarlo o reagendar.</p>}
-                                {tempStatus === 'vendido' && <p className="text-[11px] font-medium text-emerald-600/80 italic animate-fade-in">¡Excelente! La póliza fue aprobada.</p>}
-                                {tempStatus === 'descartado' && <p className="text-[11px] font-medium text-rose-600/80 italic animate-fade-in">El prospecto no califica o dio un no definitivo.</p>}
+                            {/* TEXTO DE AYUDA DINÁMICO Y ADVERTENCIA */}
+                            <div className="min-h-[20px] text-center mt-2">
+                                {tempStatus === 'activo' && <p className="text-[11px] font-medium text-blue-600/80 italic animate-fade-in px-2">Todavía no ha atendido al Prospecto.</p>}
+                                {tempStatus === 'seguimiento' && <p className="text-[11px] font-medium text-amber-600/80 italic animate-fade-in px-2">Hay interés, pero el cliente necesita pensarlo o reagendar.</p>}
+                                
+                                {/* ADVERTENCIA INTEGRADA AL SELECCIONAR VENTA CERRADA */}
+                                {tempStatus === 'vendido' && (
+                                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-left animate-fade-in shadow-sm mx-1">
+                                        <p className="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1.5 mb-1 uppercase tracking-widest"><AlertTriangle size={14}/> Acción Definitiva</p>
+                                        <p className="text-[11px] leading-relaxed font-medium text-emerald-600">Al guardar y salir, ya no podrás modificar el estatus de este cliente y el sistema le pedirá de inmediato tu calificación.</p>
+                                    </div>
+                                )}
+                                
+                                {tempStatus === 'descartado' && <p className="text-[11px] font-medium text-rose-600/80 italic animate-fade-in px-2">El prospecto no califica o dio un no definitivo.</p>}
                             </div>
 
                             <div className="flex gap-3 mt-3">
@@ -1780,7 +1810,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                             // 1. INTERCEPTOR: LANZAR ADVERTENCIA (Solo al Agente)
                                                             setDialog({
                                                                 title: 'Sellar Venta Cerrada',
-                                                                message: '¿Estás seguro de marcar a este cliente como Venta Cerrada?\n\nEsta acción es DEFINITIVA y bloqueará la ficha técnica. El sistema le pedirá al cliente tu calificación.',
+                                                                message: '¿Estás seguro de marcar a este cliente como Venta Cerrada?\n\nEsta acción es DEFINITIVA. Ya no podrás modificar el estatus de este cliente, pero seguirás teniendo acceso a su ficha técnica. El sistema le pedirá tu calificación.',
                                                                 type: 'info',
                                                                 onConfirm: async () => {
                                                                     setTempStatus('vendido');
