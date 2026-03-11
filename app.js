@@ -5914,7 +5914,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
                 </div>
                 <h2 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">¡Muchas Gracias!</h2>
                 <p className="text-lg text-gray-500 max-w-md mx-auto leading-relaxed">
-                    Tu opinión nos ayuda a mantener el nivel de excelencia que tu familia merece.
+                    Su opinión nos ayuda a mantener el nivel de excelencia que su familia merece.
                 </p>
             </div>
         );
