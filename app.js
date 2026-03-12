@@ -3921,18 +3921,12 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                             {lead.assignedTo && activeTab === 'assigned' && (
-                                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8.5px] font-extrabold uppercase tracking-[0.1em] border mt-1 shadow-sm ${
-                                                    (lead.agentStatus === 'vendido') ? 'bg-white text-emerald-600 border-emerald-200' :
-                                                    (lead.agentStatus === 'seguimiento') ? 'bg-white text-amber-600 border-amber-200' :
-                                                    (lead.agentStatus === 'descartado') ? 'bg-white text-rose-600 border-rose-200' :
-                                                    'bg-white text-blue-600 border-blue-200'
+                                                <span className={`inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-widest shrink-0 ${
+                                                    (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                    (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                    (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                    'bg-blue-50 text-blue-600 border border-blue-100'
                                                 }`}>
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${
-                                                        (lead.agentStatus === 'vendido') ? 'bg-emerald-500' :
-                                                        (lead.agentStatus === 'seguimiento') ? 'bg-amber-500' :
-                                                        (lead.agentStatus === 'descartado') ? 'bg-rose-500' :
-                                                        'bg-blue-500'
-                                                    }`}></div>
                                                     {lead.agentStatus === 'vendido' ? 'Venta Cerrada' :
                                                      lead.agentStatus === 'seguimiento' ? 'En Seguimiento' :
                                                      lead.agentStatus === 'descartado' ? 'Descartado' : 'Cita Programada'}
@@ -3967,18 +3961,12 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                     {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                                 </span>
                                                 {lead.assignedTo && activeTab === 'assigned' && (
-                                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-extrabold uppercase tracking-[0.1em] border shadow-sm ${
-                                                        (lead.agentStatus === 'vendido') ? 'bg-white text-emerald-600 border-emerald-200' :
-                                                        (lead.agentStatus === 'seguimiento') ? 'bg-white text-amber-600 border-amber-200' :
-                                                        (lead.agentStatus === 'descartado') ? 'bg-white text-rose-600 border-rose-200' :
-                                                        'bg-white text-blue-600 border-blue-200'
+                                                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-widest shrink-0 ${
+                                                        (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                        (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                        (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                        'bg-blue-50 text-blue-600 border border-blue-100'
                                                     }`}>
-                                                        <div className={`w-1.5 h-1.5 rounded-full ${
-                                                            (lead.agentStatus === 'vendido') ? 'bg-emerald-500' :
-                                                            (lead.agentStatus === 'seguimiento') ? 'bg-amber-500' :
-                                                            (lead.agentStatus === 'descartado') ? 'bg-rose-500' :
-                                                            'bg-blue-500'
-                                                        }`}></div>
                                                         {lead.agentStatus === 'vendido' ? 'Venta Cerrada' :
                                                          lead.agentStatus === 'seguimiento' ? 'En Seguimiento' :
                                                          lead.agentStatus === 'descartado' ? 'Descartado' : 'Cita Programada'}
