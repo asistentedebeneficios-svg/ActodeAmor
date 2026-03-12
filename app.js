@@ -6334,7 +6334,7 @@ const App = () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             evento: 'nuevo_prospecto',
-                            datos: webhookPayload
+                            datos: { lead: webhookPayload, agent: null } // Cajas estandarizadas
                         })
                     });
                 }
@@ -6387,7 +6387,7 @@ const App = () => {
                                             method: 'POST', headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ 
                                                 evento: 'nuevo_agente', 
-                                                datos: datosLimpios 
+                                                datos: { lead: null, agent: datosLimpios } 
                                             })
                                         }).catch(e => console.error("Error Webhook Agente:", e));
                                     }
@@ -6503,13 +6503,13 @@ const App = () => {
                         await addDoc(collection(db, 'agent_requests'), { ...datosLimpios, status: 'pending', timestamp: Date.now() }); 
                         
                         // Disparo al Webhook Maestro: Nuevo Agente
-                        const url = webhooks?.master || webhooks?.telegram;
-                        if (url) {
-                            fetch(url, {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ evento: 'nuevo_agente', datos: datosLimpios })
-                            }).catch(e => console.error("Error Webhook Agente:", e));
-                        }
+                        const url = webhooks?.master || webhooks?.telegram;
+                        if (url) {
+                            fetch(url, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ evento: 'nuevo_agente', datos: { lead: null, agent: datosLimpios } })
+                            }).catch(e => console.error("Error Webhook Agente:", e));
+                        }
                     } catch (e) { 
                         console.error("Error crítico de guardado:", e); 
                         throw e; 
