@@ -6336,12 +6336,11 @@ const App = () => {
                             evento: 'nuevo_prospecto',
                             datos: { lead: webhookPayload, agent: null } // Cajas estandarizadas
                         })
-                    }).catch(err => console.error("Fallo al disparar el webhook del prospecto:", err));
-                } else {
-                    console.warn("Aviso: No se encontró la URL del Webhook para el prospecto.");
+                    }).catch(e => console.error("Fetch de prospecto fallido", e));
                 }
-                }
-            } catch (err) { console.error("Error Webhook:", err); }
+            } catch (err) { 
+                console.error("Error procesando los datos para el Webhook:", err); 
+            }
         }
     };
     const completeSuccess = () => { 
