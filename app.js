@@ -3032,27 +3032,52 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     // NUEVO: ESTADO PARA EL MODAL DE SALIDA
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) ---
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) CON AVISO PREVIO ---
+    const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+    const [inactivityCountdown, setInactivityCountdown] = useState(120);
+    const isWarningVisible = useRef(false);
+
     useEffect(() => {
-        let inactivityTimer;
-        const resetTimer = () => {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                onLogout(); // Expulsa al usuario al login
-            }, 60 * 60 * 1000); // 60 minutos
+        let warningTimer;
+        let countdownInterval;
+
+        const resetAll = () => {
+            if (isWarningVisible.current) return; 
+            
+            clearTimeout(warningTimer);
+            clearInterval(countdownInterval);
+            
+            const TOTAL_TIME = 60 * 60 * 1000; // 60 minutos
+            const WARNING_TIME = TOTAL_TIME - (2 * 60 * 1000); // 58 minutos (Aviso 2 min antes)
+
+            warningTimer = setTimeout(() => {
+                isWarningVisible.current = true;
+                setShowInactivityWarning(true);
+                
+                const logoutTime = Date.now() + (2 * 60 * 1000); 
+                
+                countdownInterval = setInterval(() => {
+                    const secondsLeft = Math.ceil((logoutTime - Date.now()) / 1000);
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        onLogout();
+                    } else {
+                        setInactivityCountdown(secondsLeft);
+                    }
+                }, 1000);
+            }, WARNING_TIME);
         };
 
-        // Escucha cualquier interacción del usuario
         const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        activityEvents.forEach(event => document.addEventListener(event, resetTimer));
-
-        resetTimer(); // Inicia el reloj
+        activityEvents.forEach(event => document.addEventListener(event, resetAll));
+        resetAll();
 
         return () => {
-            clearTimeout(inactivityTimer);
-            activityEvents.forEach(event => document.removeEventListener(event, resetTimer));
+            clearTimeout(warningTimer);
+            clearInterval(countdownInterval);
+            activityEvents.forEach(event => document.removeEventListener(event, resetAll));
         };
-    }, []); 
+    }, [onLogout]);
     // -----------------------------------------------------------------
 
     const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'];
@@ -3390,7 +3415,31 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 onConfirm={onLogout} 
                 onCancel={() => setShowLogoutConfirm(false)} 
             />
-            
+            {/* MODAL DE INACTIVIDAD BANCARIA */}
+            {showInactivityWarning && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden text-center p-8">
+                        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100 shadow-inner animate-pulse">
+                            <Clock size={32} strokeWidth={2.5} />
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">¿Sigues ahí?</h3>
+                        <p className="text-sm text-gray-500 mb-6 leading-relaxed font-medium">
+                            Por tu seguridad, cerraremos tu sesión por inactividad en <br/>
+                            <span className="text-3xl font-black text-red-600 font-mono mt-3 block">
+                                {Math.floor(inactivityCountdown / 60)}:{(inactivityCountdown % 60).toString().padStart(2, '0')}
+                            </span>
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={() => { isWarningVisible.current = false; setShowInactivityWarning(false); }} className="w-full py-4 bg-black text-white rounded-2xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform">
+                                Sí, seguir conectado
+                            </button>
+                            <button onClick={onLogout} className="w-full py-4 bg-gray-50 border border-gray-200 text-gray-600 rounded-2xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm">
+                                Cerrar Sesión Segura
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* VISOR DE IMÁGENES EN PANTALLA COMPLETA (LIGHTBOX) */}
             {previewImage && (
                 <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
@@ -4330,27 +4379,54 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
     const [showReviewsModal, setShowReviewsModal] = useState(false);
 
-    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) ---
+    // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (30 MIN) CON AVISO PREVIO ---
+    const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+    const [inactivityCountdown, setInactivityCountdown] = useState(120);
+    const isWarningVisible = useRef(false);
+
     useEffect(() => {
-        let inactivityTimer;
-        const resetTimer = () => {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                onLogout(); // Expulsa al agente al login
-            }, 30 * 60 * 1000); // 30 minutos
+        let warningTimer;
+        let countdownInterval;
+
+        const resetAll = () => {
+            // Si la alerta ya saltó, ignoramos los movimientos del mouse para obligarlo a hacer clic en el botón
+            if (isWarningVisible.current) return; 
+            
+            clearTimeout(warningTimer);
+            clearInterval(countdownInterval);
+            
+            const TOTAL_TIME = 30 * 60 * 1000; // 30 minutos
+            const WARNING_TIME = TOTAL_TIME - (2 * 60 * 1000); // 28 minutos (Lanza aviso faltando 2 min)
+
+            warningTimer = setTimeout(() => {
+                isWarningVisible.current = true;
+                setShowInactivityWarning(true);
+                
+                // Calcula el momento exacto en el futuro para evitar retrasos si se minimiza la pestaña
+                const logoutTime = Date.now() + (2 * 60 * 1000); 
+                
+                countdownInterval = setInterval(() => {
+                    const secondsLeft = Math.ceil((logoutTime - Date.now()) / 1000);
+                    if (secondsLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        onLogout();
+                    } else {
+                        setInactivityCountdown(secondsLeft);
+                    }
+                }, 1000);
+            }, WARNING_TIME);
         };
 
-        // Escucha cualquier interacción del agente
         const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        activityEvents.forEach(event => document.addEventListener(event, resetTimer));
-
-        resetTimer(); // Inicia el reloj
+        activityEvents.forEach(event => document.addEventListener(event, resetAll));
+        resetAll();
 
         return () => {
-            clearTimeout(inactivityTimer);
-            activityEvents.forEach(event => document.removeEventListener(event, resetTimer));
+            clearTimeout(warningTimer);
+            clearInterval(countdownInterval);
+            activityEvents.forEach(event => document.removeEventListener(event, resetAll));
         };
-    }, []); 
+    }, [onLogout]);
     // -----------------------------------------------------------------
 
     const regularPrice = generalSettings?.regularPrice ?? 45;
@@ -4775,6 +4851,31 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                 onConfirm={onLogout} 
                 onCancel={() => setShowLogoutConfirm(false)} 
             />
+            {/* MODAL DE INACTIVIDAD BANCARIA */}
+            {showInactivityWarning && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden text-center p-8">
+                        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100 shadow-inner animate-pulse">
+                            <Clock size={32} strokeWidth={2.5} />
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">¿Sigues ahí?</h3>
+                        <p className="text-sm text-gray-500 mb-6 leading-relaxed font-medium">
+                            Por tu seguridad, cerraremos tu sesión por inactividad en <br/>
+                            <span className="text-3xl font-black text-red-600 font-mono mt-3 block">
+                                {Math.floor(inactivityCountdown / 60)}:{(inactivityCountdown % 60).toString().padStart(2, '0')}
+                            </span>
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={() => { isWarningVisible.current = false; setShowInactivityWarning(false); }} className="w-full py-4 bg-black text-white rounded-2xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform">
+                                Sí, seguir conectado
+                            </button>
+                            <button onClick={onLogout} className="w-full py-4 bg-gray-50 border border-gray-200 text-gray-600 rounded-2xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm">
+                                Cerrar Sesión Segura
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Header Minimalista */}
             <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
                 <div className="flex items-center gap-3">
