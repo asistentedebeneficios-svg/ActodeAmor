@@ -2004,7 +2004,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                     
                     <div className="lg:col-span-7 space-y-6 flex flex-col">
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100 shrink-0">
-                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShoppingCart size={16} className="text-rose-500"/> Asignación</h3>
+                            <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><Briefcase size={16} className="text-rose-500"/> Asignación</h3>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Agente Responsable</label>
@@ -2478,7 +2478,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
                                         <div key={lead.id} onClick={(e) => { e.stopPropagation(); onLeadClick(lead); }} className={`${isAssigned ? 'bg-green-50 hover:bg-green-100 border-green-200' : 'bg-blue-50 hover:bg-blue-100 border-blue-100'} border p-1.5 rounded-md cursor-pointer transition-colors shadow-sm hidden md:flex flex-col gap-1`}>
                                             <div className={`font-bold text-[10px] ${isAssigned ? 'text-green-700' : 'text-blue-700'} flex items-center gap-1`}><Clock size={10}/> {lead.localTime || lead.time}</div>
                                             <div className="text-[9.5px] truncate font-bold text-gray-800 flex items-center gap-1"><User size={10} className="text-gray-400 shrink-0"/> {lead.name}</div>
-                                            <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><ShoppingCart size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
+                                            <div className="text-[9px] truncate text-gray-500 font-medium flex items-center gap-1"><Briefcase size={10} className="text-gray-400 shrink-0"/> {agentName}</div>
                                         </div>
                                     )})}
                                     {dayLeads.length > 3 && <div className="text-[9px] text-gray-400 font-bold text-center hidden md:block">+{dayLeads.length - 3} más</div>}
@@ -2528,7 +2528,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
                                     <div key={lead.id} onClick={() => onLeadClick(lead)} className={`bg-white border border-gray-200 p-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col gap-1.5 ${isAssigned ? 'hover:border-green-400' : 'hover:border-blue-300'}`}>
                                         <div className={`font-bold text-[10px] md:text-xs flex items-center gap-1 ${isAssigned ? 'text-green-600' : 'text-blue-600'}`}><Clock size={12}/> {lead.localTime || lead.time}</div>
                                         <div className="font-bold text-[11px] md:text-sm text-gray-900 leading-tight group-hover:text-rose-600 transition-colors truncate flex items-center gap-1"><User size={12} className="text-gray-400 shrink-0"/> {lead.name}</div>
-                                        <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><ShoppingCart size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
+                                        <div className="font-medium text-[10px] md:text-xs text-gray-500 truncate flex items-center gap-1"><Briefcase size={12} className="text-gray-400 shrink-0"/> {agentName}</div>
                                     </div>
                                 )})}
                                 {dayLeads.length === 0 && <div className="text-center text-gray-300 text-[9px] uppercase font-bold tracking-widest mt-4 rotate-90 md:rotate-0 origin-left ml-2 md:ml-0">Libre</div>}
@@ -2581,7 +2581,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
                                             <h4 className="font-bold text-gray-900 text-base md:text-lg group-hover:text-rose-600 transition-colors truncate">{lead.name}</h4>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
-                                            <span className="flex items-center gap-1"><ShoppingCart size={12}/> {agentName}</span>
+                                            <span className="flex items-center gap-1"><Briefcase size={12}/> {agentName}</span>
                                             <span className="hidden sm:block w-1 h-1 bg-gray-300 rounded-full"></span>
                                             <span className="flex items-center gap-1"><Phone size={12}/> {lead.phone}</span>
                                             {lead.state && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded uppercase text-[10px] tracking-wider">{lead.state}</span>}
