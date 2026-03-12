@@ -4,8 +4,7 @@ import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 // --- CONSTANTS ---
 const FULL_US_STATES = [
     { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' }, { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' }, { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'Florida', abbr: 'FL' }, { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' }, { name: 'Idaho', abbr: 'ID' }, { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' }, { name: 'Iowa', abbr: 'IA' }, { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' }, { name: 'Louisiana', abbr: 'LA' }, { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' }, { name: 'Massachusetts', abbr: 'MA' }, { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' }, { name: 'Mississippi', abbr: 'MS' }, { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' }, { name: 'Nebraska', abbr: 'NE' }, { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' }, { name: 'New Jersey', abbr: 'NJ' }, { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' }, { name: 'North Carolina', abbr: 'NC' }, { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' }, { name: 'Oklahoma', abbr: 'OK' }, { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' }, { name: 'Rhode Island', abbr: 'RI' }, { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' }, { name: 'Tennessee', abbr: 'TN' }, { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' }, { name: 'Vermont', abbr: 'VT' }, { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' }, { name: 'West Virginia', abbr: 'WV' }, { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }
@@ -6314,17 +6313,21 @@ const App = () => {
     const [isVerifying, setIsVerifying] = useState(true); 
     
     // --- RUTAS INTELIGENTES ---
-    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+    const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
     const [isReviewRoute, setIsReviewRoute] = useState(window.location.hash.startsWith('#evaluar/'));
+    const [isActivationRoute, setIsActivationRoute] = useState(window.location.hash.startsWith('#activar/'));
+    
     const reviewLeadId = isReviewRoute ? window.location.hash.split('/')[1] : null;
+    const activationEmail = isActivationRoute ? decodeURIComponent(window.location.hash.split('/')[1]) : null;
 
-    useEffect(() => {
-        if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
+    useEffect(() => {
+        if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
 
-        const handleHashChange = () => {
-            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+        const handleHashChange = () => {
+            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
             setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
-        };
+            setIsActivationRoute(window.location.hash.startsWith('#activar/'));
+        };
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -6343,6 +6346,92 @@ const App = () => {
     // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
     if (isReviewRoute && reviewLeadId) {
         return <ClientReviewScreen leadId={reviewLeadId} db={db} />;
+    }
+
+    // --- NUEVO: RENDERIZADO DE ACTIVACIÓN DE AGENTES (Estilo Premium) ---
+    if (isActivationRoute && activationEmail) {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+                {/* Efectos de luces de fondo */}
+                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+                
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                    <div className="w-20 h-20 bg-gradient-to-br from-rose-500/20 to-rose-600/10 text-rose-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-inner">
+                        <Lock size={36}/>
+                    </div>
+                    
+                    <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Activa tu cuenta</h2>
+                    <p className="text-gray-400 text-sm mb-2 font-medium">Configura tu contraseña para acceder al portal.</p>
+                    <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-rose-300 text-[11px] font-mono tracking-widest mb-8 border border-white/5">
+                        {activationEmail}
+                    </div>
+
+                    <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        const p1 = e.target.p1.value;
+                        const p2 = e.target.p2.value;
+                        
+                        if (p1 !== p2) {
+                            alert('Las contraseñas no coinciden');
+                            return;
+                        }
+                        if (p1.length < 6) {
+                            alert('La contraseña debe tener al menos 6 caracteres');
+                            return;
+                        }
+                        
+                        try {
+                            const btn = document.getElementById('btn-activate');
+                            btn.innerHTML = 'Creando credenciales...';
+                            btn.disabled = true;
+                            
+                            // 1. Verificamos si existe en la lista de agentes aprobados (Seguridad)
+                            const isApproved = agents.find(a => a.email.toLowerCase() === activationEmail.toLowerCase());
+                            if (!isApproved) {
+                                alert("Este correo no se encuentra en la base de datos de agentes aprobados. Contacta a soporte.");
+                                btn.innerHTML = 'Crear Contraseña';
+                                btn.disabled = false;
+                                return;
+                            }
+
+                            // 2. Creamos la cuenta en Firebase
+                            await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                            
+                            // 3. ¡Éxito! Lo metemos al portal
+                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                            setTimeout(() => {
+                                window.location.hash = '#portal';
+                                window.location.reload();
+                            }, 1500);
+
+                        } catch (error) {
+                            if (error.code === 'auth/email-already-in-use') {
+                                alert('Esta cuenta ya fue activada anteriormente. Serás redirigido al Login.');
+                                window.location.hash = '#portal';
+                            } else {
+                                alert('Ocurrió un error: ' + error.message);
+                            }
+                            document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
+                            document.getElementById('btn-activate').disabled = false;
+                        }
+                    }} className="space-y-4 text-left">
+                        <div>
+                            <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva Contraseña</label>
+                            <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar Contraseña</label>
+                            <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                        </div>
+
+                        <button id="btn-activate" type="submit" className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4">
+                            Crear Contraseña
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
     }
 
     // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
