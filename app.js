@@ -3921,7 +3921,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
                                             {lead.assignedTo && activeTab === 'assigned' && (
-                                                <span className={`inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-widest shrink-0 ${
+                                                <span className={`inline-flex px-1.5 py-0.5 rounded shadow-sm text-[8px] font-extrabold uppercase tracking-widest shrink-0 ${
                                                     (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                                                     (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                                                     (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
@@ -3961,7 +3961,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                     {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                                 </span>
                                                 {lead.assignedTo && activeTab === 'assigned' && (
-                                                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-widest shrink-0 ${
+                                                    <span className={`inline-flex px-1.5 py-0.5 rounded shadow-sm text-[8px] font-extrabold uppercase tracking-widest shrink-0 ${
                                                         (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                                                         (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                                                         (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
