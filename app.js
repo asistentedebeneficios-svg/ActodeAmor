@@ -5807,7 +5807,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                                 <Lock size={32} className="text-rose-400 shadow-rose-400/50" />
                             </div>
                             <h2 className="text-3xl font-bold text-white tracking-tight">Acceso al Portal</h2>
-                            <p className="text-gray-400 text-sm mt-3 font-medium">Gestiona tu equipo y escala tus ventas.</p>
+                            <p className="text-gray-400 text-sm mt-3 font-medium">Gestiona tu portafolio y escala tus ventas.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
