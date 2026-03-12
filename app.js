@@ -4696,10 +4696,10 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         return `${h}h ${m}m ${s}s`;
     };
     
-    // Citas activas: La más próxima va arriba
-    const activeClients = myLeads.filter(l => l.status !== 'archived').sort((a, b) => a.hoursUntil - b.hoursUntil);
-    // Citas archivadas: La que pasó más recientemente va arriba
-    const archivedClients = myLeads.filter(l => l.status === 'archived').sort((a, b) => b.hoursUntil - a.hoursUntil);
+    // Citas activas: La más próxima va arriba (Oculta las Ventas Cerradas)
+    const activeClients = myLeads.filter(l => l.status !== 'archived' && l.agentStatus !== 'vendido').sort((a, b) => a.hoursUntil - b.hoursUntil);
+    // Citas archivadas: La que pasó más recientemente va arriba (Incluye las Ventas Cerradas)
+    const archivedClients = myLeads.filter(l => l.status === 'archived' || l.agentStatus === 'vendido').sort((a, b) => b.hoursUntil - a.hoursUntil);
     
     // Buscador Inteligente Universal de Clientes
     let currentClientsList = [];
