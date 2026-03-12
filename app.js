@@ -4369,7 +4369,7 @@ const AgentSupportModal = ({ onClose }) => {
     return createPortal(modalContent, document.body);
 };
                                                                    
-const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, generalSettings }) => {
+const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, generalSettings, webhooks }) => {
     
     // NUEVO: ESTADO PARA EL MODAL DE SALIDA
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -4794,6 +4794,61 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         };
     }, []);
 
+    // --- NUEVO: MOTOR DE WEBHOOKS PARA COMPRAS ---
+    const triggerAssignmentWebhook = (leadObj, agentObj) => {
+        if (!webhooks || (!webhooks.assignment && !webhooks.master && !webhooks.telegram)) return;
+        const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
+        const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
+        const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
+        const coverageMap = { '5k': '$5,000', '10k': '$10,000 - $15,000', '15k': '$15,000 - $20,000', '20k': '$20,000 - $25,000', '25k': '$25,000 o más' };
+        
+        let formattedDate = leadObj.date;
+        if (leadObj.date) {
+            const dateObj = new Date(leadObj.date + 'T12:00:00');
+            formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        const safeCoverage = String(leadObj.coverage_amount || '').toLowerCase();
+        const translatedLead = {
+            ...leadObj,
+            date: formattedDate,
+            callType: callTypeMap[leadObj.callType] || leadObj.callType,
+            policy_for: leadObj.policy_for ? (Array.isArray(leadObj.policy_for) ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : policyMap[leadObj.policy_for] || leadObj.policy_for) : '',
+            motivation: leadObj.motivation ? (Array.isArray(leadObj.motivation) ? leadObj.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') : motivationMap[leadObj.motivation.toLowerCase()] || leadObj.motivation) : '',
+            coverage_amount: coverageMap[safeCoverage] || leadObj.coverage_amount,
+            time: leadObj.localTime || leadObj.time
+        };
+
+        const url = webhooks.master || webhooks.telegram || webhooks.assignment;
+        if (url) {
+            fetch(url, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    evento: 'asignacion_agente', 
+                    datos: { lead: translatedLead, agent: agentObj } 
+                })
+            }).catch(e => console.error("Error Webhook Asignación:", e));
+        }
+    };
+
+    // Disparador automático al volver de Stripe
+    useEffect(() => {
+        const pendingLeadsJSON = localStorage.getItem('pendingPurchasedLeads');
+        if (pendingLeadsJSON && leads.length > 0) {
+            try {
+                const purchasedIds = JSON.parse(pendingLeadsJSON);
+                purchasedIds.forEach(id => {
+                    const leadData = leads.find(l => l.id === id);
+                    if (leadData) {
+                        triggerAssignmentWebhook(leadData, agent);
+                    }
+                });
+                localStorage.removeItem('pendingPurchasedLeads'); // Limpiamos la memoria
+            } catch (e) {
+                console.error("Error disparando webhooks post-compra", e);
+            }
+        }
+    }, [leads, agent, webhooks]);
     const handleCheckout = async (directItems = null, directLeadIds = null) => {
         // Usamos los IDs que vienen del botón de Ofertas, o si no, usamos el carrito normal
         const checkoutLeadIds = directLeadIds || cart;
@@ -4828,6 +4883,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
             
             // 3. Redirigimos a la pantalla segura de Stripe
             if (result.url) {
+                // NUEVO: Guardamos la lista de compras en la memoria para el regreso
+                localStorage.setItem('pendingPurchasedLeads', JSON.stringify(checkoutLeadIds));
                 window.location.href = result.url;
             } else {
                 setDialog({ title: 'Error de Conexión', message: 'No pudimos conectar con la pasarela de pagos. Por favor, intenta de nuevo.', type: 'danger', onConfirm: () => setDialog(null) });
@@ -6443,7 +6500,7 @@ const App = () => {
         const isSuperAdmin = adminUIDs.includes(user.uid);
 
         if (currentAgent) {
-            return <AgentPortal leads={leads} agent={currentAgent} reviews={reviews} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} />;
+            return <AgentPortal leads={leads} agent={currentAgent} reviews={reviews} onUpdateLead={updateLead} onLogout={handleLogout} generalSettings={generalSettings} webhooks={webhooks} />;
         }
 
         if (isSuperAdmin) {
