@@ -3031,7 +3031,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     
     // NUEVO: ESTADO PARA EL MODAL DE SALIDA
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+    // --- NUEVO: FILTRO DE ESTATUS PARA ASIGNADOS ---
+    const [adminSelectedStatusFilters, setAdminSelectedStatusFilters] = useState([]);
+    const [isAdminStatusFilterOpen, setIsAdminStatusFilterOpen] = useState(false);
+                                                                   
     // --- SENSOR DE SEGURIDAD: AUTO-CIERRE POR INACTIVIDAD (60 MIN) CON AVISO PREVIO ---
     const [showInactivityWarning, setShowInactivityWarning] = useState(false);
     const [inactivityCountdown, setInactivityCountdown] = useState(120);
@@ -3255,16 +3258,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     const [viewingBundle, setViewingBundle] = useState(null); // Estado para el desglose de la nota
 
     const getFilteredLeads = () => {
-        if (searchTerm) {
-            const lower = searchTerm.toLowerCase();
-            return processedLeads.filter(l => 
-                (l.name && l.name.toLowerCase().includes(lower)) || 
-                (l.phone && l.phone.includes(lower)) || 
-                (l.email && l.email.toLowerCase().includes(lower)) || 
-                (l.state && l.state.toLowerCase().includes(lower)) ||
-                (l.notes && l.notes.toLowerCase().includes(lower))
-            );
-        }
         let list = [];
         if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
@@ -3272,6 +3265,27 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'offers') list = processedLeads.filter(l => l.status === 'pending_payment');
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
+        else list = processedLeads; // Seguridad
+
+        // Filtro de Estatus (Aplica solo en Asignados si hay opciones seleccionadas)
+        if (activeTab === 'assigned' && adminSelectedStatusFilters.length > 0) {
+            list = list.filter(l => adminSelectedStatusFilters.includes(l.agentStatus || 'activo'));
+        }
+
+        // Buscador por texto (Búsqueda refinada sobre la pestaña actual)
+        if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            let searchSource = activeTab === 'assigned' ? list : processedLeads; 
+
+            return searchSource.filter(l => 
+                (l.name && l.name.toLowerCase().includes(lower)) || 
+                (l.phone && l.phone.includes(lower)) || 
+                (l.email && l.email.toLowerCase().includes(lower)) || 
+                (l.state && l.state.toLowerCase().includes(lower)) ||
+                (l.notes && l.notes.toLowerCase().includes(lower))
+            );
+        }
+
         return list;
     };
 
@@ -3486,9 +3500,83 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 </div>
                 
                 {activeTab !== 'schedule' && (
-                    <div className="relative w-full md:w-[400px] group">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
-                        <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                        
+                        {/* NUEVO: FILTRO ELEGANTE DE ESTATUS (SOLO EN ASIGNADOS) */}
+                        {activeTab === 'assigned' && (
+                            <div className="relative w-full sm:w-60 shrink-0 z-30">
+                                <button 
+                                    onClick={() => setIsAdminStatusFilterOpen(!isAdminStatusFilterOpen)} 
+                                    className="w-full pl-4 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-500/10 shadow-sm transition-all flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                                        <span className="truncate">
+                                            {adminSelectedStatusFilters.length === 0 
+                                                ? 'Filtrar por Estatus...' 
+                                                : `${adminSelectedStatusFilters.length} Seleccionado(s)`}
+                                        </span>
+                                    </div>
+                                    <ChevronRight size={12} className={`text-gray-400 shrink-0 transition-transform ${isAdminStatusFilterOpen ? '-rotate-90' : 'rotate-90'}`} />
+                                </button>
+
+                                {/* Menú Flotante de Checkboxes */}
+                                {isAdminStatusFilterOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsAdminStatusFilterOpen(false)}></div>
+                                        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-slide-up z-50">
+                                            <div className="p-2 flex flex-col gap-1">
+                                                {[
+                                                    { id: 'vendido', label: 'Venta Cerrada', color: 'emerald' },
+                                                    { id: 'seguimiento', label: 'En Seguimiento', color: 'amber' },
+                                                    { id: 'descartado', label: 'Descartado', color: 'rose' },
+                                                    { id: 'activo', label: 'Cita Programada', color: 'blue' }
+                                                ].map(st => {
+                                                    const count = leads.filter(l => l.assignedTo && l.status !== 'archived' && (l.agentStatus || 'activo') === st.id).length;
+                                                    const isSelected = adminSelectedStatusFilters.includes(st.id);
+                                                    
+                                                    return (
+                                                        <label key={st.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="custom-checkbox shrink-0"
+                                                                checked={isSelected} 
+                                                                onChange={() => {
+                                                                    setAdminSelectedStatusFilters(prev => 
+                                                                        prev.includes(st.id) ? prev.filter(f => f !== st.id) : [...prev, st.id]
+                                                                    );
+                                                                }} 
+                                                            />
+                                                            <span className="text-sm font-semibold text-gray-700 flex-1 flex justify-between items-center group-hover:text-black transition-colors">
+                                                                {st.label}
+                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border transition-colors ${isSelected ? `bg-${st.color}-50 text-${st.color}-600 border-${st.color}-200` : 'bg-gray-100 text-gray-500 border-transparent'}`}>
+                                                                    {count}
+                                                                </span>
+                                                            </span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                            {adminSelectedStatusFilters.length > 0 && (
+                                                <div className="p-2 border-t border-gray-100 bg-gray-50">
+                                                    <button 
+                                                        onClick={() => setAdminSelectedStatusFilters([])} 
+                                                        className="w-full py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:text-black hover:border-gray-300 transition-colors shadow-sm"
+                                                    >
+                                                        Limpiar Filtro
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="relative w-full md:w-[400px] group shrink-0">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
+                            <input type="text" placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`} className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        </div>
                     </div>
                 )}
                 
@@ -3843,10 +3931,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                 </span>
                                             )}
                                         </div>
-                                        <div>
+                                        <div className="flex flex-col items-start gap-1">
                                             <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
                                                 {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
                                             </span>
+                                            {lead.assignedTo && activeTab === 'assigned' && (
+                                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest ${
+                                                    (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                    (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                    (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                    'bg-blue-50 text-blue-600 border border-blue-100'
+                                                }`}>
+                                                    {lead.agentStatus === 'vendido' ? 'Venta Cerrada' :
+                                                     lead.agentStatus === 'seguimiento' ? 'En Seguimiento' :
+                                                     lead.agentStatus === 'descartado' ? 'Descartado' : 'Cita Programada'}
+                                                </span>
+                                            )}
                                         </div>
                                         <div onClick={e => e.stopPropagation()}>
                                              <button onClick={() => setIndividualAgentSelectLeadId(lead.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-left w-full text-xs font-bold ${assignedAgent ? 'bg-white border-gray-200 hover:border-rose-300' : 'bg-gray-50 border-dashed border-gray-300 hover:bg-white hover:border-gray-400 text-gray-400'}`}>
@@ -3871,9 +3971,23 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                         </div>
                                         
                                         <div className="pr-8 mb-3">
-                                            <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest items-center gap-1 mb-1.5 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
-                                            </span>
+                                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                    {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
+                                                </span>
+                                                {lead.assignedTo && activeTab === 'assigned' && (
+                                                    <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest ${
+                                                        (lead.agentStatus === 'vendido') ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                        (lead.agentStatus === 'seguimiento') ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                        (lead.agentStatus === 'descartado') ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                        'bg-blue-50 text-blue-600 border border-blue-100'
+                                                    }`}>
+                                                        {lead.agentStatus === 'vendido' ? 'Venta Cerrada' :
+                                                         lead.agentStatus === 'seguimiento' ? 'En Seguimiento' :
+                                                         lead.agentStatus === 'descartado' ? 'Descartado' : 'Cita Programada'}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="font-bold text-gray-900 text-base leading-tight mb-1.5 truncate">{lead.name}</p>
                                             
                                             <div className="flex flex-wrap items-center gap-1.5">
