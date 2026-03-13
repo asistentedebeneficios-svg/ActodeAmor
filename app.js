@@ -6472,7 +6472,8 @@ const PasswordRecoveryScreen = ({ auth }) => {
             
             setStatus('success');
             setTimeout(() => {
-                window.location.href = window.location.origin + window.location.pathname + '#portal';
+                // Limpiamos el código de la URL antes de recargar para que no choque
+                window.history.replaceState(null, '', window.location.pathname + '#portal');
                 window.location.reload();
             }, 2000);
         } catch (error) {
