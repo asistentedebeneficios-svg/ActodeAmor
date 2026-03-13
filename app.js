@@ -6438,15 +6438,13 @@ const App = () => {
                             // 1. Creamos la cuenta en Firebase
                             await createUserWithEmailAndPassword(auth, activationEmail, p1);
                             
-                            // 2. 🔥 MAGIA: Sellamos la cuenta en la Base de Datos para bloquear este enlace para siempre
-                            await saveAgent({ ...targetAgent, isActivated: true });
+                            // 2. 🔥 Sellamos directo en la Base de Datos (A prueba de fallos)
+                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
                             
-                            // 3. ¡Éxito! Lo metemos al portal
-                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
-                            setTimeout(() => {
-                                window.location.hash = '#portal';
-                                window.location.reload();
-                            }, 1500);
+                            // 3. ¡Éxito! Redirigimos de inmediato
+                            btn.innerHTML = '¡Cuenta Activada!';
+                            window.location.hash = '#portal';
+                            window.location.reload();
 
                         } catch (error) {
                             if (error.code === 'auth/email-already-in-use') {
