@@ -6374,8 +6374,11 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
 
                     } catch (error) {
                         if (error.code === 'auth/email-already-in-use') {
-                            // MAGIA: Si el usuario ya existe, mostramos la pantalla roja de seguridad
-                            setStatus('activated');
+                            // Si ya tiene cuenta en Firebase Auth, sellamos la BD y le avisamos con elegancia
+                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                            alert('Tus credenciales corporativas ya existen en el sistema.\n\nSerás redirigido al Login. Si no recuerdas tu clave anterior, usa la opción "¿Olvidaste tu clave?".');
+                            window.location.hash = '#portal';
+                            window.location.reload();
                         } else {
                             alert('Ocurrió un error: ' + error.message);
                             const btn = document.getElementById('btn-activate');
