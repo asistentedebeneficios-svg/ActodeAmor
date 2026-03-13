@@ -6280,8 +6280,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
 // --- COMPONENTE DEDICADO A LA ACTIVACIÓN DE AGENTES ---
 const AgentActivationScreen = ({ activationEmail, db, auth }) => {
     const [targetAgent, setTargetAgent] = useState(null);
-    const [status, setStatus] = useState('loading');
-    const [isActivating, setIsActivating] = useState(false);
+    const [status, setStatus] = useState('loading'); // 'loading', 'ready', 'not_found', 'activated'
 
     useEffect(() => {
         const fetchAgent = async () => {
@@ -6293,12 +6292,8 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     return;
                 }
                 const agentData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                if (agentData.isActivated) {
-                    setStatus('activated');
-                } else {
-                    setTargetAgent(agentData);
-                    setStatus('ready');
-                }
+                setTargetAgent(agentData);
+                setStatus('ready');
             } catch (e) {
                 console.error("Error buscando agente:", e);
                 setStatus('not_found');
@@ -6316,7 +6311,8 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
         );
     }
 
-    if (status !== 'ready' && !isActivating) {
+    // Si ya está activado (lo detectamos al intentar crear) o el correo no existe
+    if (status === 'activated' || status === 'not_found') {
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
                 <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
@@ -6324,7 +6320,7 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
                         <Lock size={36}/>
                     </div>
-                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado o Inválido</h2>
+                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado</h2>
                     <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
                         Esta cuenta ya fue activada previamente o el enlace no es válido. Por tu seguridad, este acceso ha sido bloqueado.
                     </p>
@@ -6365,33 +6361,26 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                         btn.innerHTML = 'Creando credenciales...';
                         btn.disabled = true;
                         
-                        setIsActivating(true);
-                        
-                        // 1. Sellamos la cuenta PRIMERO
-                        await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                        
-                        // 2. Creamos la cuenta en Firebase
+                        // 1. Creamos la cuenta en Firebase (Esto NO da error de permisos)
                         await createUserWithEmailAndPassword(auth, activationEmail, p1);
                         
-                        // 3. Pase VIP
+                        // 2. Pase VIP al portal
                         localStorage.setItem('isAdminLoggedIn', 'true');
                         
-                        // 4. Redirigimos sin cuelgues
+                        // 3. Redirigimos a la pantalla principal
                         btn.innerHTML = '¡Cuenta Activada! Entrando...';
                         window.location.hash = '#portal';
                         window.location.reload();
 
                     } catch (error) {
-                        setIsActivating(false);
                         if (error.code === 'auth/email-already-in-use') {
-                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                            alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
-                            window.location.hash = '#portal';
-                            window.location.reload();
+                            // MAGIA: Si el usuario ya existe, mostramos la pantalla roja de seguridad
+                            setStatus('activated');
                         } else {
                             alert('Ocurrió un error: ' + error.message);
-                            document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
-                            document.getElementById('btn-activate').disabled = false;
+                            const btn = document.getElementById('btn-activate');
+                            btn.innerHTML = 'Crear Contraseña';
+                            btn.disabled = false;
                         }
                     }
                 }} className="space-y-4 text-left">
