@@ -369,10 +369,28 @@ const useFirebaseDatabase = () => {
         await batch.commit();
     };
 
-    const rejectAgentRequest = async (id) => {
+    const rejectAgentRequest = async (request) => {
         if (!user) return;
-        // Simplemente lo borramos de la base de datos
-        await deleteDoc(doc(db, 'agent_requests', id));
+        
+        // 🔥 ENVIAMOS A MAKE PRIMERO Y ESPERAMOS 🔥
+        const url = webhooks?.master || webhooks?.telegram;
+        if (url) {
+            try {
+                await fetch(url, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        evento: 'agente_rechazado', 
+                        datos: { lead: null, agent: request } 
+                    })
+                });
+            } catch(e) {
+                console.error("Error contactando a Make:", e);
+            }
+        }
+
+        // AHORA SÍ, lo borramos de la base de datos
+        await deleteDoc(doc(db, 'agent_requests', request.id));
     };
 
     const updateAgentRequest = async (id, data) => { 
@@ -540,8 +558,9 @@ const RegistrationClosedModal = ({ onClose }) => {
 const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, generalSettings }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [formData, setFormData] = useState(initialData ? { id: initialData.id, fullName: initialData.fullName, email: initialData.email, phone: initialData.phone, companies: initialData.companies, isAgency: initialData.isAgency, bio: initialData.bio } : { fullName: '', email: '', phone: '', companies: '', isAgency: false, bio: '' });
-    const [acceptedTerms, setAcceptedTerms] = useState(false);
-    const [showTermsModal, setShowTermsModal] = useState(false);    
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [acceptedRemote, setAcceptedRemote] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);   
     const [licenses, setLicenses] = useState(initialData && initialData.licenses ? initialData.licenses : [{ state: '', number: '', fileStr: '', fileName: '' }]);
     const [profilePicStr, setProfilePicStr] = useState(initialData ? initialData.photo : '');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -802,7 +821,19 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                         
                         {error && <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-fade-in shadow-sm"><AlertTriangle size={18} className="shrink-0" /><p>{error}</p></div>}
 
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-3">
+                            {/* NUEVO: Checkbox de Venta Remota */}
+                            <label className="flex items-start gap-3 p-4 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
+                                <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                                    <input type="checkbox" required checked={acceptedRemote} onChange={e => setAcceptedRemote(e.target.checked)} className="peer appearance-none w-5 h-5 border-2 border-blue-300 rounded cursor-pointer checked:bg-blue-600 checked:border-blue-600 transition-all" />
+                                    <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+                                </div>
+                                <span className="text-xs font-medium text-blue-900 leading-relaxed">
+                                    Entiendo que los clientes de esta plataforma son para atención <strong>100% a distancia (Telesales)</strong>. Confirmo que las compañías que represento permiten la venta y emisión de pólizas por teléfono o videollamada.
+                                </span>
+                            </label>
+
+                            {/* Checkbox de Términos y Condiciones */}
                             <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                                     <input type="checkbox" required checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-black checked:border-black transition-all" />
@@ -814,8 +845,8 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                             </label>
                         </div>
 
-                        <div className="pt-3 mt-2 border-t border-gray-100">
-                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError || !acceptedTerms} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
+                        <div className="pt-3 mt-2 border-t border-gray-100">
+                            <button type="submit" disabled={isSubmitting || formData.bio.length > 150 || emailError || phoneError || !acceptedTerms || !acceptedRemote} className="w-full py-4 bg-black text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed">
                                 {isSubmitting ? (initialData ? 'Guardando...' : 'Enviando...') : (initialData ? 'Guardar Cambios' : 'Enviar Solicitud')}
                             </button>
                         </div>
@@ -3705,7 +3736,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                     <Check size={16} className="group-hover:text-green-400 transition-colors"/> Aprobar
                                                 </button>
                                                 <button onClick={() => {
-                                                    setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de eliminar y rechazar la solicitud de ${req.fullName}? Esta acción no se puede deshacer.`, type: 'danger', onConfirm: () => { onRejectRequest(req.id); setDialog(null); }, onCancel: () => setDialog(null) });
+                                                    setDialog({ title: 'Rechazar Solicitud', message: `¿Estás seguro de rechazar la solicitud de ${req.fullName}? Se le enviará un correo de notificación automáticamente.`, type: 'danger', onConfirm: () => { onRejectRequest(req); setDialog(null); }, onCancel: () => setDialog(null) });
                                                 }} className="flex-1 md:flex-none md:w-full py-2.5 bg-white border border-red-100 text-red-500 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 transition-colors shadow-sm">
                                                     <X size={16} /> Rechazar
                                                 </button>
