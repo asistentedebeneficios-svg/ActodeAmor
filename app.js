@@ -281,7 +281,9 @@ const useFirebaseDatabase = () => {
             const { id, ...data } = agent;
             await updateDoc(doc(col, id), data);
         } else {
-            await addDoc(col, { ...agent, timestamp: Date.now() });
+            // Extraemos el id (que viene undefined) y guardamos solo el resto de los datos
+            const { id, ...dataToSave } = agent; 
+            await addDoc(col, { ...dataToSave, timestamp: Date.now() });
         }
     };
     const deleteAgent = async (id) => { 
