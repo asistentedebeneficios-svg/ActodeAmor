@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
-import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
+import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu, Eye, EyeOff } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -5727,6 +5727,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [resetMsg, setResetMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     
     // Referencia para el auto-enfoque en móviles
     const loginRef = useRef(null);
@@ -5842,7 +5843,12 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                                     <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em]">Contraseña</label>
                                     <button type="button" onClick={handleResetPassword} className="text-[10px] font-bold text-gray-500 hover:text-rose-400 transition-colors uppercase tracking-widest">¿Olvidaste tu clave?</button>
                                 </div>
-                                <input type="password" placeholder="••••••••" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" value={password} onChange={e=>setPassword(e.target.value)} required/>
+                                <div className="relative">
+                                    <input type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full p-4 pr-12 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" value={password} onChange={e=>setPassword(e.target.value)} required/>
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none">
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             {error && <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold text-center animate-pulse flex items-center justify-center gap-2"><AlertTriangle size={14}/> {error}</div>}
