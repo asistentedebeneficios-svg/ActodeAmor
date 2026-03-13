@@ -6339,35 +6339,11 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     </div>
                     <h2 className="text-2xl font-extrabold text-white mb-4 tracking-tight">¡Bienvenido de vuelta!</h2>
                     <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-                        Este correo ya cuenta con credenciales registradas en nuestro sistema. Por favor, elige una opción:
+                        Este correo ya cuenta con credenciales registradas en nuestro sistema. Puedes acceder a tu portal directamente.
                     </p>
-                    <div className="flex flex-col gap-4">
-                        <button onClick={() => window.location.hash = '#portal'} className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all shadow-lg">
-                            Iniciar Sesión
-                        </button>
-                        <button onClick={async (e) => {
-                            try {
-                                const btn = e.currentTarget;
-                                btn.innerHTML = 'Enviando enlace mágico...';
-                                btn.disabled = true;
-                                
-                                // Le enviamos el correo directo con la URL premium de tu plataforma
-                                const actionCodeSettings = {
-                                    url: window.location.origin + window.location.pathname + '#recuperar',
-                                    handleCodeInApp: false
-                                };
-                                await sendPasswordResetEmail(auth, activationEmail, actionCodeSettings);
-                                
-                                btn.innerHTML = '¡Enlace enviado a tu correo!';
-                                btn.className = "w-full bg-green-500/20 text-green-400 py-4 rounded-2xl font-bold text-sm border border-green-500/30 transition-all";
-                            } catch (err) {
-                                alert("Error al enviar. Intenta desde el Login.");
-                                window.location.hash = '#portal';
-                            }
-                        }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm border border-white/10 hover:bg-white/20 transition-all disabled:opacity-50">
-                            Recuperar Contraseña
-                        </button>
-                    </div>
+                    <button onClick={() => window.location.hash = '#portal'} className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all shadow-lg">
+                        Ir al Login
+                    </button>
                 </div>
             </div>
         );
