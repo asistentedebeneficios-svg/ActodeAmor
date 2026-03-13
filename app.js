@@ -974,14 +974,9 @@ const LetterStep = ({ data, onContinue }) => {
         <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
             <style dangerouslySetInnerHTML={{__html: `
                 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
-                .font-letter { font-family: 'Crimson Text', serif; }
-                
                 @keyframes letterFadeIn {
                     0% { opacity: 0; }
                     100% { opacity: 1; }
-                }
-                .animate-letter-fade {
-                    animation: letterFadeIn 3s ease-in-out forwards; /* <-- FADE IN DE 3 SEGUNDOS */
                 }
             `}} />
 
@@ -989,12 +984,16 @@ const LetterStep = ({ data, onContinue }) => {
             <div className="bg-[#FCFBF8] p-6 md:p-10 rounded-[2rem] border border-[#EBE5D9] relative mb-6 shadow-xl overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
                 
-                <div className="absolute -bottom-10 -right-10 text-[#E11D48] opacity-[0.03] pointer-events-none">
-                    <Heart size={200} fill="currentColor" />
+                {/* SOLUCIÓN AL CORAZÓN NEGRO: Color incrustado y opacidad pura */}
+                <div className="absolute -bottom-10 -right-10 pointer-events-none" style={{ opacity: 0.03 }}>
+                    <Heart size={200} color="#E11D48" fill="#E11D48" />
                 </div>
                 
-                {/* Texto de la carta con el efecto de aparecer suavemente (Fade-in) */}
-                <div className="font-letter italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px] animate-letter-fade">
+                {/* SOLUCIÓN AL PESTAÑEO: Se inicia invisible (opacity: 0) desde la línea 1 de ejecución */}
+                <div 
+                    className="italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px]"
+                    style={{ fontFamily: "'Crimson Text', Georgia, serif", opacity: 0, animation: 'letterFadeIn 3s ease-in-out forwards' }}
+                >
                     <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl">{letter.salutation}</p>
                     <p className="text-xl md:text-2xl text-gray-800 tracking-wide">{letter.body}</p>
                     <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl pt-4">{letter.closing}</p>
