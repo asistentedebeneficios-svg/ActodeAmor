@@ -6281,6 +6281,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
 const AgentActivationScreen = ({ activationEmail, db, auth }) => {
     const [targetAgent, setTargetAgent] = useState(null);
     const [status, setStatus] = useState('loading'); // 'loading', 'ready', 'not_found', 'activated'
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchAgent = async () => {
@@ -6311,7 +6312,6 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
         );
     }
 
-    // Si ya está activado (lo detectamos al intentar crear) o el correo no existe
     if (status === 'activated' || status === 'not_found') {
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
@@ -6356,48 +6356,51 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
                     if (p1.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
                     
+                    setIsSubmitting(true);
+                    
                     try {
-                        const btn = document.getElementById('btn-activate');
-                        btn.innerHTML = 'Creando credenciales...';
-                        btn.disabled = true;
-                        
-                        // 1. Creamos la cuenta en Firebase (Esto NO da error de permisos)
+                        // 1. Creamos la cuenta en Firebase (Esto nos da los permisos necesarios)
                         await createUserWithEmailAndPassword(auth, activationEmail, p1);
                         
-                        // 2. Pase VIP al portal
+                        // 2. AHORA SÍ, sellamos la base de datos (Porque ya estamos autenticados)
+                        await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                        
+                        // 3. Pase VIP al portal
                         localStorage.setItem('isAdminLoggedIn', 'true');
                         
-                        // 3. Redirigimos a la pantalla principal
-                        btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                        // 4. Redirigimos
                         window.location.hash = '#portal';
                         window.location.reload();
 
                     } catch (error) {
                         if (error.code === 'auth/email-already-in-use') {
-                            // Si ya tiene cuenta en Firebase Auth, sellamos la BD y le avisamos con elegancia
-                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                            alert('Tus credenciales corporativas ya existen en el sistema.\n\nSerás redirigido al Login. Si no recuerdas tu clave anterior, usa la opción "¿Olvidaste tu clave?".');
+                            // Si ya existe, NO intentamos escribir en la BD porque daría error de permisos.
+                            // Simplemente le avisamos y lo mandamos al login.
+                            alert('Tus credenciales corporativas ya existen.\n\nSerás redirigido al Login. Si no recuerdas tu clave anterior, usa la opción "¿Olvidaste tu clave?".');
                             window.location.hash = '#portal';
                             window.location.reload();
                         } else {
                             alert('Ocurrió un error: ' + error.message);
-                            const btn = document.getElementById('btn-activate');
-                            btn.innerHTML = 'Crear Contraseña';
-                            btn.disabled = false;
+                            setIsSubmitting(false); // Libera el botón si hay error
                         }
                     }
                 }} className="space-y-4 text-left">
                     <div>
                         <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva Contraseña</label>
-                        <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                        <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" disabled={isSubmitting} />
                     </div>
                     <div>
                         <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar Contraseña</label>
-                        <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                        <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" disabled={isSubmitting} />
                     </div>
 
-                    <button id="btn-activate" type="submit" className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4">
-                        Crear Contraseña
+                    <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4 disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2">
+                        {isSubmitting ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Creando credenciales...
+                            </>
+                        ) : 'Crear Contraseña'}
                     </button>
                 </form>
             </div>
