@@ -4,7 +4,7 @@ import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 // --- CONSTANTS ---
 const FULL_US_STATES = [
     { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' }, { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' }, { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'Florida', abbr: 'FL' }, { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' }, { name: 'Idaho', abbr: 'ID' }, { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' }, { name: 'Iowa', abbr: 'IA' }, { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' }, { name: 'Louisiana', abbr: 'LA' }, { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' }, { name: 'Massachusetts', abbr: 'MA' }, { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' }, { name: 'Mississippi', abbr: 'MS' }, { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' }, { name: 'Nebraska', abbr: 'NE' }, { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' }, { name: 'New Jersey', abbr: 'NJ' }, { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' }, { name: 'North Carolina', abbr: 'NC' }, { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' }, { name: 'Oklahoma', abbr: 'OK' }, { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' }, { name: 'Rhode Island', abbr: 'RI' }, { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' }, { name: 'Tennessee', abbr: 'TN' }, { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' }, { name: 'Vermont', abbr: 'VT' }, { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' }, { name: 'West Virginia', abbr: 'WV' }, { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }
@@ -858,8 +858,12 @@ const AdminLogin = ({ onClose, onLogin, onOpenRegister }) => {
             return;
         }
         try {
-            await sendPasswordResetEmail(auth, email);
-            setResetMsg('Correo de recuperación enviado. Revisa tu bandeja.');
+            const actionCodeSettings = {
+                url: window.location.origin + window.location.pathname + '#recuperar',
+                handleCodeInApp: false
+            };
+            await sendPasswordResetEmail(auth, email, actionCodeSettings);
+            setResetMsg('Enlace mágico enviado. Revisa tu bandeja.');
             setError('');
         } catch (err) {
             setError('Error al enviar correo o el usuario no existe.');
@@ -6341,11 +6345,26 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                         <button onClick={() => window.location.hash = '#portal'} className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all shadow-lg">
                             Iniciar Sesión
                         </button>
-                        <button onClick={() => {
-                            // Cambiamos el hash al login para que use el botón de olvidar clave
-                            window.location.hash = '#portal';
-                            setTimeout(() => alert("Escribe tu correo y presiona 'Olvidé mi contraseña'"), 500);
-                        }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm border border-white/10 hover:bg-white/20 transition-all">
+                        <button onClick={async (e) => {
+                            try {
+                                const btn = e.currentTarget;
+                                btn.innerHTML = 'Enviando enlace mágico...';
+                                btn.disabled = true;
+                                
+                                // Le enviamos el correo directo con la URL premium de tu plataforma
+                                const actionCodeSettings = {
+                                    url: window.location.origin + window.location.pathname + '#recuperar',
+                                    handleCodeInApp: false
+                                };
+                                await sendPasswordResetEmail(auth, activationEmail, actionCodeSettings);
+                                
+                                btn.innerHTML = '¡Enlace enviado a tu correo!';
+                                btn.className = "w-full bg-green-500/20 text-green-400 py-4 rounded-2xl font-bold text-sm border border-green-500/30 transition-all";
+                            } catch (err) {
+                                alert("Error al enviar. Intenta desde el Login.");
+                                window.location.hash = '#portal';
+                            }
+                        }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm border border-white/10 hover:bg-white/20 transition-all disabled:opacity-50">
                             Recuperar Contraseña
                         </button>
                     </div>
@@ -6414,6 +6433,113 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
     );
 };
 
+// --- NUEVA PANTALLA: RECUPERACIÓN DE CONTRASEÑA PREMIUM ---
+const PasswordRecoveryScreen = ({ auth }) => {
+    const [status, setStatus] = useState('verifying'); // verifying, ready, success, error
+    const [email, setEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const match = window.location.href.match(/[?&]oobCode=([^&]+)/);
+    const oobCode = match ? match[1] : null;
+
+    useEffect(() => {
+        if (!oobCode) {
+            setStatus('error');
+            return;
+        }
+        verifyPasswordResetCode(auth, oobCode).then((userEmail) => {
+            setEmail(userEmail);
+            setStatus('ready');
+        }).catch(e => {
+            setStatus('error');
+        });
+    }, [oobCode, auth]);
+
+    const handleReset = async (e) => {
+        e.preventDefault();
+        setErrorMsg('');
+        if (newPassword !== confirmPassword) { setErrorMsg('Las contraseñas no coinciden.'); return; }
+        if (newPassword.length < 6) { setErrorMsg('La contraseña debe tener al menos 6 caracteres.'); return; }
+
+        try {
+            const btn = document.getElementById('btn-reset');
+            btn.innerHTML = 'Actualizando credenciales...';
+            btn.disabled = true;
+
+            await confirmPasswordReset(auth, oobCode, newPassword);
+            
+            setStatus('success');
+            setTimeout(() => {
+                window.location.href = window.location.origin + window.location.pathname + '#portal';
+                window.location.reload();
+            }, 2000);
+        } catch (error) {
+            setErrorMsg('El enlace ha expirado o ya fue utilizado.');
+            document.getElementById('btn-reset').innerHTML = 'Actualizar Contraseña';
+            document.getElementById('btn-reset').disabled = false;
+        }
+    };
+
+    if (status === 'verifying') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
+                <div className="w-10 h-10 border-4 border-white/10 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Validando Seguridad...</p>
+            </div>
+        );
+    }
+
+    if (status === 'error') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                    <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner"><X size={36}/></div>
+                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Inválido</h2>
+                    <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">Este enlace de recuperación ha expirado o ya fue utilizado. Solicita uno nuevo desde el Login.</p>
+                    <button onClick={() => { window.location.href = window.location.origin + window.location.pathname + '#portal'; window.location.reload(); }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm hover:bg-white/20 transition-colors">Volver al Login</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (status === 'success') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in">
+                <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/20"><Check size={40} strokeWidth={3}/></div>
+                <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">¡Contraseña Actualizada!</h2>
+                <p className="text-green-400 text-sm font-medium">Redirigiendo al portal...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/10 text-blue-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-inner"><Lock size={36}/></div>
+                <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Nueva Contraseña</h2>
+                <p className="text-gray-400 text-sm mb-2 font-medium">Restableciendo acceso para:</p>
+                <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-blue-300 text-[11px] font-mono tracking-widest mb-8 border border-white/5">{email}</div>
+
+                <form onSubmit={handleReset} className="space-y-4 text-left">
+                    <div>
+                        <label className="block text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva contraseña</label>
+                        <input type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-white placeholder:text-gray-600" value={newPassword} onChange={e=>setNewPassword(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar contraseña</label>
+                        <input type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-white placeholder:text-gray-600" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} />
+                    </div>
+                    {errorMsg && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[11px] font-bold text-center">{errorMsg}</div>}
+                    <button id="btn-reset" type="submit" className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-5 rounded-2xl font-bold hover:scale-[1.02] transition-all mt-4">Actualizar Contraseña</button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const App = () => {
     // --- FAVICON DINÁMICO ---
     useEffect(() => {
@@ -6472,6 +6598,7 @@ const App = () => {
     const [isPortalRoute, setIsPortalRoute] = useState(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
     const [isReviewRoute, setIsReviewRoute] = useState(window.location.hash.startsWith('#evaluar/'));
     const [isActivationRoute, setIsActivationRoute] = useState(window.location.hash.startsWith('#activar/'));
+    const [isRecoveryRoute, setIsRecoveryRoute] = useState(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
     
     const reviewLeadId = isReviewRoute ? window.location.hash.split('/')[1] : null;
     const activationEmail = isActivationRoute ? decodeURIComponent(window.location.hash.split('/')[1]) : null;
@@ -6483,6 +6610,7 @@ const App = () => {
             setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
             setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
             setIsActivationRoute(window.location.hash.startsWith('#activar/'));
+            setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
         };
 
         window.addEventListener('hashchange', handleHashChange);
@@ -6676,6 +6804,11 @@ const App = () => {
         // Obligamos al navegador a quedarse en la ruta del portal al salir
         window.location.hash = '#portal';
     };
+
+    // RENDERIZADO DE RECUPERACIÓN DE CONTRASEÑA
+    if (isRecoveryRoute) {
+        return <PasswordRecoveryScreen auth={auth} />;
+    }
 
     // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
     if (isReviewRoute && reviewLeadId) {
