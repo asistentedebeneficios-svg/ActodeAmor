@@ -326,7 +326,6 @@ const useFirebaseDatabase = () => {
         if (!user) return;
         const batch = writeBatch(db);
         
-        // ¡Magia aquí! Pasamos ABSOLUTAMENTE TODOS los datos de la solicitud al perfil oficial
         const newAgentData = {
             name: request.fullName || '', 
             email: request.email || '', 
@@ -336,7 +335,7 @@ const useFirebaseDatabase = () => {
             license: request.licenseSummary || 'Sin estados configurados',
             companies: request.companies || 'Independiente', 
             isAgency: request.isAgency || false, 
-            licensesArray: request.licenses || [], // Guardamos las fotos de las licencias
+            licensesArray: request.licenses || [], 
             timestamp: Date.now(), 
             status: 'active'
         };
@@ -346,7 +345,25 @@ const useFirebaseDatabase = () => {
         
         const requestRef = doc(db, 'agent_requests', request.id);
         batch.delete(requestRef);
+
+        // 🔥 ENVIAMOS A MAKE PRIMERO Y ESPERAMOS ANTES DE ACTUALIZAR LA PANTALLA 🔥
+        const url = webhooks?.master || webhooks?.telegram;
+        if (url) {
+            try {
+                await fetch(url, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        evento: 'agente_aprobado', 
+                        datos: { lead: null, agent: { ...newAgentData, id: newAgentRef.id } } 
+                    })
+                });
+            } catch(e) {
+                console.error("Error contactando a Make:", e);
+            }
+        }
         
+        // AHORA SÍ, aplicamos en Firebase y se quita de la pantalla
         await batch.commit();
     };
 
