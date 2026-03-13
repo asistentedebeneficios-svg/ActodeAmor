@@ -6370,7 +6370,7 @@ const App = () => {
     // --- NUEVO: RENDERIZADO DE ACTIVACIÓN DE AGENTES (Estilo Premium) ---
     if (isActivationRoute && activationEmail) {
         
-        // 1. Pantalla de carga (Espera milisegundos a que Firebase traiga la base de datos)
+        // 1. Pantalla de carga
         if (agents.length === 0) {
             return (
                 <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
@@ -6380,11 +6380,10 @@ const App = () => {
             );
         }
 
-        // Buscamos al agente en tiempo real
         const targetAgent = agents.find(a => a.email && a.email.toLowerCase() === activationEmail.toLowerCase());
 
-        // 2. 🛡️ PANTALLA DE BLOQUEO (Si no existe o si ya tiene el Sello de Activado)
-        if (!targetAgent || targetAgent.isActivated) {
+        // 2. 🛡️ PANTALLA DE BLOQUEO (Bloquea si ya está activado, EXCEPTO si estamos en medio del proceso)
+        if (!targetAgent || (targetAgent.isActivated && !window.isActivating)) {
             return (
                 <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
                     <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
@@ -6404,10 +6403,9 @@ const App = () => {
             );
         }
 
-        // 3. PANTALLA NORMAL (Solo la verá 1 vez en la vida)
+        // 3. PANTALLA NORMAL
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-                {/* Efectos de luces de fondo */}
                 <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
                 
@@ -6435,26 +6433,30 @@ const App = () => {
                             btn.innerHTML = 'Creando credenciales...';
                             btn.disabled = true;
                             
-                            // 1. Creamos la cuenta en Firebase
-                            await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                            // 🔥 EL TRUCO MAESTRO: Bloqueamos la interfaz de "Expirado" temporalmente
+                            window.isActivating = true;
                             
-                            // 2. 🔥 Sellamos directo en la Base de Datos (A prueba de fallos)
+                            // 1. Sellamos la cuenta en la Base de Datos PRIMERO (Conexión estable)
                             await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
                             
-                            // 3. ¡Éxito! Redirigimos a la manera limpia de React
-                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                            // 2. Creamos la cuenta en Firebase
+                            await createUserWithEmailAndPassword(auth, activationEmail, p1);
                             
-                            // Damos 1 segundito para que Firebase termine de asentar la sesión
-                            setTimeout(() => {
-                                window.location.hash = '#portal';
-                            }, 1000);
+                            // 3. Le damos el "Pase VIP" para que el portal lo deje entrar sin loguearse de nuevo
+                            localStorage.setItem('isAdminLoggedIn', 'true');
+                            
+                            // 4. ¡Éxito! Lo metemos al portal forzando la recarga para limpiar memoria
+                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                            window.location.hash = '#portal';
+                            window.location.reload();
 
                         } catch (error) {
+                            window.isActivating = false;
                             if (error.code === 'auth/email-already-in-use') {
-                                // Por si hubo un bajón de internet y se creó el usuario pero no se puso el sello
                                 await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                                alert('Esta cuenta ya fue activada o estás usando una sesión antigua. Serás redirigido.');
+                                alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
                                 window.location.hash = '#portal';
+                                window.location.reload();
                             } else {
                                 alert('Ocurrió un error: ' + error.message);
                                 document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
