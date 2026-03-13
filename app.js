@@ -5751,7 +5751,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
         if (!email) { setError('Ingresa tu correo primero.'); return; }
         try {
             await sendPasswordResetEmail(auth, email);
-            setResetMsg('Recuperación enviada.');
+            setResetMsg('Recuperación enviada al email.');
         } catch (err) { setError('Error al enviar correo.'); }
     };
 
