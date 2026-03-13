@@ -6276,7 +6276,143 @@ const ClientReviewScreen = ({ leadId, db }) => {
         </div>
     );
 };
-                                                                   
+
+// --- COMPONENTE DEDICADO A LA ACTIVACIÓN DE AGENTES ---
+const AgentActivationScreen = ({ activationEmail, db, auth }) => {
+    const [targetAgent, setTargetAgent] = useState(null);
+    const [status, setStatus] = useState('loading');
+    const [isActivating, setIsActivating] = useState(false);
+
+    useEffect(() => {
+        const fetchAgent = async () => {
+            try {
+                const q = query(collection(db, 'agents'), where('email', '==', activationEmail.toLowerCase()));
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    setStatus('not_found');
+                    return;
+                }
+                const agentData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                if (agentData.isActivated) {
+                    setStatus('activated');
+                } else {
+                    setTargetAgent(agentData);
+                    setStatus('ready');
+                }
+            } catch (e) {
+                console.error("Error buscando agente:", e);
+                setStatus('not_found');
+            }
+        };
+        fetchAgent();
+    }, [activationEmail, db]);
+
+    if (status === 'loading') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
+                <div className="w-10 h-10 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin mb-4"></div>
+                <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Verificando seguridad...</p>
+            </div>
+        );
+    }
+
+    if (status !== 'ready' && !isActivating) {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                    <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
+                        <Lock size={36}/>
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado o Inválido</h2>
+                    <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
+                        Esta cuenta ya fue activada previamente o el enlace no es válido. Por tu seguridad, este acceso ha sido bloqueado.
+                    </p>
+                    <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm hover:bg-white/20 transition-colors shadow-sm">
+                        Ir al Login del Portal
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+            
+            <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-rose-500/20 to-rose-600/10 text-rose-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-inner">
+                    <Lock size={36}/>
+                </div>
+                
+                <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Activa tu cuenta</h2>
+                <p className="text-gray-400 text-sm mb-2 font-medium">Configura tu contraseña para acceder al portal.</p>
+                <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-rose-300 text-[11px] font-mono tracking-widest mb-8 border border-white/5">
+                    {activationEmail}
+                </div>
+
+                <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const p1 = e.target.p1.value;
+                    const p2 = e.target.p2.value;
+                    
+                    if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
+                    if (p1.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+                    
+                    try {
+                        const btn = document.getElementById('btn-activate');
+                        btn.innerHTML = 'Creando credenciales...';
+                        btn.disabled = true;
+                        
+                        setIsActivating(true);
+                        
+                        // 1. Sellamos la cuenta PRIMERO
+                        await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                        
+                        // 2. Creamos la cuenta en Firebase
+                        await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                        
+                        // 3. Pase VIP
+                        localStorage.setItem('isAdminLoggedIn', 'true');
+                        
+                        // 4. Redirigimos sin cuelgues
+                        btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                        window.location.hash = '#portal';
+                        window.location.reload();
+
+                    } catch (error) {
+                        setIsActivating(false);
+                        if (error.code === 'auth/email-already-in-use') {
+                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                            alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
+                            window.location.hash = '#portal';
+                            window.location.reload();
+                        } else {
+                            alert('Ocurrió un error: ' + error.message);
+                            document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
+                            document.getElementById('btn-activate').disabled = false;
+                        }
+                    }
+                }} className="space-y-4 text-left">
+                    <div>
+                        <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva Contraseña</label>
+                        <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar Contraseña</label>
+                        <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
+                    </div>
+
+                    <button id="btn-activate" type="submit" className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4">
+                        Crear Contraseña
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const App = () => {
     // --- FAVICON DINÁMICO ---
     useEffect(() => {
@@ -6367,119 +6503,9 @@ const App = () => {
         return <ClientReviewScreen leadId={reviewLeadId} db={db} />;
     }
 
-    // --- NUEVO: RENDERIZADO DE ACTIVACIÓN DE AGENTES (Estilo Premium) ---
+    // --- RENDERIZADO DE ACTIVACIÓN DE AGENTES ---
     if (isActivationRoute && activationEmail) {
-        
-        // 1. Pantalla de carga
-        if (agents.length === 0) {
-            return (
-                <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
-                    <div className="w-10 h-10 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Verificando seguridad...</p>
-                </div>
-            );
-        }
-
-        const targetAgent = agents.find(a => a.email && a.email.toLowerCase() === activationEmail.toLowerCase());
-
-        // 2. 🛡️ PANTALLA DE BLOQUEO (Bloquea si ya está activado, EXCEPTO si estamos en medio del proceso)
-        if (!targetAgent || (targetAgent.isActivated && !window.isActivating)) {
-            return (
-                <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-                    <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-                    <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
-                        <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
-                            <Lock size={36}/>
-                        </div>
-                        <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado</h2>
-                        <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
-                            Esta cuenta ya fue activada previamente o el enlace de invitación no es válido. Por tu seguridad, este acceso ha sido bloqueado.
-                        </p>
-                        <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm hover:bg-white/20 transition-colors shadow-sm">
-                            Ir al Login del Portal
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        // 3. PANTALLA NORMAL
-        return (
-            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                
-                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
-                    <div className="w-20 h-20 bg-gradient-to-br from-rose-500/20 to-rose-600/10 text-rose-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-inner">
-                        <Lock size={36}/>
-                    </div>
-                    
-                    <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Activa tu cuenta</h2>
-                    <p className="text-gray-400 text-sm mb-2 font-medium">Configura tu contraseña para acceder al portal.</p>
-                    <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-rose-300 text-[11px] font-mono tracking-widest mb-8 border border-white/5">
-                        {activationEmail}
-                    </div>
-
-                    <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        const p1 = e.target.p1.value;
-                        const p2 = e.target.p2.value;
-                        
-                        if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
-                        if (p1.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
-                        
-                        try {
-                            const btn = document.getElementById('btn-activate');
-                            btn.innerHTML = 'Creando credenciales...';
-                            btn.disabled = true;
-                            
-                            // 🔥 EL TRUCO MAESTRO: Bloqueamos la interfaz de "Expirado" temporalmente
-                            window.isActivating = true;
-                            
-                            // 1. Sellamos la cuenta en la Base de Datos PRIMERO (Conexión estable)
-                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                            
-                            // 2. Creamos la cuenta en Firebase
-                            await createUserWithEmailAndPassword(auth, activationEmail, p1);
-                            
-                            // 3. Le damos el "Pase VIP" para que el portal lo deje entrar sin loguearse de nuevo
-                            localStorage.setItem('isAdminLoggedIn', 'true');
-                            
-                            // 4. ¡Éxito! Lo metemos al portal forzando la recarga para limpiar memoria
-                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
-                            window.location.hash = '#portal';
-                            window.location.reload();
-
-                        } catch (error) {
-                            window.isActivating = false;
-                            if (error.code === 'auth/email-already-in-use') {
-                                await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                                alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
-                                window.location.hash = '#portal';
-                                window.location.reload();
-                            } else {
-                                alert('Ocurrió un error: ' + error.message);
-                                document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
-                                document.getElementById('btn-activate').disabled = false;
-                            }
-                        }
-                    }} className="space-y-4 text-left">
-                        <div>
-                            <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva Contraseña</label>
-                            <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar Contraseña</label>
-                            <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" />
-                        </div>
-
-                        <button id="btn-activate" type="submit" className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4">
-                            Crear Contraseña
-                        </button>
-                    </form>
-                </div>
-            </div>
-        );
+        return <AgentActivationScreen activationEmail={activationEmail} db={db} auth={auth} />;
     }
 
     // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
