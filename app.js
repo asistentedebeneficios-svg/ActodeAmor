@@ -6367,6 +6367,42 @@ const App = () => {
 
     // --- NUEVO: RENDERIZADO DE ACTIVACIÓN DE AGENTES (Estilo Premium) ---
     if (isActivationRoute && activationEmail) {
+        
+        // 1. Pantalla de carga (Espera milisegundos a que Firebase traiga la base de datos)
+        if (agents.length === 0) {
+            return (
+                <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
+                    <div className="w-10 h-10 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Verificando seguridad...</p>
+                </div>
+            );
+        }
+
+        // Buscamos al agente en tiempo real
+        const targetAgent = agents.find(a => a.email && a.email.toLowerCase() === activationEmail.toLowerCase());
+
+        // 2. 🛡️ PANTALLA DE BLOQUEO (Si no existe o si ya tiene el Sello de Activado)
+        if (!targetAgent || targetAgent.isActivated) {
+            return (
+                <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+                    <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+                    <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                        <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
+                            <Lock size={36}/>
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado</h2>
+                        <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
+                            Esta cuenta ya fue activada previamente o el enlace de invitación no es válido. Por tu seguridad, este acceso ha sido bloqueado.
+                        </p>
+                        <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm hover:bg-white/20 transition-colors shadow-sm">
+                            Ir al Login del Portal
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // 3. PANTALLA NORMAL (Solo la verá 1 vez en la vida)
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
                 {/* Efectos de luces de fondo */}
@@ -6389,31 +6425,19 @@ const App = () => {
                         const p1 = e.target.p1.value;
                         const p2 = e.target.p2.value;
                         
-                        if (p1 !== p2) {
-                            alert('Las contraseñas no coinciden');
-                            return;
-                        }
-                        if (p1.length < 6) {
-                            alert('La contraseña debe tener al menos 6 caracteres');
-                            return;
-                        }
+                        if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
+                        if (p1.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
                         
                         try {
                             const btn = document.getElementById('btn-activate');
                             btn.innerHTML = 'Creando credenciales...';
                             btn.disabled = true;
                             
-                            // 1. Verificamos si existe en la lista de agentes aprobados (Seguridad)
-                            const isApproved = agents.find(a => a.email.toLowerCase() === activationEmail.toLowerCase());
-                            if (!isApproved) {
-                                alert("Este correo no se encuentra en la base de datos de agentes aprobados. Contacta a soporte.");
-                                btn.innerHTML = 'Crear Contraseña';
-                                btn.disabled = false;
-                                return;
-                            }
-
-                            // 2. Creamos la cuenta en Firebase
+                            // 1. Creamos la cuenta en Firebase
                             await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                            
+                            // 2. 🔥 MAGIA: Sellamos la cuenta en la Base de Datos para bloquear este enlace para siempre
+                            await saveAgent({ ...targetAgent, isActivated: true });
                             
                             // 3. ¡Éxito! Lo metemos al portal
                             btn.innerHTML = '¡Cuenta Activada! Entrando...';
@@ -6424,13 +6448,16 @@ const App = () => {
 
                         } catch (error) {
                             if (error.code === 'auth/email-already-in-use') {
-                                alert('Esta cuenta ya fue activada anteriormente. Serás redirigido al Login.');
+                                // Por si hubo un bajón de internet y se creó el usuario pero no se puso el sello
+                                await saveAgent({ ...targetAgent, isActivated: true });
+                                alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
                                 window.location.hash = '#portal';
+                                window.location.reload();
                             } else {
                                 alert('Ocurrió un error: ' + error.message);
+                                document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
+                                document.getElementById('btn-activate').disabled = false;
                             }
-                            document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
-                            document.getElementById('btn-activate').disabled = false;
                         }
                     }} className="space-y-4 text-left">
                         <div>
