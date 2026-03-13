@@ -30,7 +30,7 @@ const STEPS = [
         subtext: "Puede seleccionar a varias personas importantes.", 
         multiSelect: true, 
         options: [
-            { id: 'me', label: 'A mí', icon: User },
+            { id: 'me', label: 'Para mí', icon: User },
             { id: 'spouse', label: 'Mi Pareja', icon: Heart },
             { id: 'children', label: 'Mis Hijos', icon: Baby },
             { id: 'parents', label: 'Mis Padres', icon: ShieldCheck }
