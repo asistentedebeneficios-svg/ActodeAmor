@@ -6441,18 +6441,20 @@ const App = () => {
                             // 2. 🔥 Sellamos directo en la Base de Datos (A prueba de fallos)
                             await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
                             
-                            // 3. ¡Éxito! Redirigimos de inmediato
-                            btn.innerHTML = '¡Cuenta Activada!';
-                            window.location.hash = '#portal';
-                            window.location.reload();
+                            // 3. ¡Éxito! Redirigimos a la manera limpia de React
+                            btn.innerHTML = '¡Cuenta Activada! Entrando...';
+                            
+                            // Damos 1 segundito para que Firebase termine de asentar la sesión
+                            setTimeout(() => {
+                                window.location.hash = '#portal';
+                            }, 1000);
 
                         } catch (error) {
                             if (error.code === 'auth/email-already-in-use') {
                                 // Por si hubo un bajón de internet y se creó el usuario pero no se puso el sello
-                                await saveAgent({ ...targetAgent, isActivated: true });
-                                alert('Esta cuenta ya fue activada. Serás redirigido al Login.');
+                                await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                                alert('Esta cuenta ya fue activada o estás usando una sesión antigua. Serás redirigido.');
                                 window.location.hash = '#portal';
-                                window.location.reload();
                             } else {
                                 alert('Ocurrió un error: ' + error.message);
                                 document.getElementById('btn-activate').innerHTML = 'Crear Contraseña';
