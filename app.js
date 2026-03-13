@@ -1038,7 +1038,7 @@ const LetterStep = ({ data, onContinue }) => {
             
             <div className="shrink-0 animate-slide-up pb-8">
                 <p className="text-center text-gray-500 text-sm md:text-base font-medium mb-4">
-                    {!isWritingComplete ? "Por favor lea la carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Debe sellar la carta arriba para poder continuar."}
+                    {!isWritingComplete ? "Por favor lea la carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Descuide, esto es sólo un acto simbólico."}
                 </p>
                 <button 
                     onClick={onContinue} 
