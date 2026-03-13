@@ -6277,161 +6277,139 @@ const ClientReviewScreen = ({ leadId, db }) => {
     );
 };
 
-// --- COMPONENTE DEDICADO A LA ACTIVACIÓN DE AGENTES ---
+// --- COMPONENTE DE ACTIVACIÓN SIMPLIFICADO (CAMINO 1 Y 2) ---
 const AgentActivationScreen = ({ activationEmail, db, auth }) => {
+    const [status, setStatus] = useState('loading'); 
     const [targetAgent, setTargetAgent] = useState(null);
-    const [status, setStatus] = useState('loading'); // 'loading', 'ready', 'not_found', 'activated', 'already_exists'
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const fetchAgent = async () => {
+        const checkStatus = async () => {
             try {
+                // Buscamos al agente en tu lista de equipo
                 const q = query(collection(db, 'agents'), where('email', '==', activationEmail.toLowerCase()));
-                const snapshot = await getDocs(q);
-                if (snapshot.empty) {
+                const snap = await getDocs(q);
+                
+                if (snap.empty) {
                     setStatus('not_found');
                     return;
                 }
-                const agentData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                if (agentData.isActivated) {
-                    setStatus('activated');
-                } else {
-                    setTargetAgent(agentData);
-                    setStatus('ready');
+                
+                const agentData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+                setTargetAgent(agentData);
+
+                // Verificamos si ya existe en la bóveda de contraseñas de Google
+                try {
+                    const methods = await fetchSignInMethodsForEmail(auth, activationEmail.toLowerCase());
+                    if (methods.length > 0) {
+                        setStatus('returning'); // CAMINO 2: YA TIENE CUENTA
+                    } else {
+                        setStatus('new'); // CAMINO 1: 100% NUEVO
+                    }
+                } catch (e) {
+                    setStatus('new'); // Si Google bloquea la verificación, asumimos nuevo y el "catch" del registro hará el resto
                 }
             } catch (e) {
-                console.error("Error buscando agente:", e);
                 setStatus('not_found');
             }
         };
-        fetchAgent();
-    }, [activationEmail, db]);
+        checkStatus();
+    }, [activationEmail, db, auth]);
 
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans">
                 <div className="w-10 h-10 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Verificando seguridad...</p>
+                <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px]">Validando invitación...</p>
             </div>
         );
     }
 
-    // Pantalla: Enlace viejo o cuenta ya sellada
-    if (status === 'activated' || status === 'not_found') {
+    // --- CAMINO 2: AGENTE QUE YA EXISTÍA (MENSAJE ELEGANTE) ---
+    if (status === 'returning') {
         return (
-            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
-                    <div className="w-20 h-20 bg-red-500/10 text-red-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-500/20 shadow-inner">
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in">
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl">
+                    <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-inner">
+                        <BadgeCheck size={36}/>
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-white mb-4 tracking-tight">¡Bienvenido de vuelta!</h2>
+                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                        Este correo ya cuenta con credenciales registradas en nuestro sistema. Por favor, elige una opción:
+                    </p>
+                    <div className="flex flex-col gap-4">
+                        <button onClick={() => window.location.hash = '#portal'} className="w-full bg-white text-black py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all shadow-lg">
+                            Iniciar Sesión
+                        </button>
+                        <button onClick={() => {
+                            // Cambiamos el hash al login para que use el botón de olvidar clave
+                            window.location.hash = '#portal';
+                            setTimeout(() => alert("Escribe tu correo y presiona 'Olvidé mi contraseña'"), 500);
+                        }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm border border-white/10 hover:bg-white/20 transition-all">
+                            Recuperar Contraseña
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- CAMINO 1: AGENTE NUEVO (FORMULARIO NORMAL) ---
+    if (status === 'new') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in">
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl">
+                    <div className="w-20 h-20 bg-rose-500/10 text-rose-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-inner">
                         <Lock size={36}/>
                     </div>
-                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">Enlace Expirado</h2>
-                    <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
-                        Esta cuenta ya fue activada previamente o el enlace no es válido. Por tu seguridad, este acceso ha sido bloqueado.
-                    </p>
-                    <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-white/10 text-white py-4 rounded-2xl font-bold text-sm hover:bg-white/20 transition-colors shadow-sm">
-                        Ir al Login del Portal
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // 🔥 LA IDEA DE FRENDIS: PANTALLA ELEGANTE SI YA EXISTE EN LA BÓVEDA 🔥
-    if (status === 'already_exists') {
-        return (
-            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
-                    <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-inner">
-                        <User size={36}/>
-                    </div>
-                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">¡Hola de nuevo!</h2>
-                    <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
-                        Detectamos que <strong>{activationEmail}</strong> ya tiene credenciales registradas en nuestro sistema corporativo.
-                    </p>
-                    <div className="space-y-4">
-                        <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg">
-                            Ir al Login
-                        </button>
-                        <p className="text-xs text-gray-500">
-                            Si no recuerdas tu clave, usa la opción "¿Olvidaste tu contraseña?" en la siguiente pantalla.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Pantalla Normal: Crear contraseña
-    return (
-        <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
-            <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-            
-            <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
-                <div className="w-20 h-20 bg-gradient-to-br from-rose-500/20 to-rose-600/10 text-rose-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-rose-500/20 shadow-inner">
-                    <Lock size={36}/>
-                </div>
-                
-                <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Activa tu cuenta</h2>
-                <p className="text-gray-400 text-sm mb-2 font-medium">Configura tu contraseña para acceder al portal.</p>
-                <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-rose-300 text-[11px] font-mono tracking-widest mb-8 border border-white/5">
-                    {activationEmail}
-                </div>
-
-                <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    const p1 = e.target.p1.value;
-                    const p2 = e.target.p2.value;
+                    <h2 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Crea tu contraseña</h2>
+                    <p className="text-gray-400 text-sm mb-8 font-medium">Configura tu acceso al portal de agentes.</p>
                     
-                    if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
-                    if (p1.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
-                    
-                    setIsSubmitting(true);
-                    
-                    try {
-                        // 1. Creamos la cuenta en Firebase
-                        await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                    <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        const p1 = e.target.p1.value;
+                        const p2 = e.target.p2.value;
+                        if (p1 !== p2) { alert('Las contraseñas no coinciden'); return; }
                         
-                        // 2. Sellamos la base de datos
-                        await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
-                        
-                        // 3. Pase VIP y recarga
-                        localStorage.setItem('isAdminLoggedIn', 'true');
-                        window.location.hash = '#portal';
-                        window.location.reload();
-
-                    } catch (error) {
-                        setIsSubmitting(false); // Detenemos el "cargando" si hay error
-                        
-                        if (error.code === 'auth/email-already-in-use') {
-                            // MAGIA APLICADA: Mostramos tu pantalla elegante
-                            setStatus('already_exists');
-                        } else {
-                            alert('Ocurrió un error: ' + error.message);
+                        setIsSubmitting(true);
+                        try {
+                            // 1. Crear cuenta
+                            await createUserWithEmailAndPassword(auth, activationEmail, p1);
+                            // 2. Sellar ficha en base de datos
+                            await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
+                            
+                            localStorage.setItem('isAdminLoggedIn', 'true');
+                            window.location.hash = '#portal';
+                            window.location.reload();
+                        } catch (error) {
+                            setIsSubmitting(false);
+                            if (error.code === 'auth/email-already-in-use') {
+                                setStatus('returning'); // Si choca, saltamos al mensaje elegante
+                            } else {
+                                alert("Error: " + error.message);
+                            }
                         }
-                    }
-                }} className="space-y-4 text-left">
-                    <div>
-                        <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Nueva Contraseña</label>
-                        <input name="p1" type="password" required placeholder="Mínimo 6 caracteres" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" disabled={isSubmitting} />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] ml-1 mb-2">Confirmar Contraseña</label>
-                        <input name="p2" type="password" required placeholder="Repite tu contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-rose-500/50 focus:bg-white/10 focus:ring-4 focus:ring-rose-500/5 transition-all text-white placeholder:text-gray-600 font-medium" disabled={isSubmitting} />
-                    </div>
-
-                    <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-5 rounded-2xl font-bold text-base shadow-xl shadow-rose-600/20 hover:shadow-rose-600/30 hover:scale-[1.02] active:scale-95 transition-all mt-4 disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2">
-                        {isSubmitting ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                Creando credenciales...
-                            </>
-                        ) : 'Crear Contraseña'}
-                    </button>
-                </form>
+                    }} className="space-y-4 text-left">
+                        <input name="p1" type="password" required placeholder="Contraseña nueva" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-rose-500/50 transition-all" disabled={isSubmitting} />
+                        <input name="p2" type="password" required placeholder="Confirmar contraseña" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-rose-500/50 transition-all" disabled={isSubmitting} />
+                        <button type="submit" disabled={isSubmitting} className="w-full bg-rose-600 text-white py-5 rounded-2xl font-bold hover:bg-rose-700 transition-all flex items-center justify-center gap-2">
+                            {isSubmitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Procesando...</> : 'Activar mi cuenta'}
+                        </button>
+                    </form>
+                </div>
             </div>
+        );
+    }
+
+    // Pantalla para correos no encontrados
+    return (
+        <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center p-6 text-center">
+             <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 max-w-sm">
+                <X size={40} className="mx-auto text-gray-500 mb-4"/>
+                <h2 className="text-white font-bold text-xl">Acceso no válido</h2>
+                <p className="text-gray-400 text-sm mt-2">No tienes una invitación pendiente o el correo no coincide.</p>
+                <button onClick={() => window.location.hash = '#portal'} className="mt-6 text-rose-500 font-bold text-sm">Ir al inicio</button>
+             </div>
         </div>
     );
 };
