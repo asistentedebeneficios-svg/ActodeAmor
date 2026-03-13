@@ -6280,7 +6280,7 @@ const ClientReviewScreen = ({ leadId, db }) => {
 // --- COMPONENTE DEDICADO A LA ACTIVACIÓN DE AGENTES ---
 const AgentActivationScreen = ({ activationEmail, db, auth }) => {
     const [targetAgent, setTargetAgent] = useState(null);
-    const [status, setStatus] = useState('loading'); // 'loading', 'ready', 'not_found', 'activated'
+    const [status, setStatus] = useState('loading'); // 'loading', 'ready', 'not_found', 'activated', 'already_exists'
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -6293,8 +6293,12 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     return;
                 }
                 const agentData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                setTargetAgent(agentData);
-                setStatus('ready');
+                if (agentData.isActivated) {
+                    setStatus('activated');
+                } else {
+                    setTargetAgent(agentData);
+                    setStatus('ready');
+                }
             } catch (e) {
                 console.error("Error buscando agente:", e);
                 setStatus('not_found');
@@ -6312,6 +6316,7 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
         );
     }
 
+    // Pantalla: Enlace viejo o cuenta ya sellada
     if (status === 'activated' || status === 'not_found') {
         return (
             <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
@@ -6332,6 +6337,33 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
         );
     }
 
+    // 🔥 LA IDEA DE FRENDIS: PANTALLA ELEGANTE SI YA EXISTE EN LA BÓVEDA 🔥
+    if (status === 'already_exists') {
+        return (
+            <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="bg-white/5 p-8 md:p-12 rounded-[2.5rem] border border-white/10 w-full max-w-md backdrop-blur-xl shadow-2xl relative z-10">
+                    <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-500/20 shadow-inner">
+                        <User size={36}/>
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-white mb-2 tracking-tight">¡Hola de nuevo!</h2>
+                    <p className="text-gray-400 text-sm mb-8 font-medium leading-relaxed">
+                        Detectamos que <strong>{activationEmail}</strong> ya tiene credenciales registradas en nuestro sistema corporativo.
+                    </p>
+                    <div className="space-y-4">
+                        <button onClick={() => { window.location.hash = '#portal'; window.location.reload(); }} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg">
+                            Ir al Login
+                        </button>
+                        <p className="text-xs text-gray-500">
+                            Si no recuerdas tu clave, usa la opción "¿Olvidaste tu contraseña?" en la siguiente pantalla.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Pantalla Normal: Crear contraseña
     return (
         <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center font-sans px-4 text-center animate-fade-in relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none"></div>
@@ -6359,29 +6391,25 @@ const AgentActivationScreen = ({ activationEmail, db, auth }) => {
                     setIsSubmitting(true);
                     
                     try {
-                        // 1. Creamos la cuenta en Firebase (Esto nos da los permisos necesarios)
+                        // 1. Creamos la cuenta en Firebase
                         await createUserWithEmailAndPassword(auth, activationEmail, p1);
                         
-                        // 2. AHORA SÍ, sellamos la base de datos (Porque ya estamos autenticados)
+                        // 2. Sellamos la base de datos
                         await updateDoc(doc(db, 'agents', targetAgent.id), { isActivated: true });
                         
-                        // 3. Pase VIP al portal
+                        // 3. Pase VIP y recarga
                         localStorage.setItem('isAdminLoggedIn', 'true');
-                        
-                        // 4. Redirigimos
                         window.location.hash = '#portal';
                         window.location.reload();
 
                     } catch (error) {
+                        setIsSubmitting(false); // Detenemos el "cargando" si hay error
+                        
                         if (error.code === 'auth/email-already-in-use') {
-                            // Si ya existe, NO intentamos escribir en la BD porque daría error de permisos.
-                            // Simplemente le avisamos y lo mandamos al login.
-                            alert('Tus credenciales corporativas ya existen.\n\nSerás redirigido al Login. Si no recuerdas tu clave anterior, usa la opción "¿Olvidaste tu clave?".');
-                            window.location.hash = '#portal';
-                            window.location.reload();
+                            // MAGIA APLICADA: Mostramos tu pantalla elegante
+                            setStatus('already_exists');
                         } else {
                             alert('Ocurrió un error: ' + error.message);
-                            setIsSubmitting(false); // Libera el botón si hay error
                         }
                     }
                 }} className="space-y-4 text-left">
