@@ -6499,15 +6499,6 @@ const App = () => {
     const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
     const currentStep = STEPS[stepIndex];
 
-    // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
-    if (isReviewRoute && reviewLeadId) {
-        return <ClientReviewScreen leadId={reviewLeadId} db={db} />;
-    }
-
-    // --- RENDERIZADO DE ACTIVACIÓN DE AGENTES ---
-    if (isActivationRoute && activationEmail) {
-        return <AgentActivationScreen activationEmail={activationEmail} db={db} auth={auth} />;
-    }
 
     // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
     useEffect(() => {
@@ -6685,6 +6676,16 @@ const App = () => {
         // Obligamos al navegador a quedarse en la ruta del portal al salir
         window.location.hash = '#portal';
     };
+
+    // RENDERIZADO DE RUTA DE EVALUACIÓN (Prioridad Absoluta)
+    if (isReviewRoute && reviewLeadId) {
+        return <ClientReviewScreen leadId={reviewLeadId} db={db} />;
+    }
+
+    // --- RENDERIZADO DE ACTIVACIÓN DE AGENTES ---
+    if (isActivationRoute && activationEmail) {
+        return <AgentActivationScreen activationEmail={activationEmail} db={db} auth={auth} />;
+    }
 
    if (isPortalRoute && !showAdmin) {
         if (showRegister) {
