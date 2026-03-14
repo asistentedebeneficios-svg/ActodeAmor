@@ -4595,7 +4595,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         return () => clearInterval(timer);
     }, []);
 
-    // --- NUEVO: DETECTOR DE REGRESO DE STRIPE ---
+    // --- NUEVO: DETECTOR DE REGRESO DE STRIPE BLINDADO ---
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         
@@ -4610,12 +4610,11 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         }
         
         if (urlParams.get('canceled') === 'true') {
-            // NUEVO: Si cancela, liberamos inmediatamente cualquier lead que tuviera bloqueado
-            leads.forEach(l => {
-                if (l.lockedBy === agent.id) {
-                    onUpdateLead(l.id, { lockedBy: null, lockedAt: null });
-                }
-            });
+            // 🔥 SOLUCIÓN CRÍTICA: Eliminamos la memoria para que no dispare Make
+            localStorage.removeItem('pendingPurchasedLeads');
+
+            // Dejamos un recado en la sesión para liberar los leads cuando Firebase cargue
+            sessionStorage.setItem('releaseCanceledLeads', 'true');
 
             setDialog({ 
                 title: 'Compra Cancelada', 
@@ -4982,10 +4981,13 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         }
     };
 
-    // Disparador automático al volver de Stripe
+    // Motor de Acciones Post-Stripe (Espera a que Firebase entregue los leads)
     useEffect(() => {
+        if (leads.length === 0) return;
+
+        // 1. Si regresó exitoso (Disparamos a Make)
         const pendingLeadsJSON = localStorage.getItem('pendingPurchasedLeads');
-        if (pendingLeadsJSON && leads.length > 0) {
+        if (pendingLeadsJSON) {
             try {
                 const purchasedIds = JSON.parse(pendingLeadsJSON);
                 purchasedIds.forEach(id => {
@@ -4994,12 +4996,23 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                         triggerAssignmentWebhook(leadData, agent);
                     }
                 });
-                localStorage.removeItem('pendingPurchasedLeads'); // Limpiamos la memoria
+                localStorage.removeItem('pendingPurchasedLeads'); // Limpiamos la memoria tras el envío
             } catch (e) {
                 console.error("Error disparando webhooks post-compra", e);
             }
         }
-    }, [leads, agent, webhooks]);
+
+        // 2. Si regresó cancelado (Liberamos los leads bloqueados con seguridad)
+        if (sessionStorage.getItem('releaseCanceledLeads') === 'true') {
+            leads.forEach(l => {
+                if (l.lockedBy === agent.id) {
+                    onUpdateLead(l.id, { lockedBy: null, lockedAt: null });
+                }
+            });
+            sessionStorage.removeItem('releaseCanceledLeads');
+        }
+    }, [leads, agent, webhooks, onUpdateLead]);
+
     const handleCheckout = async (directItems = null, directLeadIds = null) => {
         // Usamos los IDs que vienen del botón de Ofertas, o si no, usamos el carrito normal
         const checkoutLeadIds = directLeadIds || cart;
