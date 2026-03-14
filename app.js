@@ -1313,7 +1313,30 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             <button onClick={() => setNoEmail(false)} disabled={status !== 'idle'} className={`p-2.5 md:p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${!noEmail ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' : 'bg-white border-gray-200 text-gray-400'}`}><span className="text-xs md:text-sm font-bold">Ingresar Correo</span></button>
                             <button onClick={() => setNoEmail(true)} disabled={status !== 'idle'} className={`p-2.5 md:p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${noEmail ? 'bg-gray-100 border-gray-400 text-gray-700 ring-1 ring-gray-400' : 'bg-white border-gray-200 text-gray-400'}`}><span className="text-xs md:text-sm font-bold">No tengo Correo</span></button>
                         </div>
-                        {!noEmail ? (<div><input type="email" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-white text-sm md:text-base font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)} disabled={status !== 'idle'} /></div>) : (<div className="p-3 bg-yellow-50 text-yellow-700 rounded-xl text-xs md:text-sm flex items-start gap-2"><Shield size={16} className="shrink-0 mt-0.5"/><span>No hay problema, conocerá a su especialista en su cita.</span></div>)}
+                        {!noEmail ? (
+                            <div className="space-y-2.5">
+                                <input type="email" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-white text-sm md:text-base font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)} disabled={status !== 'idle'} />
+                                {/* Botones de Autocompletado para Adultos Mayores */}
+                                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                                    {['@gmail.com', '@yahoo.com', '@hotmail.com', '@icloud.com'].map(domain => (
+                                        <button 
+                                            key={domain}
+                                            type="button"
+                                            disabled={status !== 'idle'}
+                                            onClick={() => {
+                                                const base = email.split('@')[0]; // Toma solo el nombre si ya pusieron un arroba (corrige errores)
+                                                setEmail(base + domain);
+                                            }}
+                                            className="px-3.5 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-gray-600 hover:text-blue-700 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 disabled:opacity-50"
+                                        >
+                                            {domain}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-3 bg-yellow-50 text-yellow-700 rounded-xl text-xs md:text-sm flex items-start gap-2"><Shield size={16} className="shrink-0 mt-0.5"/><span>No hay problema, conocerá a su especialista en su cita.</span></div>
+                        )}
                     </div>
 
                     <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
