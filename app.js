@@ -3319,8 +3319,8 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
         else list = processedLeads; // Seguridad
 
-        // Filtro de Estatus (Aplica solo en Asignados si hay opciones seleccionadas)
-        if (activeTab === 'assigned' && adminSelectedStatusFilters.length > 0) {
+        // Filtro de Estatus (Aplica en Asignados y Archivados si hay opciones seleccionadas)
+        if ((activeTab === 'assigned' || activeTab === 'archived') && adminSelectedStatusFilters.length > 0) {
             list = list.filter(l => adminSelectedStatusFilters.includes(l.agentStatus || 'activo'));
         }
 
@@ -3865,7 +3865,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     <div className="max-w-6xl mx-auto bg-transparent md:bg-white md:rounded-3xl md:shadow-soft border-0 md:border border-gray-100 md:overflow-hidden pb-20 md:pb-0 flex flex-col">
                         
                         {/* NUEVO: FILTRO ELEGANTE REUBICADO ENCIMA DE LA TABLA */}
-                        {activeTab === 'assigned' && (
+                        {(activeTab === 'assigned' || activeTab === 'archived') && (
                             <div className="px-4 md:px-6 py-3 border-b border-gray-100 bg-white flex justify-end shrink-0">
                                 <div className="relative w-full sm:w-64 z-30">
                                     <button 
@@ -3894,7 +3894,11 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                         { id: 'descartado', label: 'Descartado', color: 'rose' },
                                                         { id: 'activo', label: 'Cita Programada', color: 'blue' }
                                                     ].map(st => {
-                                                        const count = leads.filter(l => l.assignedTo && l.status !== 'archived' && (l.agentStatus || 'activo') === st.id).length;
+                                                        const count = leads.filter(l => {
+                                                            if (activeTab === 'assigned') return l.assignedTo && l.status !== 'archived' && (l.agentStatus || 'activo') === st.id;
+                                                            if (activeTab === 'archived') return l.status === 'archived' && (l.agentStatus || 'activo') === st.id;
+                                                            return false;
+                                                        }).length;
                                                         const isSelected = adminSelectedStatusFilters.includes(st.id);
                                                         
                                                         return (
