@@ -3135,7 +3135,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     }, [onLogout]);
     // -----------------------------------------------------------------
 
-    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'];
+    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'offers', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
@@ -3575,7 +3575,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 
             {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'urgent', 'assigned', 'offers', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'urgent', 'offers', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm('');}}
@@ -3593,13 +3593,13 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                 {urgentLeadsCount > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{urgentLeadsCount}</span>}
                             </>
                         )}
-                        {tab === 'assigned' && 'Asignados'}
                         {tab === 'offers' && (
                             <>
                                 Ofertas
                                 {groupedOffers.length > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{groupedOffers.length}</span>}
                             </>
                         )}
+                        {tab === 'assigned' && 'Asignados'}
                         {tab === 'archived' && 'Archivados'}
                         {/* AQUÍ EL GLOBO ROJO EN LA PESTAÑA EQUIPO */}
                         {tab === 'agents' && (
