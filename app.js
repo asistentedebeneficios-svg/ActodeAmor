@@ -6594,6 +6594,20 @@ const PasswordRecoveryScreen = ({ auth }) => {
 };
 
 const App = () => {
+    // --- META PIXEL ANDROMEDA LOADER ---
+    useEffect(() => {
+        !(function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s);
+        })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '665618033310421'); // <-- REEMPLAZA CON TU ID REAL
+        fbq('track', 'PageView');
+    }, []);
     // --- FAVICON DINÁMICO ---
     useEffect(() => {
         let link = document.querySelector("link[rel~='icon']");
@@ -6839,7 +6853,19 @@ const App = () => {
         setIsSuccess(true); 
         sessionStorage.removeItem('funnelStepIndex');
         sessionStorage.removeItem('funnelLeadData');
-    };
+
+        // 🔥 SEÑAL PARA ANDROMEDA (META ADS)
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'Lead', {
+            content_name: 'Asesoría Gastos Finales',
+            content_category: 'Seguros',
+            // Enviamos el estado para que Andromeda aprenda en qué regiones conviertes mejor
+            address_state: leadData.state || 'Unknown', 
+            value: 0.00, // Puedes asignar un valor estimado si quieres
+            currency: 'USD'
+        });
+    }
+};
 
     // --- CAMBIO 2: Guardar el pase VIP al entrar ---
     const handleLogin = async (email, password) => {
