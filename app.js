@@ -1195,8 +1195,8 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
              )}
             
             <div className="space-y-4 md:space-y-6">
-                {status === 'success' ? (
-                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-10 relative">
+                {status === 'success' ? (
+                    <div ref={el => el && setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' }), 100)} className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-10 relative">
                         
                         <div className="mb-4 animate-[slide-up_0.5s_ease-out_0.2s_both]">
                             <HeartProgress percentage={100} isBeating={true} />
