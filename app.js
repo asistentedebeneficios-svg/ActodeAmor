@@ -1163,14 +1163,16 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time && acceptedTerms;
 
     const handleFinalSubmit = async (e) => {
-        e.preventDefault();
-        if(!isFormValid || status !== 'idle') return;
-        setStatus('submitting');
-        await new Promise(r => setTimeout(r, 1500));
-        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
-        setStatus('success');
-        onSuccess();
-    };
+        e.preventDefault();
+        if(!isFormValid || status !== 'idle') return;
+        setStatus('submitting');
+        await new Promise(r => setTimeout(r, 1500));
+        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
+        setStatus('success');
+        // Solución: Forzamos el scroll suave hacia arriba para ver el corazón al 100%
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        onSuccess();
+    };
 
     // Calculamos la fecha de MAÑANA para restringir el calendario
     const tomorrow = new Date();
