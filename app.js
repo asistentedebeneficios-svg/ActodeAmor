@@ -6613,7 +6613,7 @@ const App = () => {
             t.src = v; s = b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t, s);
         })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '665618033310421'); // <-- REEMPLAZA CON TU ID REAL
+        fbq('init', '1654543972543555'); // <-- REEMPLAZA CON TU ID REAL
         fbq('track', 'PageView');
     }, []);
     // --- FAVICON DINÁMICO ---
