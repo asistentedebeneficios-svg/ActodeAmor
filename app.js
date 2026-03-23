@@ -1197,10 +1197,10 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         </div>
                         
                         <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">¡Misión Cumplida!</h2>
-                        <p className="text-gray-500 mb-6 text-sm md:text-base">Has dado un paso gigante de amor.</p>
+                        <p className="text-gray-500 mb-6 text-sm md:text-base">Ha dado un paso gigante de amor.</p>
                         
                         <div className="bg-rose-50 p-5 md:p-6 rounded-2xl text-rose-800 italic text-sm md:text-base shadow-inner mb-6 w-full">
-                            "No hay mayor tranquilidad que saber que, pase lo que pase, tu familia estará protegida. Gracias por cuidarlos hoy."
+                            "No hay mayor tranquilidad que saber que, pase lo que pase, su familia estará protegida. Gracias por cuidarlos hoy."
                         </div>
 
                         {/* --- TARJETA ELEGANTE DE CITA --- */}
@@ -1254,7 +1254,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             </a>
 
                             <p className="text-xs text-slate-500 mt-4 text-center italic">
-                                Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.
+                                En breve recibirá por correo electrónico todos los datos de su especialista. Gracias por utilizar nuestos servicios.
                             </p>
                         </div>
 
