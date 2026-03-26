@@ -1112,7 +1112,7 @@ const FAQStep = ({ options, onContinue }) => {
     );
 };
 
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
+const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, leads = [] }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
     const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -1154,13 +1154,25 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             while(current < end) {
                 const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
                 
-                // Si es hoy, bloqueamos si la hora del bloque es menor al margen de preparación (ahora + 1 hr)
+                // 1. Regla de Hoy (Margen de 1 hora)
                 if(isToday && current < bufferTime) { 
                     current.setMinutes(current.getMinutes() + 60); 
                     continue; 
                 }
+
+                // 2. NUEVA REGLA: Único Agente (Prevención de doble reserva)
+                const isSlotTaken = generalSettings?.singleAgentMode && leads.some(l => 
+                    l.date === date && 
+                    l.time === timeStr && 
+                    l.status !== 'archived' && 
+                    l.agentStatus !== 'descartado'
+                );
+
+                // Si la hora NO está ocupada (o el modo único agente está apagado), la mostramos
+                if (!isSlotTaken) {
+                    slots.push(timeStr);
+                }
                 
-                slots.push(timeStr);
                 current.setMinutes(current.getMinutes() + 60); 
             }
         });
@@ -2772,9 +2784,10 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
     const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
     const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
-    // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
+    // --- NUEVO ESTADO: ESTADOS OPERATIVOS Y AGENTE ÚNICO ---
     const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
     const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
+    const [singleAgentMode, setSingleAgentMode] = useState(generalSettings?.singleAgentMode ?? false);
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -2807,7 +2820,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
             regularPrice: Number(regPrice), 
             offerPrice: Number(offPrice),
             activeStates: activeStates,
-            waitlistUrl: waitlistUrl
+            waitlistUrl: waitlistUrl,
+            singleAgentMode: singleAgentMode
         });
         
         setIsSaving(false);
@@ -3041,8 +3055,28 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                         </div>
                     </div>
 
-                    {/* SECCIÓN 5: HORARIO LABORAL (Movido desde la Agenda) */}
-                    <div className="md:col-span-12 mb-12">
+                    {/* SECCIÓN 5: HORARIO LABORAL Y MODO AGENTE ÚNICO */}
+                    <div className="md:col-span-12 mb-12 space-y-6">
+                        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
+                                    <User size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Modo Único Agente</h3>
+                                    <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+                                        Al activarlo, los prospectos no podrán elegir una fecha y hora que ya haya sido reservada por otra persona, evitando cruces en tu agenda.
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setSingleAgentMode(!singleAgentMode)}
+                                className={`w-14 h-8 rounded-full p-1 transition-all relative shadow-inner shrink-0 ${singleAgentMode ? 'bg-purple-500' : 'bg-gray-300'}`}
+                            >
+                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${singleAgentMode ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </button>
+                        </div>
+
                         <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
                     </div>
 
@@ -7241,7 +7275,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} leads={leads} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
