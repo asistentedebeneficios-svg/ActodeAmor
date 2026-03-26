@@ -316,7 +316,16 @@ const useFirebaseDatabase = () => {
             const agentRef = doc(db, 'agents', id);
             batch.delete(agentRef);
 
-            // 3. Ejecutar todo en un solo proceso
+            // 3. NUEVO: Autolimpieza del Modo Único Agente
+            if (generalSettings?.singleAgentId === id) {
+                const generalRef = doc(db, 'settings', 'general');
+                batch.update(generalRef, { 
+                    singleAgentMode: false, 
+                    singleAgentId: '' 
+                });
+            }
+
+            // 4. Ejecutar todo en un solo proceso
             await batch.commit();
         } catch (error) {
             console.error("Error al eliminar agente:", error);
@@ -1112,7 +1121,7 @@ const FAQStep = ({ options, onContinue }) => {
     );
 };
 
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, leads = [] }) => {
+const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, leads = [], agents = [] }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
     const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -1131,7 +1140,6 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     useEffect(() => {
         if(!date) { setAvailableSlots([]); return; }
         
-        // Convertimos la fecha de forma segura para evitar saltos de zona horaria
         const selectedParts = date.split('-');
         const selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
         const dayIndex = selectedDate.getDay(); 
@@ -1144,9 +1152,10 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const isToday = date === todayStr;
-        
-        // Sumamos 1 hora (60 minutos) a la hora actual para crear el margen de preparación
         const bufferTime = new Date(now.getTime() + 60 * 60 * 1000);
+        
+        // 🌍 PREPARADOR DE ZONAS HORARIAS
+        const prospectTz = STATE_TZ[state] || null;
 
         dayConfig.blocks.forEach(block => {
             let current = new Date(`${date}T${block.start}`);
@@ -1154,21 +1163,35 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             while(current < end) {
                 const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
                 
-                // 1. Regla de Hoy (Margen de 1 hora)
                 if(isToday && current < bufferTime) { 
                     current.setMinutes(current.getMinutes() + 60); 
                     continue; 
                 }
 
-                // 2. NUEVA REGLA: Único Agente (Prevención de doble reserva)
-                const isSlotTaken = generalSettings?.singleAgentMode && leads.some(l => 
-                    l.date === date && 
-                    l.time === timeStr && 
-                    l.status !== 'archived' && 
-                    l.agentStatus !== 'descartado'
-                );
+                let isSlotTaken = false;
 
-                // Si la hora NO está ocupada (o el modo único agente está apagado), la mostramos
+                // 2. REGLA AVANZADA: Único Agente + Zonas Horarias
+                if (generalSettings?.singleAgentMode && generalSettings?.singleAgentId) {
+                    const currentSlotUtcMs = prospectTz ? zonedDateTimeToUtcMs(date, timeStr, prospectTz) : null;
+
+                    isSlotTaken = leads.some(l => {
+                        const belongsToAgent = l.assignedTo === generalSettings.singleAgentId || !l.assignedTo;
+                        const isNotDiscarded = l.status !== 'archived' && (l.agentStatus || 'activo') !== 'descartado';
+                        
+                        if (!belongsToAgent || !isNotDiscarded) return false;
+
+                        // Traducción Universal: Comparamos Milisegundos
+                        const leadTz = STATE_TZ[l.state];
+                        if (currentSlotUtcMs && leadTz && l.date && l.time) {
+                            const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
+                            return leadUtcMs === currentSlotUtcMs;
+                        }
+
+                        // Respaldo de texto en caso de que falte la zona horaria
+                        return l.date === date && l.time === timeStr;
+                    });
+                }
+
                 if (!isSlotTaken) {
                     slots.push(timeStr);
                 }
@@ -1178,7 +1201,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         });
         slots.sort((a, b) => new Date('1970/01/01 ' + a.replace('a.m.','AM').replace('p.m.','PM')) - new Date('1970/01/01 ' + b.replace('a.m.','AM').replace('p.m.','PM')));
         setAvailableSlots(slots); setTime(''); 
-    }, [date, scheduleConfig]);
+    }, [date, scheduleConfig, state, leads, generalSettings]);
 
     const ageNum = parseInt(age, 10);
     const isAgeValid = ageNum >= 18 && ageNum <= 85;
@@ -2170,7 +2193,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
     );
 };
 
-const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent, onDeleteReview }) => {
+const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent, onDeleteReview, generalSettings }) => {
     // Calculadora de estrellas estilo Amazon
     const agentReviews = reviews.filter(r => r.agentId === agent.id).sort((a,b) => b.timestamp - a.timestamp);
     const avgRating = agentReviews.length > 0 ? (agentReviews.reduce((acc, r) => acc + r.rating, 0) / agentReviews.length).toFixed(1) : 0;
@@ -2289,6 +2312,15 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                         <div className="bg-white p-6 rounded-3xl shadow-soft border border-gray-100">
                             {!isEditing ? (
                                 <div className="flex flex-col items-center text-center animate-fade-in">
+                                    {generalSettings?.singleAgentMode && generalSettings?.singleAgentId === agent.id && (
+                                        <div className="flex items-center gap-2.5 mb-4 bg-purple-50 border border-purple-100 px-4 py-1.5 rounded-full w-fit shadow-sm animate-slide-up">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                                            </span>
+                                            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-widest">Este es el Agente Único Activo</span>
+                                        </div>
+                                    )}
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-3xl border-4 border-gray-50 overflow-hidden shadow-sm text-gray-400 mb-4 relative group cursor-pointer" onClick={() => agent.photo && setPreviewImage(agent.photo)}>
                                         {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0).toUpperCase()}
                                         {agent.photo && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Search size={14} className="text-white"/></div>}
@@ -2779,7 +2811,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
 };
 
 // --- NUEVO: PANTALLA DE CONFIGURACIÓN DEL SISTEMA (CON BOTÓN MÁGICO) ---
-const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebhooks, onSaveGeneral, onUpdateSchedule, onClose }) => {
+const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, agents = [], onSaveWebhooks, onSaveGeneral, onUpdateSchedule, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
     const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
@@ -2787,6 +2819,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
     // --- NUEVO ESTADO: ESTADOS OPERATIVOS Y AGENTE ÚNICO ---
     const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
     const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
+    const [singleAgentMode, setSingleAgentMode] = useState(generalSettings?.singleAgentMode ?? false);
+    const [singleAgentId, setSingleAgentId] = useState(generalSettings?.singleAgentId || '');
     const [singleAgentMode, setSingleAgentMode] = useState(generalSettings?.singleAgentMode ?? false);
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -2821,7 +2855,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
             offerPrice: Number(offPrice),
             activeStates: activeStates,
             waitlistUrl: waitlistUrl,
-            singleAgentMode: singleAgentMode
+            singleAgentMode: singleAgentMode,
+            singleAgentId: singleAgentId
         });
         
         setIsSaving(false);
@@ -3057,24 +3092,44 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
 
                     {/* SECCIÓN 5: HORARIO LABORAL Y MODO AGENTE ÚNICO */}
                     <div className="md:col-span-12 mb-12 space-y-6">
-                        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
-                                    <User size={24} />
+                        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col gap-6 hover:shadow-md transition-shadow">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
+                                        <User size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900">Modo Único Agente</h3>
+                                        <p className="text-gray-500 text-sm mt-1 leading-relaxed max-w-2xl">
+                                            Evita que los prospectos reserven una hora que ya está ocupada por el agente designado. Cruza Zonas Horarias automáticamente.
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900">Modo Único Agente</h3>
-                                    <p className="text-gray-500 text-sm mt-1 leading-relaxed">
-                                        Al activarlo, los prospectos no podrán elegir una fecha y hora que ya haya sido reservada por otra persona, evitando cruces en tu agenda.
-                                    </p>
-                                </div>
+                                <button 
+                                    onClick={() => setSingleAgentMode(!singleAgentMode)}
+                                    className={`w-14 h-8 rounded-full p-1 transition-all relative shadow-inner shrink-0 ${singleAgentMode ? 'bg-purple-500' : 'bg-gray-300'}`}
+                                >
+                                    <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${singleAgentMode ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </button>
                             </div>
-                            <button 
-                                onClick={() => setSingleAgentMode(!singleAgentMode)}
-                                className={`w-14 h-8 rounded-full p-1 transition-all relative shadow-inner shrink-0 ${singleAgentMode ? 'bg-purple-500' : 'bg-gray-300'}`}
-                            >
-                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${singleAgentMode ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                            </button>
+                            
+                            {/* Menú Desplegable Elegante (Aparece al encender el switch) */}
+                            {singleAgentMode && (
+                                <div className="pt-5 border-t border-gray-100 animate-slide-up">
+                                    <label className="text-[10px] font-bold text-purple-500 uppercase tracking-widest block mb-2 ml-1">Agente Designado para Cruce Horario</label>
+                                    <select 
+                                        value={singleAgentId} 
+                                        onChange={(e) => setSingleAgentId(e.target.value)}
+                                        className="w-full md:w-1/2 p-3.5 bg-purple-50/50 border border-purple-100 text-gray-800 text-sm font-bold rounded-xl outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-all cursor-pointer appearance-none"
+                                    >
+                                        <option value="">Selecciona un Agente...</option>
+                                        {agents.filter(a => a.status === 'active').map(a => (
+                                            <option key={a.id} value={a.id}>{a.name} ({a.email})</option>
+                                        ))}
+                                    </select>
+                                    {!singleAgentId && <p className="text-[10px] text-red-500 font-bold mt-2 ml-1">⚠️ Debes seleccionar un agente para que el bloqueo de agenda funcione.</p>}
+                                </div>
+                            )}
                         </div>
 
                         <ScheduleSettings schedule={schedule} onUpdate={onUpdateSchedule} />
@@ -3836,6 +3891,15 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                                     {agent.photo ? <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover" /> : agent.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0 flex-1 pr-2">
+                                                    {generalSettings?.singleAgentMode && generalSettings?.singleAgentId === agent.id && (
+                                                        <div className="flex items-center gap-2 mb-1.5 bg-purple-50 border border-purple-100 px-2.5 py-0.5 rounded-full w-fit shadow-inner">
+                                                            <span className="relative flex h-1.5 w-1.5">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500"></span>
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-purple-700 uppercase tracking-widest">Agente Único</span>
+                                                        </div>
+                                                    )}
                                                     <h3 className="font-bold text-gray-900 text-base md:text-lg truncate flex items-center gap-2 group-hover:text-rose-600 transition-colors">
                                                         <span className="truncate">{agent.name}</span>
                                                         {agent.status === 'inactive' && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest border border-gray-200 shrink-0">Inactivo</span>}
@@ -4241,13 +4305,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     agent={agents.find(a => a.id === viewingAgent.id) || viewingAgent} 
                     leads={processedLeads} 
                     reviews={reviews}
+                    generalSettings={generalSettings}
                     onClose={() => setViewingAgent(null)} 
                     onLeadClick={(l) => { setViewingAgent(null); setViewingLead(l); }} 
                     onSaveAgent={handleSaveAgent}
                     onDeleteAgent={onDeleteAgent}
                     onDeleteReview={onDeleteReview}
                 />
-            )}                        
+            )}                       
             <CustomDialog isOpen={!!dialog} {...dialog} />
 
             {isBulkAgentSelectOpen && (
@@ -4454,6 +4519,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     webhooks={webhooks} 
                     generalSettings={generalSettings}
                     schedule={schedule}
+                    agents={agents}
                     onSaveWebhooks={onUpdateWebhooks} 
                     onSaveGeneral={onUpdateGeneralSettings}
                     onUpdateSchedule={onUpdateSchedule}
@@ -7275,7 +7341,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} leads={leads} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} leads={leads} agents={agents} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
