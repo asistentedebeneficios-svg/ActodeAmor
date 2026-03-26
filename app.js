@@ -207,34 +207,34 @@ const useFirebaseDatabase = () => {
         });
 
         let unsubLeads = () => {};
-        let unsubAgents = () => {};
-        let unsubRequests = () => {}; 
-        let unsubReviews = () => {}; // NUEVO: Limpieza de reseñas
+        let unsubAgents = () => {};
+        let unsubRequests = () => {}; 
+        let unsubReviews = () => {}; 
 
-        if (!user.isAnonymous) {
-            // Descargamos las reseñas para el panel de Admin
-            const reviewsQuery = collection(db, 'reviews');
-            unsubReviews = onSnapshot(reviewsQuery, (snapshot) => {
-                setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }, (err) => { if (err.code !== 'permission-denied') console.error("Reviews error:", err); });
-            const leadsQuery = collection(db, 'leads'); 
-            unsubLeads = onSnapshot(leadsQuery, (snapshot) => {
-                setLeads(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }, (err) => {
-                if (err.code !== 'permission-denied') console.error("Leads error:", err);
-            });
+        // 1. DATOS GLOBALES (Necesarios para el formulario público y el motor de bloqueo de agenda)
+        const leadsQuery = collection(db, 'leads'); 
+        unsubLeads = onSnapshot(leadsQuery, (snapshot) => {
+            setLeads(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (err) => {
+            if (err.code !== 'permission-denied') console.error("Leads error:", err);
+        });
 
-            const agentsQuery = collection(db, 'agents');
-            unsubAgents = onSnapshot(agentsQuery, (snapshot) => {
-                setAgents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }, (err) => {
-                if (err.code !== 'permission-denied') console.error("Agents error:", err);
-            });
+        const agentsQuery = collection(db, 'agents');
+        unsubAgents = onSnapshot(agentsQuery, (snapshot) => {
+            setAgents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (err) => {
+            if (err.code !== 'permission-denied') console.error("Agents error:", err);
+        });
 
-            // NUEVO: Escuchador en tiempo real de las solicitudes de agentes
+        if (!user.isAnonymous) {
+            // 2. DATOS ULTRA PRIVADOS (Solo visibles para el Admin o Agentes Logueados)
+            const reviewsQuery = collection(db, 'reviews');
+            unsubReviews = onSnapshot(reviewsQuery, (snapshot) => {
+                setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            }, (err) => { if (err.code !== 'permission-denied') console.error("Reviews error:", err); });
+
             const requestsQuery = collection(db, 'agent_requests');
             unsubRequests = onSnapshot(requestsQuery, (snapshot) => {
-                // Solo traemos los que están pendientes, los ordenamos del más nuevo al más viejo
                 const reqs = snapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
                     .filter(req => req.status === 'pending')
@@ -242,8 +242,8 @@ const useFirebaseDatabase = () => {
                 setAgentRequests(reqs);
             }, (err) => {
                 if (err.code !== 'permission-denied') console.error("Requests error:", err);
-            });
-        }
+            });
+        }
 
         return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
     }, [user]);
