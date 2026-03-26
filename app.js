@@ -2821,7 +2821,6 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, agents = []
     const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
     const [singleAgentMode, setSingleAgentMode] = useState(generalSettings?.singleAgentMode ?? false);
     const [singleAgentId, setSingleAgentId] = useState(generalSettings?.singleAgentId || '');
-    const [singleAgentMode, setSingleAgentMode] = useState(generalSettings?.singleAgentMode ?? false);
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
