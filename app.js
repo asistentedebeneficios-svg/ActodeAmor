@@ -1138,70 +1138,83 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     const [availableSlots, setAvailableSlots] = useState([]);
 
     useEffect(() => {
-        if(!date) { setAvailableSlots([]); return; }
+        // 1. Validar que tengamos Fecha Y Estado
+        if(!date || !state) { 
+            setAvailableSlots([]); 
+            return; 
+        }
         
-        const selectedParts = date.split('-');
-        const selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
-        const dayIndex = selectedDate.getDay(); 
-        
-        let dayConfig = scheduleConfig.exceptions[date] || scheduleConfig.weekly[dayIndex];
+        const prospectTz = STATE_TZ[state];
+        if (!prospectTz) {
+            setAvailableSlots([]); 
+            return; // Bloqueo de seguridad
+        }
 
-        if(!dayConfig || !dayConfig.active || !dayConfig.blocks) { setAvailableSlots([]); return; }
+        // 2. Asumimos el Huso Horario de la Agencia (Florida - EST)
+        const agentTz = "America/New_York"; 
 
         const slots = [];
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const isToday = date === todayStr;
-        const bufferTime = new Date(now.getTime() + 60 * 60 * 1000);
-        
-        // 🌍 PREPARADOR DE ZONAS HORARIAS
-        const prospectTz = STATE_TZ[state] || null;
+        const nowMs = Date.now();
+        const bufferMs = nowMs + (60 * 60 * 1000); // 1 hora de preparación
 
-        dayConfig.blocks.forEach(block => {
-            let current = new Date(`${date}T${block.start}`);
-            const end = new Date(`${date}T${block.end}`);
-            while(current < end) {
-                const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
-                
-                if(isToday && current < bufferTime) { 
-                    current.setMinutes(current.getMinutes() + 60); 
-                    continue; 
+        // Iterar 24 horas (en la zona del prospecto)
+        for (let h = 0; h < 24; h++) {
+            const time24h = `${String(h).padStart(2, '0')}:00`;
+            const slotUtcMs = zonedDateTimeToUtcMs(date, time24h, prospectTz);
+            
+            if (!slotUtcMs) continue;
+
+            // Bloquear horas pasadas + margen
+            if (slotUtcMs < bufferMs) continue;
+
+            // Convertimos slotUtcMs a la hora de Florida para verificar si la agencia está abierta
+            const agentDateObj = new Date(new Date(slotUtcMs).toLocaleString('en-US', { timeZone: agentTz }));
+            const agentDayIndex = agentDateObj.getDay();
+            const agentHour = agentDateObj.getHours();
+            
+            const dayConfig = scheduleConfig.weekly[agentDayIndex];
+            if (!dayConfig || !dayConfig.active) continue;
+
+            let fallsInBlock = false;
+            for (let block of dayConfig.blocks) {
+                const [bStartH] = block.start.split(':').map(Number);
+                const [bEndH] = block.end.split(':').map(Number);
+                if (agentHour >= bStartH && agentHour < bEndH) {
+                    fallsInBlock = true;
+                    break;
                 }
-
-                let isSlotTaken = false;
-
-                // 2. REGLA AVANZADA: Único Agente + Zonas Horarias
-                if (generalSettings?.singleAgentMode && generalSettings?.singleAgentId) {
-                    const currentSlotUtcMs = prospectTz ? zonedDateTimeToUtcMs(date, timeStr, prospectTz) : null;
-
-                    isSlotTaken = leads.some(l => {
-                        const belongsToAgent = l.assignedTo === generalSettings.singleAgentId || !l.assignedTo;
-                        const isNotDiscarded = l.status !== 'archived' && (l.agentStatus || 'activo') !== 'descartado';
-                        
-                        if (!belongsToAgent || !isNotDiscarded) return false;
-
-                        // Traducción Universal: Comparamos Milisegundos
-                        const leadTz = STATE_TZ[l.state];
-                        if (currentSlotUtcMs && leadTz && l.date && l.time) {
-                            const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
-                            return leadUtcMs === currentSlotUtcMs;
-                        }
-
-                        // Respaldo de texto en caso de que falte la zona horaria
-                        return l.date === date && l.time === timeStr;
-                    });
-                }
-
-                if (!isSlotTaken) {
-                    slots.push(timeStr);
-                }
-                
-                current.setMinutes(current.getMinutes() + 60); 
             }
-        });
-        slots.sort((a, b) => new Date('1970/01/01 ' + a.replace('a.m.','AM').replace('p.m.','PM')) - new Date('1970/01/01 ' + b.replace('a.m.','AM').replace('p.m.','PM')));
-        setAvailableSlots(slots); setTime(''); 
-    }, [date, scheduleConfig, state, leads, generalSettings]);
+
+            if (!fallsInBlock) continue;
+
+            // REGLA DEL AGENTE ÚNICO
+            let isSlotTaken = false;
+            if (generalSettings?.singleAgentMode && generalSettings?.singleAgentId) {
+                isSlotTaken = leads.some(l => {
+                    const belongsToAgent = l.assignedTo === generalSettings.singleAgentId || !l.assignedTo;
+                    const isNotDiscarded = l.status !== 'archived' && (l.agentStatus || 'activo') !== 'descartado';
+                    
+                    if (!belongsToAgent || !isNotDiscarded || !l.state || !l.date || !l.time) return false;
+
+                    const leadTz = STATE_TZ[l.state];
+                    if (leadTz) {
+                        const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
+                        return leadUtcMs === slotUtcMs;
+                    }
+                    return false;
+                });
+            }
+
+            if (!isSlotTaken) {
+                const ampm = h >= 12 ? 'p.m.' : 'a.m.';
+                const displayH = h % 12 || 12;
+                slots.push(`${String(displayH).padStart(2, '0')}:00 ${ampm}`);
+            }
+        }
+
+        setAvailableSlots(slots); 
+        setTime(''); 
+    }, [date, state, scheduleConfig, leads, generalSettings]);
 
     const ageNum = parseInt(age, 10);
     const isAgeValid = ageNum >= 18 && ageNum <= 85;
@@ -1403,22 +1416,29 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Calendar size={16} className="text-rose-500"/> Fecha y Hora</h3>
                         <div className="flex flex-col gap-4">
-                            {/* AQUÍ ESTÁ EL CAMBIO: min={minDate} restringe para que solo se pueda desde mañana */}
                             <div>
-                                <div className="relative">
+                                <div className="relative group">
                                     {!date && (
-                                        <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
-                                            <span className="text-gray-400 text-sm md:text-base font-medium">Seleccione un día...</span>
+                                        <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none z-10">
+                                            <span className="text-gray-400 text-sm md:text-base font-medium">
+                                                {state ? 'Seleccione un día...' : 'Primero seleccione su Estado arriba'}
+                                            </span>
                                         </div>
                                     )}
                                     <input 
                                         type="date" 
                                         min={minDate} 
-                                        className={`w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500 transition-all ${!date ? 'text-transparent' : 'text-gray-700'}`} 
+                                        className={`w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium outline-none transition-all relative ${!date ? 'text-transparent' : 'text-gray-700'} ${!state ? 'cursor-not-allowed opacity-60' : 'focus:bg-white focus:ring-2 focus:ring-rose-500'}`} 
                                         value={date} 
                                         onChange={e => setDate(e.target.value)} 
-                                        disabled={status !== 'idle'} 
+                                        disabled={!state || status !== 'idle'} 
                                     />
+                                    {/* Tooltip elegante si intentan hacer clic sin estado */}
+                                    {!state && (
+                                        <div className="absolute -top-10 left-0 bg-gray-900 text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                            Requerido para calcular tu zona horaria
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             {date && (
