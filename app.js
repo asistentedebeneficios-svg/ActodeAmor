@@ -26,11 +26,11 @@ const STEPS = [
     { id: 'intro', question: "Un Acto de Amor", subtext: "Llene este corazón paso a paso para descubrir si califica para proteger a su familia.", buttonStart: "Comenzar" },
     { 
         id: 'policy_for', 
-        question: "¿Para quién es este gesto de amor?", 
+        question: "¿A quién desea proteger?", 
         subtext: "Puede seleccionar a varias personas importantes.", 
         multiSelect: true, 
         options: [
-            { id: 'me', label: 'Para mí', icon: User },
+            { id: 'me', label: 'A mí', icon: User },
             { id: 'spouse', label: 'Mi Pareja', icon: Heart },
             { id: 'children', label: 'Mis Hijos', icon: Baby },
             { id: 'parents', label: 'Mis Padres', icon: ShieldCheck }
