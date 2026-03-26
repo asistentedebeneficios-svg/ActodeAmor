@@ -26,7 +26,7 @@ const STEPS = [
     { id: 'intro', question: "Un Acto de Amor", subtext: "Llene este corazón paso a paso para descubrir si califica para proteger a su familia.", buttonStart: "Comenzar" },
     { 
         id: 'policy_for', 
-        question: "¿Para quién sería esta protección?", 
+        question: "¿Para quién es este gesto de amor?", 
         subtext: "Puede seleccionar a varias personas importantes.", 
         multiSelect: true, 
         options: [
