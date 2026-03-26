@@ -2318,7 +2318,7 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
                                             </span>
-                                            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-widest">Este es el Agente Único Activo</span>
+                                            <span className="text-[10px] font-bold text-purple-800 uppercase tracking-widest">Agente Único Activo</span>
                                         </div>
                                     )}
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-white flex items-center justify-center font-bold text-3xl border-4 border-gray-50 overflow-hidden shadow-sm text-gray-400 mb-4 relative group cursor-pointer" onClick={() => agent.photo && setPreviewImage(agent.photo)}>
