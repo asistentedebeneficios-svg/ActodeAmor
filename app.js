@@ -1138,43 +1138,52 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     const [availableSlots, setAvailableSlots] = useState([]);
 
     useEffect(() => {
-        // 1. Validar que tengamos Fecha Y Estado
+        // 1. OBLIGATORIO: Validar que tengamos Fecha Y Estado
         if(!date || !state) { 
             setAvailableSlots([]); 
             return; 
         }
         
-        const prospectTz = STATE_TZ[state];
-        if (!prospectTz) {
-            setAvailableSlots([]); 
-            return; // Bloqueo de seguridad
-        }
-
-        // 2. Asumimos el Huso Horario de la Agencia (Florida - EST)
-        const agentTz = "America/New_York"; 
+        // Huso horario del prospecto (Con respaldo a New_York por seguridad extrema)
+        const prospectTz = STATE_TZ[state] || "America/New_York";
+        const agentTz = "America/New_York"; // Tu agencia opera en hora del ESTE
 
         const slots = [];
         const nowMs = Date.now();
-        const bufferMs = nowMs + (60 * 60 * 1000); // 1 hora de preparación
+        const bufferMs = nowMs + (60 * 60 * 1000); // 1 hora de margen de respiro
 
-        // Iterar 24 horas (en la zona del prospecto)
+        // 2. Evaluamos las 24 horas del día seleccionado por el PROSPECTO
         for (let h = 0; h < 24; h++) {
             const time24h = `${String(h).padStart(2, '0')}:00`;
-            const slotUtcMs = zonedDateTimeToUtcMs(date, time24h, prospectTz);
             
+            // Convertir la hora local del prospecto a Milisegundos Universales (UTC)
+            const slotUtcMs = zonedDateTimeToUtcMs(date, time24h, prospectTz);
             if (!slotUtcMs) continue;
 
-            // Bloquear horas pasadas + margen
+            // Filtro de Pasado: Si la hora ya pasó (más el margen de 1 hr), la ignoramos
             if (slotUtcMs < bufferMs) continue;
 
-            // Convertimos slotUtcMs a la hora de Florida para verificar si la agencia está abierta
-            const agentDateObj = new Date(new Date(slotUtcMs).toLocaleString('en-US', { timeZone: agentTz }));
-            const agentDayIndex = agentDateObj.getDay();
-            const agentHour = agentDateObj.getHours();
+            // 3. Convertir ese UTC a la hora de Florida para ver si la agencia está abierta
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: agentTz,
+                weekday: 'short',
+                hour: 'numeric',
+                hour12: false
+            });
             
+            const agentTimeParts = formatter.format(new Date(slotUtcMs)).split(', ');
+            if (agentTimeParts.length < 2) continue;
+            
+            const agentDayStr = agentTimeParts[0]; 
+            const agentHour = parseInt(agentTimeParts[1], 10);
+            
+            const dayStrToIdx = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+            const agentDayIndex = dayStrToIdx[agentDayStr];
+
             const dayConfig = scheduleConfig.weekly[agentDayIndex];
             if (!dayConfig || !dayConfig.active) continue;
 
+            // Revisar si cae dentro de los bloques de trabajo (Ej. 09:00 a 18:00)
             let fallsInBlock = false;
             for (let block of dayConfig.blocks) {
                 const [bStartH] = block.start.split(':').map(Number);
@@ -1185,9 +1194,10 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                 }
             }
 
+            // Si en Florida está cerrado a esa hora, no se la mostramos al cliente de California
             if (!fallsInBlock) continue;
 
-            // REGLA DEL AGENTE ÚNICO
+            // 4. EL RADAR DE DOBLE RESERVA (Milisegundo a Milisegundo)
             let isSlotTaken = false;
             if (generalSettings?.singleAgentMode && generalSettings?.singleAgentId) {
                 isSlotTaken = leads.some(l => {
@@ -1196,15 +1206,14 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     
                     if (!belongsToAgent || !isNotDiscarded || !l.state || !l.date || !l.time) return false;
 
-                    const leadTz = STATE_TZ[l.state];
-                    if (leadTz) {
-                        const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
-                        return leadUtcMs === slotUtcMs;
-                    }
-                    return false;
+                    const leadTz = STATE_TZ[l.state] || "America/New_York";
+                    const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
+                    
+                    return leadUtcMs === slotUtcMs;
                 });
             }
 
+            // 5. Si está libre, la agregamos en formato 12h (AM/PM) para el cliente
             if (!isSlotTaken) {
                 const ampm = h >= 12 ? 'p.m.' : 'a.m.';
                 const displayH = h % 12 || 12;
@@ -4552,23 +4561,25 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 // --- PORTAL DEL AGENTE (SaaS) ---
 // --- DICCIONARIO DE ESTADOS ---
 const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
-// --- ✅ MAPA DE TIMEZONES POR ESTADO (solo los que usas) ---
+// --- ✅ MAPA DE TIMEZONES NACIONAL (50 ESTADOS) ---
 const STATE_TZ = {
-  "Arizona": "America/Phoenix",
-  "California": "America/Los_Angeles",
-  "Colorado": "America/Denver",
-  "Florida": "America/New_York", // simplificado (si quieres lo afinamos para FL)
-  "Hawaii": "Pacific/Honolulu",
-  "Idaho": "America/Boise",
-  "Illinois": "America/Chicago",
-  "Montana": "America/Denver",
-  "Nevada": "America/Los_Angeles",
-  "New Mexico": "America/Denver",
-  "Oregon": "America/Los_Angeles",
-  "Texas": "America/Chicago",
-  "Utah": "America/Denver",
-  "Virginia": "America/New_York",
-  "Wisconsin": "America/Chicago"
+    "Alabama": "America/Chicago", "Alaska": "America/Anchorage", "Arizona": "America/Phoenix", 
+    "Arkansas": "America/Chicago", "California": "America/Los_Angeles", "Colorado": "America/Denver", 
+    "Connecticut": "America/New_York", "Delaware": "America/New_York", "Florida": "America/New_York", 
+    "Georgia": "America/New_York", "Hawaii": "Pacific/Honolulu", "Idaho": "America/Boise", 
+    "Illinois": "America/Chicago", "Indiana": "America/Indiana/Indianapolis", "Iowa": "America/Chicago", 
+    "Kansas": "America/Chicago", "Kentucky": "America/New_York", "Louisiana": "America/Chicago", 
+    "Maine": "America/New_York", "Maryland": "America/New_York", "Massachusetts": "America/New_York", 
+    "Michigan": "America/Detroit", "Minnesota": "America/Chicago", "Mississippi": "America/Chicago", 
+    "Missouri": "America/Chicago", "Montana": "America/Denver", "Nebraska": "America/Chicago", 
+    "Nevada": "America/Los_Angeles", "New Hampshire": "America/New_York", "New Jersey": "America/New_York", 
+    "New Mexico": "America/Denver", "New York": "America/New_York", "North Carolina": "America/New_York", 
+    "North Dakota": "America/Chicago", "Ohio": "America/New_York", "Oklahoma": "America/Chicago", 
+    "Oregon": "America/Los_Angeles", "Pennsylvania": "America/New_York", "Rhode Island": "America/New_York", 
+    "South Carolina": "America/New_York", "South Dakota": "America/Chicago", "Tennessee": "America/Chicago", 
+    "Texas": "America/Chicago", "Utah": "America/Denver", "Vermont": "America/New_York", 
+    "Virginia": "America/New_York", "Washington": "America/Los_Angeles", "West Virginia": "America/New_York", 
+    "Wisconsin": "America/Chicago", "Wyoming": "America/Denver"
 };
 
 // --- ✅ Normaliza hora (A prueba de p.m., P.M., PM, pm) ---
