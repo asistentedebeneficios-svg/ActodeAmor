@@ -1144,13 +1144,13 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             return; 
         }
         
-        // Huso horario del prospecto (Con respaldo a New_York por seguridad extrema)
+        // Huso horario del prospecto (Con respaldo a New_York por seguridad)
         const prospectTz = STATE_TZ[state] || "America/New_York";
         const agentTz = "America/New_York"; // Tu agencia opera en hora del ESTE
 
         const slots = [];
         const nowMs = Date.now();
-        const bufferMs = nowMs + (60 * 60 * 1000); // 1 hora de margen de respiro
+        const bufferMs = nowMs + (60 * 60 * 1000); // 1 hora de preparación mínima
 
         // 2. Evaluamos las 24 horas del día seleccionado por el PROSPECTO
         for (let h = 0; h < 24; h++) {
@@ -1158,10 +1158,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             
             // Convertir la hora local del prospecto a Milisegundos Universales (UTC)
             const slotUtcMs = zonedDateTimeToUtcMs(date, time24h, prospectTz);
-            if (!slotUtcMs) continue;
-
-            // Filtro de Pasado: Si la hora ya pasó (más el margen de 1 hr), la ignoramos
-            if (slotUtcMs < bufferMs) continue;
+            if (!slotUtcMs || slotUtcMs < bufferMs) continue;
 
             // 3. Convertir ese UTC a la hora de Florida para ver si la agencia está abierta
             const formatter = new Intl.DateTimeFormat('en-US', {
@@ -1170,7 +1167,6 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                 hour: 'numeric',
                 hour12: false
             });
-            
             const agentTimeParts = formatter.format(new Date(slotUtcMs)).split(', ');
             if (agentTimeParts.length < 2) continue;
             
@@ -1183,7 +1179,6 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             const dayConfig = scheduleConfig.weekly[agentDayIndex];
             if (!dayConfig || !dayConfig.active) continue;
 
-            // Revisar si cae dentro de los bloques de trabajo (Ej. 09:00 a 18:00)
             let fallsInBlock = false;
             for (let block of dayConfig.blocks) {
                 const [bStartH] = block.start.split(':').map(Number);
@@ -1194,10 +1189,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                 }
             }
 
-            // Si en Florida está cerrado a esa hora, no se la mostramos al cliente de California
             if (!fallsInBlock) continue;
 
-            // 4. EL RADAR DE DOBLE RESERVA (Milisegundo a Milisegundo)
+            // 4. EL RADAR ANTI-CHOQUES (Milisegundo a Milisegundo + Texto)
             let isSlotTaken = false;
             if (generalSettings?.singleAgentMode && generalSettings?.singleAgentId) {
                 isSlotTaken = leads.some(l => {
@@ -1209,11 +1203,17 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     const leadTz = STATE_TZ[l.state] || "America/New_York";
                     const leadUtcMs = zonedDateTimeToUtcMs(l.date, l.time, leadTz);
                     
-                    return leadUtcMs === slotUtcMs;
+                    // DOBLE CANDADO DE SEGURIDAD: 
+                    // a) Si choca en el tiempo universal exacto (estados distintos)
+                    const matchUniversal = leadUtcMs && Math.abs(leadUtcMs - slotUtcMs) < 60000;
+                    // b) Si choca exactamente en el mismo texto y estado
+                    const matchTextual = l.date === date && l.state === state && normalizeTimeString(l.time) === time24h;
+                    
+                    return matchUniversal || matchTextual;
                 });
             }
 
-            // 5. Si está libre, la agregamos en formato 12h (AM/PM) para el cliente
+            // 5. Si está libre, la agregamos en formato 12h (AM/PM)
             if (!isSlotTaken) {
                 const ampm = h >= 12 ? 'p.m.' : 'a.m.';
                 const displayH = h % 12 || 12;
