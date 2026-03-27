@@ -290,7 +290,7 @@ const useFirebaseDatabase = () => {
         if (!user) return;
         const batch = writeBatch(db);
         ids.forEach(id => {
-            batch.update(doc(db, 'leads', id);
+            batch.update(doc(db, 'leads', id), data);
             // ESPEJO
             const espejoData = {};
             if(data.assignedTo !== undefined) espejoData.assignedTo = data.assignedTo;
