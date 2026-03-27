@@ -1142,14 +1142,24 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
         const slots = [];
         const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const isToday = date === todayStr;
+        
+        // Sumamos 1 hora (60 minutos) a la hora actual para crear el margen de preparación
+        const bufferTime = new Date(now.getTime() + 60 * 60 * 1000);
 
         dayConfig.blocks.forEach(block => {
             let current = new Date(`${date}T${block.start}`);
             const end = new Date(`${date}T${block.end}`);
             while(current < end) {
                 const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
-                // Mantenemos la regla por seguridad, aunque ya no pueden agendar el mismo día
-                if(date === now.toISOString().split('T')[0] && current < now) { current.setMinutes(current.getMinutes() + 60); continue; }
+                
+                // Si es hoy, bloqueamos si la hora del bloque es menor al margen de preparación (ahora + 1 hr)
+                if(isToday && current < bufferTime) { 
+                    current.setMinutes(current.getMinutes() + 60); 
+                    continue; 
+                }
+                
                 slots.push(timeStr);
                 current.setMinutes(current.getMinutes() + 60); 
             }
@@ -1180,10 +1190,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         onSuccess();
     };
 
-    // Calculamos la fecha de MAÑANA para restringir el calendario
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    // Calculamos la fecha de HOY para permitir citas el mismo día
+    const todayObj = new Date();
+    const minDate = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
 
     return (
         <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
