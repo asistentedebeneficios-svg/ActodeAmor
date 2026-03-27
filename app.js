@@ -6640,7 +6640,7 @@ const ProcessFlow = () => {
     const steps = [
         { title: "Usted elige sus preferencias", icon: Check },
         { title: "Programa una breve llamada", icon: CalendarDays },
-        { title: "Un agente le ofrece opciones", icon: User },
+        { title: "Nuestro agente le ofrece las mejores opciones", icon: User },
         { title: "Califica nuestro servicio", icon: Star }
     ];
 
