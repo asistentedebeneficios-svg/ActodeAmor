@@ -6052,7 +6052,7 @@ const AboutUsPage = ({ onClose }) => {
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 tracking-tighter mb-6 leading-[1.05] text-balance">
                         Protegemos <br/>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-rose-600 to-rose-500 bg-300% animate-gradient">
-                            tu legado.
+                            su legado.
                         </span>
                     </h1>
                     <p className="text-xl md:text-2xl text-gray-500 font-medium max-w-2xl mx-auto text-balance">
@@ -6076,7 +6076,7 @@ const AboutUsPage = ({ onClose }) => {
                                 Ninguna familia debería enfrentar el dolor de una pérdida sumándole la angustia de las deudas.
                             </h2>
                             <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed md:leading-relaxed text-balance">
-                                Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Creamos Asistente de Beneficios para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de tu hogar.
+                                Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Creamos <strong>Asistente de Beneficios<strong> para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de su hogar.
                             </p>
                         </div>
                     </div>
@@ -6084,9 +6084,9 @@ const AboutUsPage = ({ onClose }) => {
                     {/* Tarjeta Izquierda: Qué Hacemos */}
                     <div className="md:col-span-7 bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-gray-100 relative overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-inner"><Users size={28}/></div>
-                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 tracking-tight">Especialistas a tu medida.</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 tracking-tight">Especialistas a su medida.</h3>
                         <p className="text-gray-500 text-lg leading-relaxed font-medium">
-                            Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong>especialistas certificados</strong> en gastos finales. Evaluamos tu situación en minutos, sin exámenes médicos, y te conectamos con pólizas respaldadas por las aseguradoras más sólidas de EE.UU.
+                            Somos una plataforma tecnológica y humana que conecta a familias de todo el país con <strong>especialistas certificados</strong> en gastos finales. Evaluamos su situación en minutos, sin exámenes médicos, y le conectamos con pólizas respaldadas por las aseguradoras más sólidas de EE.UU.
                         </p>
                     </div>
 
@@ -6094,9 +6094,9 @@ const AboutUsPage = ({ onClose }) => {
                     <div className="md:col-span-5 bg-gradient-to-br from-gray-900 to-black text-white rounded-[2.5rem] p-8 md:p-12 shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
                         <div className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-2xl flex items-center justify-center mb-8 border border-white/20"><Settings size={28}/></div>
-                        <h3 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight text-white">Tú tienes el control absoluto.</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold mb-6 tracking-tight text-white">Usted tienes el control absoluto.</h3>
                         <p className="text-gray-400 text-lg leading-relaxed font-medium">
-                            No hacemos llamadas frías. Tú decides cómo, cuándo y con quién hablar. Sin letras pequeñas, sin sorpresas.
+                            No hacemos llamadas frías. Usted decide cómo, cuándo y con quién hablar. Sin letras pequeñas, sin sorpresas.
                         </p>
                     </div>
                 </div>
@@ -6118,19 +6118,19 @@ const AboutUsPage = ({ onClose }) => {
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all group">
                             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Search size={24}/></div>
                             <h4 className="font-bold text-xl text-gray-900 mb-3">Transparencia</h4>
-                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Cero letras pequeñas. Sabrás exactamente qué cubre tu plan y garantizamos que tu cuota nunca subirá.</p>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Cero letras pequeñas. Sabrá exactamente qué cubre su plan y garantizamos que su cuota nunca subirá.</p>
                         </div>
                         {/* Pilar 3 */}
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all group">
                             <div className="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Lock size={24}/></div>
                             <h4 className="font-bold text-xl text-gray-900 mb-3">Privacidad</h4>
-                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Tu confianza lo es todo. Usamos encriptación bancaria para que tus datos estén 100% blindados.</p>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">Su confianza lo es todo. Usamos encriptación para que sus datos estén 100% blindados.</p>
                         </div>
                         {/* Pilar 4 */}
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 hover:border-purple-200 hover:shadow-lg transition-all group">
                             <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><Activity size={24}/></div>
                             <h4 className="font-bold text-xl text-gray-900 mb-3">Humano</h4>
-                            <p className="text-gray-500 font-medium text-sm leading-relaxed">La tecnología agiliza el proceso, pero siempre pondremos a un experto de carne y hueso frente a ti.</p>
+                            <p className="text-gray-500 font-medium text-sm leading-relaxed">La tecnología agiliza el proceso, pero siempre pondremos a un experto de carne y hueso frente a usted.</p>
                         </div>
                     </div>
                 </div>
@@ -6143,13 +6143,13 @@ const AboutUsPage = ({ onClose }) => {
                         
                         <div className="relative z-10 max-w-3xl mx-auto">
                             <p className="text-2xl md:text-4xl font-extrabold text-gray-900 leading-snug md:leading-snug mb-8 tracking-tight">
-                                "Creemos que el mejor regalo que le puedes dejar a los tuyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
+                                "Creemos que el mejor regalo que le puede dejar a los suyos no es una cuenta bancaria, sino la paz mental de saber que todo está resuelto."
                             </p>
                             <p className="text-rose-600 font-bold uppercase tracking-[0.2em] text-xs md:text-sm">
-                                Nosotros estamos aquí para ayudarte a sellar esa promesa.
+                                Nosotros estamos aquí para ayudarle a sellar esa promesa.
                             </p>
                             <button onClick={onClose} className="mt-12 bg-black text-white px-8 py-4 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-transform flex items-center gap-2 mx-auto">
-                                Volver y Comenzar <ChevronRight size={16}/>
+                                <ChevronLeft size={16}/> Volver y Comenzar
                             </button>
                         </div>
                     </div>
@@ -7214,7 +7214,7 @@ const App = () => {
                                     <UserPlus size={18} className="text-blue-500 shrink-0 group-hover:scale-110 transition-transform" /> Únete al equipo
                                 </button>
                                 <button onClick={() => { setShowContactUsModal(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
-                                    <Mail size={18} className="text-green-500 shrink-0 group-hover:scale-110 transition-transform" /> Contáctanos
+                                    <Mail size={18} className="text-green-500 shrink-0 group-hover:scale-110 transition-transform" /> Contáctenos
                                 </button>
                             </div>
                         </>
