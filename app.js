@@ -6641,7 +6641,7 @@ const ProcessFlow = () => {
         { title: "1. Elija sus preferencias", icon: Search },
         { title: "2. Programe su cita Online", icon: Check },
         { title: "3. Un especialista le asiste", icon: Phone },
-        { title: "4.Califica nuestro servicio", icon: Star }
+        { title: "4. Califique nuestro servicio", icon: Star }
     ];
 
     return (
