@@ -55,8 +55,8 @@ const STEPS = [
         { id: '100-150', label: 'De $100 a $150', icon: Heart }
     ]},
     { id: 'faq_consult', isFAQ: true, question: "Dudas Frecuentes", subtext: "Seleccione las preguntas para ver la respuesta.", faqOptions: [ 
-        { id: 'cost', label: '¿Será muy costoso?', icon: DollarSign, answer: "Para nada. Nuestros planes están diseñados para ajustarse a presupuestos fijos y lo mejor: la cuota nunca sube con el tiempo." },
-        { id: 'health', label: '¿Piden examen médico?', icon: Stethoscope, answer: "¡Buenas noticias! La mayoría de nuestros planes NO requieren examen médico, solo responder unas sencillas preguntas de salud." },
+        { id: 'cost', label: '¿Será muy costoso?', icon: DollarSign, answer: "Para nada. Estos planes están diseñados para ajustarse a presupuestos fijos y lo mejor: la cuota nunca sube con el tiempo." },
+        { id: 'health', label: '¿Piden examen médico?', icon: Stethoscope, answer: "¡Buenas noticias! La mayoría de los planes NO requieren examen médico, solo responder unas sencillas preguntas de salud." },
         { id: 'age', label: '¿Mi edad es un problema?', icon: HelpCircle, answer: "No es un impedimento. Puede tomar su cobertura antes de los 86 años y quedará protegido de por vida." },
         { id: 'waiting', label: '¿Cuándo empieza a cubrir?', icon: Clock, answer: "Dependiendo del plan para el que califique, muchas pólizas ofrecen protección inmediata desde el primer día." }
     ]},
