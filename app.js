@@ -7265,11 +7265,11 @@ const App = () => {
                     <p className="text-gray-500 text-base md:text-xl max-w-2xl mx-auto font-medium">Una experiencia diseñada para su tranquilidad. Sin letras pequeñas, sin presiones.</p>
                 </div>
 
-                {/* --- NUEVO: FLUJO INSERTADO AQUÍ --- */}
-                <div className="mb-16 md:mb-24">
+                {/* --- NUEVO: FLUJO INSERTADO AQUÍ (Márgenes ajustados) --- */}
+                <div className="mb-12 md:mb-16">
                     <ProcessFlow />
                 </div>
-                {/* ---------------------------------- */}
+                {/* ------------------------------------------------------- */}
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
