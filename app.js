@@ -6076,7 +6076,7 @@ const AboutUsPage = ({ onClose }) => {
                                 Ninguna familia debería enfrentar el dolor de una pérdida sumándole la angustia de las deudas.
                             </h2>
                             <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed md:leading-relaxed text-balance">
-                                Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Creamos <strong>Asistente de Beneficios<strong> para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de su hogar.
+                                Sabemos que hablar del futuro y de los gastos finales no es fácil. A menudo está lleno de tabúes, miedos y mucha desinformación. Creamos Asistente de Beneficios para transformar un proceso que antes era confuso e invasivo, en un acto de amor claro, seguro y desde la comodidad de su hogar.
                             </p>
                         </div>
                     </div>
