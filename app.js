@@ -6638,10 +6638,10 @@ const ProcessFlow = () => {
     }, [isVisible]);
 
     const steps = [
-        { title: "Buscando cobertura", icon: Search },
-        { title: "Elija sus preferencias", icon: Check },
-        { title: "Un agente le asiste", icon: Phone },
-        { title: "Califica el servicio", icon: Star }
+        { title: "1. Elija sus preferencias", icon: Search },
+        { title: "2. Programe su cita Online", icon: Check },
+        { title: "3. Un especialista le asiste", icon: Phone },
+        { title: "4.Califica nuestro servicio", icon: Star }
     ];
 
     return (
