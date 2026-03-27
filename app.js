@@ -6610,7 +6610,7 @@ const PasswordRecoveryScreen = ({ auth }) => {
     );
 };
 
-// --- NUEVO COMPONENTE: FLUJO MINIMALISTA ---
+// --- NUEVO COMPONENTE: FLUJO MINIMALISTA (AJUSTADO) ---
 const ProcessFlow = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [activeSteps, setActiveSteps] = useState([]);
@@ -6640,51 +6640,51 @@ const ProcessFlow = () => {
     const steps = [
         { title: "Usted elige sus preferencias", icon: Check },
         { title: "Programa una breve llamada", icon: CalendarDays },
-        { title: "Un agente licenciado le ofrece las mejores opciones de protección", icon: User },
-        { title: "Califique la calidad de nuestro servicio", icon: Star }
+        { title: "Un agente le ofrece opciones", icon: User },
+        { title: "Califica nuestro servicio", icon: Star }
     ];
 
     return (
-        <div ref={sectionRef} className="w-full py-10 md:py-16 flex flex-col items-center justify-center">
+        <div ref={sectionRef} className="w-full py-8 flex flex-col items-center justify-center">
             
-            {/* Título Minimalista */}
-            <div className={`text-center mb-12 md:mb-16 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900">Un camino, simplificado.</h3>
+            {/* Título Minimalista (Reducido) */}
+            <div className={`text-center mb-8 md:mb-12 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-gray-900">Un camino, simplificado.</h3>
             </div>
 
             {/* Contenedor del Flujo */}
-            <div className="relative w-full max-w-4xl mx-auto px-4 md:px-0">
+            <div className="relative w-full max-w-3xl mx-auto px-4 md:px-0">
                 
                 {/* LÍNEAS DE PROGRESO */}
                 {/* Línea Base Gris */}
-                <div className="absolute left-[39px] md:left-[10%] top-0 md:top-[31px] bottom-0 md:bottom-auto w-[2px] md:w-[80%] md:h-[3px] bg-gray-200 rounded-full z-0"></div>
+                <div className="absolute left-[31px] md:left-[10%] top-0 md:top-[23px] bottom-0 md:bottom-auto w-[2px] md:w-[80%] md:h-[2px] bg-gray-200 rounded-full z-0"></div>
                 
                 {/* Línea Animada Azul */}
                 <div 
-                    className="absolute left-[39px] md:left-[10%] top-0 md:top-[31px] bg-gradient-to-r from-blue-400 to-blue-700 rounded-full z-10 transition-all ease-out shadow-[0_0_12px_rgba(37,99,235,0.4)]"
+                    className="absolute left-[31px] md:left-[10%] top-0 md:top-[23px] bg-gradient-to-r from-blue-400 to-blue-600 rounded-full z-10 transition-all ease-out shadow-[0_0_10px_rgba(37,99,235,0.3)]"
                     style={{
-                        width: window.innerWidth >= 768 ? (isVisible ? '80%' : '0%') : '3px',
-                        height: window.innerWidth < 768 ? (isVisible ? '100%' : '0%') : '3px',
+                        width: window.innerWidth >= 768 ? (isVisible ? '80%' : '0%') : '2px',
+                        height: window.innerWidth < 768 ? (isVisible ? '100%' : '0%') : '2px',
                         transitionDuration: '2.5s'
                     }}
                 ></div>
 
                 {/* NODOS */}
-                <div className="relative z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-12 md:gap-0">
+                <div className="relative z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-0">
                     {steps.map((step, idx) => {
                         const isActive = activeSteps.includes(idx);
                         const Icon = step.icon;
 
                         return (
-                            <div key={idx} className={`flex flex-row md:flex-col items-center gap-6 md:gap-4 w-full md:w-auto md:w-1/4 transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: `${idx * 200}ms` }}>
+                            <div key={idx} className={`flex flex-row md:flex-col items-center gap-4 md:gap-3 w-full md:w-auto md:w-1/4 transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: `${idx * 200}ms` }}>
                                 
-                                {/* Icono circular */}
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-500 bg-white/90 backdrop-blur-sm relative ${isActive ? 'border-blue-600 shadow-[0_10px_25px_rgba(37,99,235,0.2)] scale-110' : 'border-gray-200 shadow-sm'}`}>
-                                    <Icon size={28} className={`transition-colors duration-500 ${isActive ? 'text-blue-600' : 'text-gray-300'}`} strokeWidth={isActive ? 2.5 : 2} />
+                                {/* Icono circular (Más pequeño) */}
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-500 bg-white relative ${isActive ? 'border-blue-600 shadow-md scale-105' : 'border-gray-200 shadow-sm'}`}>
+                                    <Icon size={20} className={`transition-colors duration-500 ${isActive ? 'text-blue-600' : 'text-gray-300'}`} strokeWidth={isActive ? 2.5 : 2} />
                                 </div>
                                 
-                                {/* Texto */}
-                                <span className={`text-lg md:text-sm tracking-wide md:text-center leading-snug transition-colors duration-500 ${isActive ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium'}`}>
+                                {/* Texto (Más pequeño) */}
+                                <span className={`text-sm md:text-xs tracking-wide md:text-center leading-tight transition-colors duration-500 ${isActive ? 'text-gray-800 font-bold' : 'text-gray-400 font-medium'}`}>
                                     {step.title}
                                 </span>
                             </div>
@@ -6694,10 +6694,10 @@ const ProcessFlow = () => {
             </div>
 
             {/* Mensaje de Control Inferior */}
-            <div className={`mt-16 md:mt-24 text-center transition-all duration-1000 delay-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white border border-gray-200 text-sm md:text-base text-gray-600 shadow-sm transition-transform duration-300 hover:scale-105">
-                    <ShieldCheck className="text-blue-600" size={20} />
-                    <span className="font-medium tracking-wide">Sin presiones. Usted tiene el control total en todo momento.</span>
+            <div className={`mt-10 md:mt-14 text-center transition-all duration-1000 delay-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-100 text-xs md:text-sm text-gray-500 shadow-sm transition-transform duration-300 hover:scale-105">
+                    <ShieldCheck className="text-blue-500" size={16} />
+                    <span className="font-medium tracking-wide">Sin presiones. Usted tiene el control total.</span>
                 </div>
             </div>
 
