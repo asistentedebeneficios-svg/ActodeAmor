@@ -6649,7 +6649,7 @@ const ProcessFlow = () => {
             
             {/* Título Minimalista */}
             <div className={`text-center mb-12 md:mb-16 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900">Tu camino, simplificado.</h3>
+                <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900">Un camino, simplificado.</h3>
             </div>
 
             {/* Contenedor del Flujo */}
