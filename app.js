@@ -155,6 +155,7 @@ const useFirebaseDatabase = () => {
     const [agents, setAgents] = useState([]);
     const [agentRequests, setAgentRequests] = useState([]); 
     const [reviews, setReviews] = useState([]); // NUEVO: Estado para reseñas
+    const [bloqueos, setBloqueos] = useState([]);
     const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
     const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false });
@@ -207,6 +208,7 @@ const useFirebaseDatabase = () => {
         });
 
         let unsubLeads = () => {};
+        let unsubBloqueos = () => {};
         let unsubAgents = () => {};
         let unsubRequests = () => {}; 
         let unsubReviews = () => {}; 
@@ -219,6 +221,13 @@ const useFirebaseDatabase = () => {
             if (err.code !== 'permission-denied') console.error("Leads error:", err);
         });
 
+        const bloqueosQuery = collection(db, 'bloqueos_agenda');
+        unsubBloqueos = onSnapshot(bloqueosQuery, (snapshot) => {
+            setBloqueos(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (err) => {
+            if (err.code !== 'permission-denied') console.error("Bloqueos error:", err);
+        });
+        
         const agentsQuery = collection(db, 'agents');
         unsubAgents = onSnapshot(agentsQuery, (snapshot) => {
             setAgents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -245,33 +254,68 @@ const useFirebaseDatabase = () => {
             });
         }
 
-        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
+        return () => { unsubLeads(); unsubBloqueos(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
     }, [user]);
 
     const addLead = async (lead) => {
         try {
             const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
             const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
-            await addDoc(collection(db, 'leads'), newLead);
-        } catch (error) {
-            console.error("Hubo un error de conexión al guardar.", error);
-        }
+            const docRef = await addDoc(collection(db, 'leads'), newLead);
+            // ESPEJO: Guardamos solo los datos vitales para el calendario
+            await setDoc(doc(db, 'bloqueos_agenda', docRef.id), {
+                date: lead.date, time: lead.time, state: lead.state, status: initialStatus, assignedTo: generalSettings?.singleAgentId || ''
+            });
+        } catch (error) { console.error("Hubo un error de conexión al guardar.", error); }
     };
 
-    const updateLead = async (id, data) => { if (user) await updateDoc(doc(db, 'leads', id), data); };
+    const updateLead = async (id, data) => { 
+        if (user) {
+            await updateDoc(doc(db, 'leads', id), data); 
+            // ESPEJO: Sincronizamos si hay cambios en el estado o asignación
+            const espejoData = {};
+            if(data.date !== undefined) espejoData.date = data.date;
+            if(data.time !== undefined) espejoData.time = data.time;
+            if(data.state !== undefined) espejoData.state = data.state;
+            if(data.assignedTo !== undefined) espejoData.assignedTo = data.assignedTo;
+            if(data.status !== undefined) espejoData.status = data.status;
+            if(data.agentStatus !== undefined) espejoData.agentStatus = data.agentStatus;
+            
+            if (Object.keys(espejoData).length > 0) {
+                await setDoc(doc(db, 'bloqueos_agenda', id), espejoData, { merge: true });
+            }
+        }
+    };
     const bulkUpdateLeads = async (ids, data) => {
         if (!user) return;
         const batch = writeBatch(db);
-        ids.forEach(id => batch.update(doc(db, 'leads', id), data));
+        ids.forEach(id => {
+            batch.update(doc(db, 'leads', id);
+            // ESPEJO
+            const espejoData = {};
+            if(data.assignedTo !== undefined) espejoData.assignedTo = data.assignedTo;
+            if(data.status !== undefined) espejoData.status = data.status;
+            if(Object.keys(espejoData).length > 0) {
+                batch.set(doc(db, 'bloqueos_agenda', id), espejoData, { merge: true });
+            }
+        });
         await batch.commit();
     };
     const bulkDeleteLeads = async (ids) => {
         if (!user) return;
         const batch = writeBatch(db);
-        ids.forEach(id => batch.delete(doc(db, 'leads', id)));
+        ids.forEach(id => {
+            batch.delete(doc(db, 'leads', id));
+            batch.delete(doc(db, 'bloqueos_agenda', id));
+        });
         await batch.commit();
     };
-    const deleteLead = async (id) => { if (user) await deleteDoc(doc(db, 'leads', id)); };
+    const deleteLead = async (id) => { 
+        if (user) {
+            await deleteDoc(doc(db, 'leads', id)); 
+            await deleteDoc(doc(db, 'bloqueos_agenda', id));
+        }
+    };
     const deleteReview = async (id) => { if (user) await deleteDoc(doc(db, 'reviews', id)); };
     
     const saveAgent = async (agent) => {
@@ -306,9 +350,11 @@ const useFirebaseDatabase = () => {
                 if (isFuture) {
                     // SI ES FUTURO: Quitar agente y volver a Bandeja (new)
                     batch.update(leadRef, { assignedTo: '', status: 'new' });
+                    batch.set(doc(db, 'bloqueos_agenda', lead.id), { assignedTo: '', status: 'new' }, { merge: true });
                 } else {
                     // SI ES PASADO: Quitar agente y enviar a Archivados (archived)
                     batch.update(leadRef, { assignedTo: '', status: 'archived' });
+                    batch.set(doc(db, 'bloqueos_agenda', lead.id), { assignedTo: '', status: 'archived' }, { merge: true });
                 }
             });
 
@@ -414,7 +460,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, bloqueos, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -6838,7 +6884,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
+    const { leads, bloqueos, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
 
@@ -7371,7 +7417,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} leads={leads} agents={agents} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} leads={bloqueos} agents={agents} />
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
