@@ -1180,19 +1180,32 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         }
     }, [status]);
 
-    const handleFinalSubmit = async (e) => {
-        e.preventDefault();
-        if(!isFormValid || status !== 'idle') return;
-        setStatus('submitting');
-        await new Promise(r => setTimeout(r, 1500));
-        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
-        setStatus('success');
-        onSuccess();
-    };
+    // --- NUEVO ESTADO: Manejador de error para fechas pasadas ---
+    const [dateErrorMsg, setDateErrorMsg] = useState('');
 
-    // Calculamos la fecha de HOY para permitir citas el mismo día
+    // Calculamos la fecha de HOY para permitir citas el mismo día (Movido arriba para poder usarlo en la validación)
     const todayObj = new Date();
+    // Ajuste de zona horaria básico: evitamos que a las 11:59pm se desfase
     const minDate = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+
+    const handleFinalSubmit = async (e) => {
+        e.preventDefault();
+        
+        // --- 🛡️ BARRERA CONTRA FECHAS DEL PASADO (Para Móviles) ---
+        setDateErrorMsg(''); // Limpiamos errores previos
+        if (date && date < minDate) {
+            setDateErrorMsg('Ha seleccionado una fecha que ya pasó. Por favor, elija el día de hoy o una fecha futura.');
+            return; // Detiene el envío
+        }
+        // ----------------------------------------------------------
+
+        if(!isFormValid || status !== 'idle') return;
+        setStatus('submitting');
+        await new Promise(r => setTimeout(r, 1500));
+        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
+        setStatus('success');
+        onSuccess();
+    };
 
     return (
         <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
@@ -1379,9 +1392,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                     <input 
                                         type="date" 
                                         min={minDate} 
-                                        className={`w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500 transition-all ${!date ? 'text-transparent' : 'text-gray-700'}`} 
+                                        className={`w-full p-3 md:p-4 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500 transition-all ${!date ? 'text-transparent' : ''}`} 
                                         value={date} 
-                                        onChange={e => setDate(e.target.value)} 
+                                        onChange={e => { setDate(e.target.value); setDateErrorMsg(''); }} 
                                         disabled={status !== 'idle'} 
                                     />
                                 </div>
@@ -1408,7 +1421,13 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
 
                         {/* Botón y Textos inferiores */}
                         <div className="w-full flex flex-col gap-2">
-                            <button onClick={handleFinalSubmit} disabled={!isFormValid || status !== 'idle'} className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>
+                            {date && date < minDate && (
+                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-bold animate-fade-in shadow-sm mb-1">
+                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                                    <p>Ha seleccionado una fecha pasada. Por favor, elija hoy o una fecha futura.</p>
+                                </div>
+                            )}
+                            <button onClick={(e) => { if(date && date < minDate) { e.preventDefault(); return; } handleFinalSubmit(e); }} disabled={!isFormValid || status !== 'idle'} className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>
                                 {status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}
                             </button>
                             
