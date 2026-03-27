@@ -97,13 +97,13 @@ const getReinforcementMessage = (stepId, selections) => {
     const sels = Array.isArray(selections) ? selections : [selections];
     if (stepId === 'policy_for') {
         if (sels.length > 1) return { title: "Un Gran Gesto de Amor", text: "Cuidar de varias personas importantes en tu vida es el legado más noble que puedes dejar.", icon: Users };
-        if (sels.includes('me')) return { title: "Un Acto de Responsabilidad", text: "Proteger a tu familia de tus propios gastos finales es el regalo más desinteresado.", icon: User };
-        if (sels.includes('parents')) return { title: "Gratitud Eterna", text: "Ellos cuidaron de ti toda la vida. Ahora es tu turno de cuidar de su tranquilidad.", icon: ShieldCheck };
-        if (sels.includes('spouse')) return { title: "Promesa de Amor", text: "Asegurar que tu pareja no tenga cargas financieras es la prueba máxima de cariño.", icon: Heart };
-        if (sels.includes('children')) return { title: "Futuro Seguro", text: "Garantizar la protección de tus hijos es la prioridad de todo padre.", icon: Baby };
+        if (sels.includes('me')) return { title: "Un Acto de Responsabilidad", text: "Proteger a su familia de estos gastos finales es el regalo más desinteresado.", icon: User };
+        if (sels.includes('parents')) return { title: "Gratitud Eterna", text: "Ellos cuidaron de usted toda la vida. Ahora es el turno de cuidar de ellos.", icon: ShieldCheck };
+        if (sels.includes('spouse')) return { title: "Promesa de Amor", text: "Asegurar que su pareja o cónyuge no tenga cargas financieras es la prueba máxima de cariño.", icon: Heart };
+        if (sels.includes('children')) return { title: "Futuro Seguro", text: "Garantizar la protección de sus hijos es la prioridad de todo padre.", icon: Baby };
     }
-    if (stepId === 'motivation') return { title: "Paz Mental", text: "Transformas una futura preocupación en un recuerdo de amor.", icon: Star };
-    if (stepId === 'coverage_amount') return { title: "Vas por buen camino", text: "El costo promedio de un funeral supera los $9,000. Tu elección ayudará a cubrir esa diferencia.", icon: DollarSign };
+    if (stepId === 'motivation') return { title: "Paz Mental", text: "Transforma una futura preocupación en un recuerdo de amor.", icon: Star };
+    if (stepId === 'coverage_amount') return { title: "Va por buen camino", text: "El costo promedio de un funeral supera los $9,000. Su elección ayudará a cubrir esa diferencia.", icon: DollarSign };
     if (stepId === 'budget') return { title: "Una inversión de amor", text: "Cuidar a su familia no requiere una fortuna. Con esta pequeña inversión mensual, les garantizará paz mental y tranquilidad para siempre.", icon: Heart };
     return null;
 };
@@ -124,7 +124,7 @@ const generateUserLetter = (data) => {
             salutation = "A mis queridos padres,";
             body = "Ustedes me dieron la vida y cuidaron de mí siempre. Ahora es mi turno de devolverles esa paz. No quiero que se preocupen por el futuro ni por gastos inesperados. Esta cobertura es mi forma de decirles 'Gracias' y asegurar que siempre estén tranquilos.";
         } else if (insured === 'spouse') {
-            salutation = "A mi amado/a esposo/a,";
+            salutation = "Al amor de mi vida,";
             body = "Prometí cuidarte en la salud y en la enfermedad, y esta decisión es para cumplir esa promesa más allá de todo. No quiero que enfrentes momentos difíciles con estrés financiero. Esto es para ti, para tu seguridad y nuestro futuro.";
         } else if (insured === 'children') {
             salutation = "A mis hijos adorados,";
@@ -491,9 +491,9 @@ const ContactUsModal = ({ onClose }) => {
                     <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
                         <Mail size={32} className="text-white" />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-950 tracking-tight">Estamos aquí para ti</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-950 tracking-tight">Estamos aquí para usted</h2>
                     <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-xs mx-auto">
-                        ¿Tienes preguntas, necesitas ayuda o simplemente quieres hablar con nosotros? Nuestro equipo está listo para asistirte de la mejor manera.
+                        ¿Tiene preguntas, necesita ayuda o simplemente desea hablar con nosotros? Nuestro equipo está listo para asistirle de la mejor manera.
                     </p>
                     <div className="p-6 bg-gray-50/50 border border-gray-100 rounded-[2rem] w-full flex flex-col items-center gap-3 group transition-all hover:bg-white hover:shadow-md hover:border-green-200">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contacto Oficial</span>
