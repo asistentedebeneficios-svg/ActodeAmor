@@ -7228,10 +7228,10 @@ const App = () => {
                     {/* Text Content */}
                     <div className="flex-1 w-full flex flex-col items-center lg:items-start text-center lg:text-left relative z-10 pt-4">
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight text-balance leading-[1.1]">
-                            Protege el futuro de <span className="text-rose-600">quienes más amas</span>
+                            Proteja el futuro de <span className="text-rose-600">quienes más ama</span>
                         </h1>
                         <p className="text-gray-500 mb-10 text-lg md:text-xl max-w-2xl leading-relaxed font-medium">
-                            Planifica hoy para evitar preocupaciones financieras mañana. Descubre si calificas para un seguro de gastos finales y dale a tu familia la tranquilidad que merecen.
+                            Planifique hoy para evitar preocupaciones financieras mañana. Descubra si califica para un seguro de gastos finales y dele a su familia la tranquilidad que merecen.
                         </p>
                         <button onClick={() => setStepIndex(1)} className="w-full max-w-sm lg:mx-0 bg-[#E11D48] text-white py-4 md:py-5 rounded-full text-xl font-bold shadow-xl shadow-rose-200 hover:shadow-rose-300 hover:scale-105 transition-all flex items-center justify-center gap-2">
                             Comenzar Ahora <ChevronRight size={24}/>
@@ -7262,7 +7262,7 @@ const App = () => {
             <div className="py-12 md:py-24 px-6 max-w-7xl mx-auto w-full">
                 <div className="text-center mb-12 md:mb-20">
                     <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">¿Por qué confiar en nosotros?</h2>
-                    <p className="text-gray-500 text-base md:text-xl max-w-2xl mx-auto font-medium">Una experiencia diseñada para tu tranquilidad. Sin letras pequeñas, sin presiones.</p>
+                    <p className="text-gray-500 text-base md:text-xl max-w-2xl mx-auto font-medium">Una experiencia diseñada para su tranquilidad. Sin letras pequeñas, sin presiones.</p>
                 </div>
 
                 {/* --- NUEVO: FLUJO INSERTADO AQUÍ --- */}
@@ -7274,32 +7274,32 @@ const App = () => {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5 md:mb-6"><Settings size={28}/></div>
-                        <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">Tú Tienes el Control</h3>
-                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">No hacemos llamadas inesperadas ni visitas repentinas a tu hogar. Tú decides cuándo y cómo hablar con nosotros.</p>
+                        <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">Usted Tiene el Control</h3>
+                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">No hacemos llamadas inesperadas ni visitas repentinas a su hogar. Usted decide cuándo y cómo hablar con nosotros.</p>
                     </div>
                     
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-5 md:mb-6"><ShieldCheck size={28}/></div>
                         <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">100% Seguro y Privado</h3>
-                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Tu privacidad está garantizada. Tus datos están encriptados y nunca venderemos tu información a terceros.</p>
+                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Su privacidad está garantizada. Sus datos están encriptados y nunca venderemos su información a terceros.</p>
                     </div>
                     
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-5 md:mb-6"><BadgeCheck size={28}/></div>
                         <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">Agentes Licenciados</h3>
-                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Serás atendido exclusivamente por profesionales certificados y con licencia oficial en tu estado de residencia.</p>
+                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Será atendido exclusivamente por profesionales certificados y con licencia oficial en su estado de residencia.</p>
                     </div>
 
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-5 md:mb-6"><Star size={28}/></div>
                         <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">Compañías Acreditadas</h3>
-                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Te conectamos únicamente con aseguradoras de primer nivel, sólidas financieramente y acreditadas por el BBB.</p>
+                        <p className="text-gray-500 text-sm md:text-base leading-relaxed">Le conectamos únicamente con aseguradoras de primer nivel, sólidas financieramente y acreditadas por el BBB.</p>
                     </div>
 
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-soft border border-gray-100 hover:border-rose-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 md:col-span-2 lg:col-span-2">
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-5 md:mb-6"><Clock size={28}/></div>
                         <h3 className="font-bold text-lg md:text-xl text-gray-900 mb-3">Proceso Transparente</h3>
-                        <p className="text-gray-500 text-sm md:text-base leading-relaxed max-w-2xl">En menos de 2 minutos podrás saber si calificas. Muchas de nuestras pólizas no requieren examen médico y ofrecen cobertura inmediata desde el primer día, protegiendo a personas hasta los 85 años.</p>
+                        <p className="text-gray-500 text-sm md:text-base leading-relaxed max-w-2xl">Programe su cita en menos de 2 minutos. Muchas de las pólizas no requieren examen médico y ofrecen cobertura inmediata desde el primer día.</p>
                     </div>
                 </div>
 
@@ -7309,7 +7309,7 @@ const App = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/80 to-transparent"></div>
                     <div className="relative z-10 p-8 md:p-20 text-left max-w-3xl">
                         <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight">El mejor regalo es la <span className="text-rose-400">tranquilidad</span></h2>
-                        <p className="text-gray-300 mb-10 text-base md:text-xl font-medium leading-relaxed max-w-xl">No dejes para mañana la seguridad de los que más amas hoy. Averigua tus opciones de forma gratuita, segura y sin compromisos.</p>
+                        <p className="text-gray-300 mb-10 text-base md:text-xl font-medium leading-relaxed max-w-xl">No deje para mañana la seguridad de los que más ama hoy. Averigue sus opciones de forma gratuita, segura y sin compromisos.</p>
                         <button onClick={() => setStepIndex(1)} className="w-full sm:w-auto bg-white text-rose-600 px-8 py-4 md:py-5 rounded-full text-lg md:text-xl font-bold shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-3">
                             Comenzar Ahora <ChevronRight size={20}/>
                         </button>
