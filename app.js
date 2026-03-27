@@ -151,13 +151,14 @@ const db = getFirestore(app);
 
 // --- HOOKS ---
 const useFirebaseDatabase = () => {
-    const [leads, setLeads] = useState([]);
-    const [agents, setAgents] = useState([]);
-    const [agentRequests, setAgentRequests] = useState([]); 
-    const [reviews, setReviews] = useState([]); // NUEVO: Estado para reseñas
-    const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
+    const [leads, setLeads] = useState([]);
+    const [agents, setAgents] = useState([]);
+    const [agentRequests, setAgentRequests] = useState([]); 
+    const [reviews, setReviews] = useState([]); 
+    const [publicSlots, setPublicSlots] = useState([]); // NUEVO: Bóveda de horarios ocupados
+    const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
-    const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false });
+    const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false, strictMode: false });
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -206,6 +207,12 @@ const useFirebaseDatabase = () => {
             if(err.code !== 'permission-denied') console.error("General error:", err);
         });
 
+        // NUEVO: Lector público de horarios ocupados (Lo leen los anónimos sin ver datos privados)
+        const publicSlotsQuery = collection(db, 'public_slots');
+        const unsubPublicSlots = onSnapshot(publicSlotsQuery, (snapshot) => {
+            setPublicSlots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (err) => { if (err.code !== 'permission-denied') console.error("Public Slots error:", err); });
+
         let unsubLeads = () => {};
         let unsubAgents = () => {};
         let unsubRequests = () => {}; 
@@ -245,14 +252,19 @@ const useFirebaseDatabase = () => {
             });
         }
 
-        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
-    }, [user]);
+        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); unsubPublicSlots(); };
+    }, [user]);
 
     const addLead = async (lead) => {
         try {
             const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
             const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
-            await addDoc(collection(db, 'leads'), newLead);
+            const docRef = await addDoc(collection(db, 'leads'), newLead);
+            
+            // NUEVO: Si está activo el modo estricto, clavamos la fecha en la pizarra pública
+            if (generalSettings?.strictMode && lead.date && lead.time) {
+                await addDoc(collection(db, 'public_slots'), { date: lead.date, time: lead.time, leadId: docRef.id });
+            }
         } catch (error) {
             console.error("Hubo un error de conexión al guardar.", error);
         }
@@ -405,7 +417,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, reviews, publicSlots, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -1112,7 +1124,7 @@ const FAQStep = ({ options, onContinue }) => {
     );
 };
 
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
+const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, publicSlots = [] }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
     const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -1160,7 +1172,11 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     continue; 
                 }
                 
-                slots.push(timeStr);
+                // NUEVO: Filtro de Bloqueo Estricto
+                const isBooked = generalSettings?.strictMode && publicSlots.some(ps => ps.date === date && ps.time === timeStr);
+                if (!isBooked) {
+                    slots.push(timeStr);
+                }
                 current.setMinutes(current.getMinutes() + 60); 
             }
         });
@@ -2529,6 +2545,7 @@ const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onS
 const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState('month'); 
+    const [calendarMode, setCalendarMode] = useState('global'); // NUEVO
 
     const prev = () => {
         const newDate = new Date(currentDate);
@@ -2551,7 +2568,12 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
     const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-    const getLeadsForDate = (dateStr) => leads.filter(l => l.date === dateStr && l.status !== 'archived').sort((a, b) => (a.localTime || a.time).localeCompare(b.localTime || b.time));
+    const getLeadsForDate = (dateStr) => leads.filter(l => {
+        if (l.status === 'archived' || l.date !== dateStr) return false;
+        // Si el filtro está en 'limitado', solo muestra las citas que entraron y aún no se les ha asignado agente (el cuello de botella principal)
+        if (calendarMode === 'strict' && l.assignedTo) return false; 
+        return true;
+    }).sort((a, b) => (a.localTime || a.time).localeCompare(b.localTime || b.time));
     const formatDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
     const renderMonth = () => {
@@ -2761,6 +2783,12 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
                 </div>
                 
                 <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto scrollbar-hide pb-1 md:pb-0">
+                    {/* NUEVOS BOTONES DE SUB-PESTAÑAS */}
+                    <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner shrink-0 mr-2">
+                        <button onClick={() => setCalendarMode('global')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${calendarMode === 'global' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Global</button>
+                        <button onClick={() => setCalendarMode('strict')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${calendarMode === 'strict' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-red-500'}`}>Limitada</button>
+                    </div>
+                    
                     <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner shrink-0">
                         {['day', 'week', 'month', 'year'].map(v => (
                             <button key={v} onClick={() => setView(v)} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs font-bold capitalize transition-all ${view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -2789,6 +2817,7 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
 const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebhooks, onSaveGeneral, onUpdateSchedule, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
+    const [strictMode, setStrictMode] = useState(generalSettings?.strictMode || false); // NUEVO
     const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
     const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
     // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
@@ -2822,7 +2851,8 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
         await onSaveWebhooks(localHooks);
         await onSaveGeneral({ 
             ...generalSettings, 
-            acceptingAgents, 
+            acceptingAgents,
+            strictMode, // NUEVO
             regularPrice: Number(regPrice), 
             offerPrice: Number(offPrice),
             activeStates: activeStates,
@@ -2924,6 +2954,20 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                             <p className="text-gray-500 font-medium mb-8">Controla la entrada de nuevos especialistas a tu equipo de ventas.</p>
                         </div>
                         
+                        {/* NUEVO SWITCH ESTRICTO */}
+                        <div className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between mb-4 ${strictMode ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-3 h-3 rounded-full ${strictMode ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                                <div>
+                                    <p className="font-bold text-gray-900">Agendamiento Estricto</p>
+                                    <p className="text-xs text-gray-500">{strictMode ? 'Activo: Si alguien agenda una hora, desaparece para el resto.' : 'Inactivo: Varias personas pueden agendar a la misma hora.'}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setStrictMode(!strictMode)} className={`w-14 h-8 rounded-full p-1 transition-all relative shadow-inner ${strictMode ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${strictMode ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </button>
+                        </div>
+
                         <div className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between ${acceptingAgents ? 'bg-green-50 border-green-100' : 'bg-rose-50 border-rose-100'}`}>
                             <div className="flex items-center gap-4">
                                 <div className={`w-3 h-3 rounded-full ${acceptingAgents ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`}></div>
@@ -6822,7 +6866,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
+    const { leads, agents, agentRequests, reviews, publicSlots, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
 
@@ -7361,7 +7405,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} publicSlots={publicSlots} /> : currentStep.isFAQ ?
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
