@@ -6149,7 +6149,7 @@ const AboutUsPage = ({ onClose }) => {
                                 Nosotros estamos aquí para ayudarle a sellar esa promesa.
                             </p>
                             <button onClick={onClose} className="mt-12 bg-black text-white px-8 py-4 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-transform flex items-center gap-2 mx-auto">
-                                <ChevronLeft size={16}/> Volver y Comenzar
+                                <ChevronLeft size={16}/> Volver a pagína principal
                             </button>
                         </div>
                     </div>
