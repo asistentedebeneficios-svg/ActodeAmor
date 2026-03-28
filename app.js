@@ -6207,11 +6207,12 @@ const AboutUsPage = ({ onClose }) => {
                         <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors shrink-0"/> 
                         <span className="hidden sm:inline">Volver</span>
                     </button>
-                    <div className="flex items-center gap-1.5 opacity-100">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
-                        </div>
-                        <span className="text-gray-900 font-bold tracking-tight text-sm sm:text-base">asistente<span className="font-light text-gray-500">debeneficios</span></span>
+                    <div className="flex items-center w-[150px] sm:w-[180px] shrink-0">
+                        <img 
+                            src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" 
+                            alt="Asistente de Beneficios"
+                            className="h-8 sm:h-10 w-auto object-contain"
+                        />
                     </div>
                 </div>
             </header>
