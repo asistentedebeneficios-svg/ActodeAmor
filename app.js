@@ -6018,9 +6018,9 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
         <div className="min-h-screen bg-[#0B0F19] flex flex-col font-sans animate-fade-in selection:bg-rose-500 selection:text-white overflow-x-hidden">
             
             {/* CABECERA PREMIUM */}
-            <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-    
+                <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+                        
                         {/* IZQUIERDA: LOGO */}
                         <div className="flex items-center w-[160px] sm:w-[200px] shrink-0">
                             <img 
@@ -6029,15 +6029,18 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                                 className="h-9 sm:h-11 w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
                             />
                         </div>
-                    
+                
+                        {/* DERECHA: BOTÓN */}
+                        <button 
+                            onClick={scrollToLogin} 
+                            className="bg-white/10 hover:bg-white/20 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold border border-white/10 transition-all active:scale-95 shrink-0 whitespace-nowrap"
+                        >
+                            <span className="sm:hidden">Login</span>
+                            <span className="hidden sm:inline">Iniciar Sesión</span>
+                        </button>
+                
                     </div>
-                    <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold border border-white/10 transition-all active:scale-95 shrink-0 whitespace-nowrap">
-                        {/* MAGIA AQUÍ: Muestra "Login" en móvil y "Iniciar Sesión" en PC/Tablet */}
-                        <span className="sm:hidden">Login</span>
-                        <span className="hidden sm:inline">Iniciar Sesión</span>
-                    </button>
-                </div>
-            </header>
+                </header>
 
             {/* CAMBIO CLAVE AQUÍ: flex-col lg:flex-row (Antes era md:flex-row) */}
             <div className="flex flex-col lg:flex-row flex-1 pt-20">
