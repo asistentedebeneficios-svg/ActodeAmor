@@ -6024,7 +6024,7 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
                         {/* IZQUIERDA: LOGO */}
                         <div className="flex items-center w-[160px] sm:w-[200px] shrink-0">
                             <img 
-                                src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" 
+                                src="https://imnufit.com/wp-content/uploads/2026/03/logoRedletraBlanco.png" 
                                 alt="Asistente de Beneficios"
                                 className="h-9 sm:h-11 w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
                             />
