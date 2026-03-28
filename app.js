@@ -3776,15 +3776,16 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             )}
 
             <div className="glass-panel px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row justify-between items-center z-20 gap-3 shadow-sm">
-                <div className="flex items-center justify-between w-full md:w-auto">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
-                        </div>
-                        <div className="leading-tight">
-                            <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between w-full md:w-auto">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                        </div>
+                        <div className="leading-tight">
+                            <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">Admin<span className="font-light">Panel</span></h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">asistentedebeneficios.com</p>
+                        </div>
+                    </div>
                     {/* Botones Móvil */}
                     <div className="flex items-center gap-1.5 md:hidden shrink-0 self-start">
                       
@@ -5312,20 +5313,16 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                 </div>
             )}
             {/* Header Minimalista */}
-            <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                        <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
-                    </div>
-                    <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600 text-xs border border-gray-200 overflow-hidden shrink-0">
-                        {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                        <h2 className="font-semibold text-gray-900 text-sm tracking-tight truncate">{agent.name}</h2>
-                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">Portal Agente</p>
-                    </div>
-                </div>
+            <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex justify-between items-center z-20 sticky top-0">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600 text-xs border border-gray-200 overflow-hidden shrink-0">
+                        {agent.photo ? <img src={agent.photo} className="w-full h-full object-cover"/> : agent.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                        <h2 className="font-semibold text-gray-900 text-sm tracking-tight truncate">{agent.name}</h2>
+                        <p className="text-[9px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">Portal Corporativo</p>
+                    </div>
+                </div>
                 
                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
                     {/* ESTRELLAS DEL AGENTE: Botón Premium (Píldora Blanca) */}
@@ -6023,12 +6020,13 @@ const PortalLoginScreen = ({ onLogin, onOpenRegister }) => {
             {/* CABECERA PREMIUM */}
             <header className="fixed top-0 left-0 w-full z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-                    <div className="flex items-center min-w-0 pr-2">
-                        <div className="h-10 sm:h-12 flex items-center justify-start shrink-0 -ml-1">
-                            {/* El filtro convierte el logo oscuro en blanco para que resalte en el fondo negro */}
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" alt="Logo Asistente de Beneficios" className="h-full w-auto object-contain drop-shadow-sm filter brightness-0 invert" />
-                        </div>
-                    </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-2">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 -ml-1">
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                        </div>
+                        {/* Subimos a text-sm para móvil y text-lg para PC, dándole mucha más presencia a la marca */}
+                        <span className="text-white font-bold tracking-tight text-sm sm:text-lg truncate">asistente<span className="font-light opacity-60">debeneficios.com</span></span>
+                    </div>
                     <button onClick={scrollToLogin} className="bg-white/10 hover:bg-white/20 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold border border-white/10 transition-all active:scale-95 shrink-0 whitespace-nowrap">
                         {/* MAGIA AQUÍ: Muestra "Login" en móvil y "Iniciar Sesión" en PC/Tablet */}
                         <span className="sm:hidden">Login</span>
@@ -6209,11 +6207,12 @@ const AboutUsPage = ({ onClose }) => {
                         <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors shrink-0"/> 
                         <span className="hidden sm:inline">Volver</span>
                     </button>
-                    <div className="flex items-center opacity-100">
-                        <div className="h-10 sm:h-12 flex items-center justify-end shrink-0">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" alt="Logo Asistente de Beneficios" className="h-full w-auto object-contain drop-shadow-sm" />
-                        </div>
-                    </div>
+                    <div className="flex items-center gap-1.5 opacity-100">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight text-sm sm:text-base">asistente<span className="font-light text-gray-500">debeneficios</span></span>
+                    </div>
                 </div>
             </header>
 
@@ -6893,16 +6892,16 @@ const App = () => {
         fbq('track', 'PageView');
     }, []);
     // --- FAVICON DINÁMICO ---
-    useEffect(() => {
-        let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = 'icon';
-            document.head.appendChild(link);
-        }
-        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/log5.png';
-        document.title = 'Asistente de Beneficios';
-    }, []);
+    useEffect(() => {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = 'https://imnufit.com/wp-content/uploads/2026/03/log5.png';
+        document.title = 'Asistente de Beneficios';
+    }, []);
 
     // --- MENU Y MODALES GLOBALES ---
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -7350,12 +7349,15 @@ const App = () => {
             <header className="fixed top-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
                     
-                    {/* IZQUIERDA: LOGO */}
-                    <div className="flex items-center overflow-hidden">
-                        <div className="h-10 md:h-12 flex items-center justify-start shrink-0">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" alt="Logo Asistente de Beneficios" className="h-full w-auto object-contain drop-shadow-sm" />
-                        </div>
-                    </div>
+                    {/* IZQUIERDA: LOGO Y NOMBRE */}
+                    <div className="flex items-center gap-1.5 md:gap-2 overflow-hidden">
+                        <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center shrink-0 -ml-1">
+                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                        </div>
+                        <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
+                            asistente<span className="font-light text-gray-400">debeneficios.com</span>
+                        </span>
+                    </div>
                     
                     {/* DERECHA: BOTÓN MENÚ */}
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-3 text-gray-700 hover:text-rose-600 transition-colors group shrink-0 outline-none">
