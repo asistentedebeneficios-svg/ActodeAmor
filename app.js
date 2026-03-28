@@ -7349,14 +7349,15 @@ const App = () => {
             <header className="fixed top-0 left-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
                     
-                    {/* IZQUIERDA: LOGO Y NOMBRE */}
-                    <div className="flex items-center gap-1.5 md:gap-2 overflow-hidden">
-                        <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center shrink-0 -ml-1">
-                            <img src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" alt="Logo Asistente de Beneficios" className="w-full h-full object-contain drop-shadow-sm" />
+                    {/* IZQUIERDA: SOLO LOGO SIN MOVER LA CABECERA */}
+                    <div className="flex items-center w-[180px] md:w-[220px] shrink-0 overflow-hidden">
+                        <div className="flex items-center h-10 md:h-12">
+                            <img
+                                src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png"
+                                alt="Asistente de Beneficios"
+                                className="h-full w-auto object-contain"
+                            />
                         </div>
-                        <span className="text-gray-900 font-bold tracking-tight text-base md:text-xl truncate">
-                            asistente<span className="font-light text-gray-400">debeneficios.com</span>
-                        </span>
                     </div>
                     
                     {/* DERECHA: BOTÓN MENÚ */}
