@@ -3,15 +3,115 @@ import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 import { createPortal } from 'https://esm.sh/react-dom@18.2.0';
 import { Heart, Check, ShieldCheck, Users, Baby, Activity, DollarSign, ChevronRight, ChevronLeft, ArrowLeft, Star, HelpCircle, Clock, Stethoscope, PenTool, Mail, Lock, X, Archive, Trash2, UserPlus, ShoppingCart, Phone, Edit2, Briefcase, BadgeCheck, MessageSquare, User, Image as ImageIcon, Video, Calendar, Shield, MapPin, CalendarDays, Settings, Plus, MinusCircle, Link as LinkIcon, Search, ArrowRight, Save, LogOut, RotateCcw, FileText, Printer, AlertTriangle, Upload, Building, Menu, Eye, EyeOff } from 'https://esm.sh/lucide-react@0.344.0';
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setDoc, writeBatch, query, where, getDocs, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 // --- CONSTANTS ---
 const FULL_US_STATES = [
     { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' }, { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' }, { name: 'Connecticut', abbr: 'CT' }, { name: 'Delaware', abbr: 'DE' }, { name: 'Florida', abbr: 'FL' }, { name: 'Georgia', abbr: 'GA' }, { name: 'Hawaii', abbr: 'HI' }, { name: 'Idaho', abbr: 'ID' }, { name: 'Illinois', abbr: 'IL' }, { name: 'Indiana', abbr: 'IN' }, { name: 'Iowa', abbr: 'IA' }, { name: 'Kansas', abbr: 'KS' }, { name: 'Kentucky', abbr: 'KY' }, { name: 'Louisiana', abbr: 'LA' }, { name: 'Maine', abbr: 'ME' }, { name: 'Maryland', abbr: 'MD' }, { name: 'Massachusetts', abbr: 'MA' }, { name: 'Michigan', abbr: 'MI' }, { name: 'Minnesota', abbr: 'MN' }, { name: 'Mississippi', abbr: 'MS' }, { name: 'Missouri', abbr: 'MO' }, { name: 'Montana', abbr: 'MT' }, { name: 'Nebraska', abbr: 'NE' }, { name: 'Nevada', abbr: 'NV' }, { name: 'New Hampshire', abbr: 'NH' }, { name: 'New Jersey', abbr: 'NJ' }, { name: 'New Mexico', abbr: 'NM' }, { name: 'New York', abbr: 'NY' }, { name: 'North Carolina', abbr: 'NC' }, { name: 'North Dakota', abbr: 'ND' }, { name: 'Ohio', abbr: 'OH' }, { name: 'Oklahoma', abbr: 'OK' }, { name: 'Oregon', abbr: 'OR' }, { name: 'Pennsylvania', abbr: 'PA' }, { name: 'Rhode Island', abbr: 'RI' }, { name: 'South Carolina', abbr: 'SC' }, { name: 'South Dakota', abbr: 'SD' }, { name: 'Tennessee', abbr: 'TN' }, { name: 'Texas', abbr: 'TX' }, { name: 'Utah', abbr: 'UT' }, { name: 'Vermont', abbr: 'VT' }, { name: 'Virginia', abbr: 'VA' }, { name: 'Washington', abbr: 'WA' }, { name: 'West Virginia', abbr: 'WV' }, { name: 'Wisconsin', abbr: 'WI' }, { name: 'Wyoming', abbr: 'WY' }
 ];
 const ALL_US_STATES = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
+
+// --- DICCIONARIO DE ESTADOS ---
+const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
+// --- ✅ MAPA DE TIMEZONES POR ESTADO (solo los que usas) ---
+const STATE_TZ = {
+  "Arizona": "America/Phoenix",
+  "California": "America/Los_Angeles",
+  "Colorado": "America/Denver",
+  "Florida": "America/New_York",
+  "Hawaii": "Pacific/Honolulu",
+  "Idaho": "America/Boise",
+  "Illinois": "America/Chicago",
+  "Montana": "America/Denver",
+  "Nevada": "America/Los_Angeles",
+  "New Mexico": "America/Denver",
+  "Oregon": "America/Los_Angeles",
+  "Texas": "America/Chicago",
+  "Utah": "America/Denver",
+  "Virginia": "America/New_York",
+  "Wisconsin": "America/Chicago"
+};
+
+// --- ✅ Normaliza hora (A prueba de p.m., P.M., PM, pm) ---
+const normalizeTimeString = (t) => {
+  if (!t) return '';
+  let clean = String(t).toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+  let isPM = clean.includes('p');
+  let isAM = clean.includes('a');
+  let nums = clean.replace(/[^0-9]/g, '');
+  if (nums.length < 3) return null;
+  
+  let hh = parseInt(nums.slice(0, -2), 10);
+  const mm = nums.slice(-2);
+  
+  if (isPM && hh < 12) hh += 12;
+  if (isAM && hh === 12) hh = 0;
+  
+  return `${String(hh).padStart(2, '0')}:${mm}`;
+};
+
+// --- ✅ Convierte "fecha+hora" en timezone X a timestamp UTC ---
+const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
+  const hhmm = normalizeTimeString(timeStr);
+  if (!dateStr || !hhmm || !timeZone) return null;
+
+  const [Y, M, D] = dateStr.split('-').map(n => parseInt(n, 10));
+  const [h, m] = hhmm.split(':').map(n => parseInt(n, 10));
+
+  const utcGuess = new Date(Date.UTC(Y, M - 1, D, h, m, 0));
+
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+
+  const parts = dtf.formatToParts(utcGuess).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+
+  const tzAsUtc = Date.UTC(
+    parseInt(parts.year, 10),
+    parseInt(parts.month, 10) - 1,
+    parseInt(parts.day, 10),
+    parseInt(parts.hour, 10),
+    parseInt(parts.minute, 10),
+    parseInt(parts.second, 10)
+  );
+
+  const offsetMs = tzAsUtc - utcGuess.getTime();
+  return utcGuess.getTime() - offsetMs;
+};
+
+// --- ✅ Devuelve "fecha+hora" ya en LOCAL DEL AGENTE ---
+const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
+  const tz = STATE_TZ[prospectState] || null;
+  if (!tz) return null;
+
+  const utcMs = zonedDateTimeToUtcMs(dateStr, timeStr, tz);
+  if (utcMs == null) return null;
+
+  const local = new Date(utcMs); 
+  const yyyy = local.getFullYear();
+  const mm = String(local.getMonth() + 1).padStart(2, '0');
+  const dd = String(local.getDate()).padStart(2, '0');
+  const HH = local.getHours();
+  const MM = String(local.getMinutes()).padStart(2, '0');
+  
+  const ampm = HH >= 12 ? 'p.m.' : 'a.m.';
+  const displayHH = HH % 12 || 12;
+
+  return {
+    localDateStr: `${yyyy}-${mm}-${dd}`,
+    localTime24: `${String(HH).padStart(2, '0')}:${MM}`,
+    localTimeAmPm: `${String(displayHH).padStart(2, '0')}:${MM} ${ampm}`,
+    localMs: local.getTime()
+  };
+};
 
 const formatPhoneNumber = (value) => {
     if (!value) return value;
@@ -158,9 +258,10 @@ const useFirebaseDatabase = () => {
     const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
     const [webhooks, setWebhooks] = useState({ telegram: '', assignment: '' });
     const [generalSettings, setGeneralSettings] = useState({ marketplaceMode: false });
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null);
+    const [bookedSlots, setBookedSlots] = useState([]);
 
-    useEffect(() => {
+    useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             if (!currentUser) {
@@ -204,9 +305,15 @@ const useFirebaseDatabase = () => {
             }
         }, (err) => {
             if(err.code !== 'permission-denied') console.error("General error:", err);
-        });
+        });
 
-        let unsubLeads = () => {};
+        const unsubBooked = onSnapshot(collection(db, 'booked_slots'), (snapshot) => {
+            setBookedSlots(snapshot.docs.map(doc => doc.id));
+        }, (err) => {
+            if (err.code !== 'permission-denied') console.error("Booked slots error:", err);
+        });
+
+        let unsubLeads = () => {};
         let unsubAgents = () => {};
         let unsubRequests = () => {}; 
         let unsubReviews = () => {}; // NUEVO: Limpieza de reseñas
@@ -245,18 +352,35 @@ const useFirebaseDatabase = () => {
             });
         }
 
-        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); };
+        return () => { unsubLeads(); unsubAgents(); unsubRequests(); unsubReviews(); unsubSchedule(); unsubWebhooks(); unsubGeneral(); unsubBooked(); };
     }, [user]);
 
-    const addLead = async (lead) => {
-        try {
-            const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
-            const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
-            await addDoc(collection(db, 'leads'), newLead);
-        } catch (error) {
-            console.error("Hubo un error de conexión al guardar.", error);
-        }
-    };
+    const addLead = async (lead) => {
+        try {
+            const initialStatus = generalSettings?.marketplaceMode ? 'marketplace' : 'new';
+            const newLead = { ...lead, timestamp: Date.now(), status: initialStatus, notes: '' };
+            
+            if (generalSettings?.strictCalendarMode && lead.utcSlotId) {
+                await runTransaction(db, async (transaction) => {
+                    const slotRef = doc(db, 'booked_slots', lead.utcSlotId);
+                    const slotDoc = await transaction.get(slotRef);
+                    if (slotDoc.exists()) {
+                        throw new Error("SLOT_TAKEN");
+                    }
+                    transaction.set(slotRef, { takenAt: Date.now() });
+                    const newLeadRef = doc(collection(db, 'leads'));
+                    transaction.set(newLeadRef, newLead);
+                });
+            } else {
+                await addDoc(collection(db, 'leads'), newLead);
+            }
+            return true;
+        } catch (error) {
+            if (error.message === "SLOT_TAKEN") return "SLOT_TAKEN";
+            console.error("Hubo un error de conexión al guardar.", error);
+            return false;
+        }
+    };
 
     const updateLead = async (id, data) => { if (user) await updateDoc(doc(db, 'leads', id), data); };
     const bulkUpdateLeads = async (ids, data) => {
@@ -271,7 +395,19 @@ const useFirebaseDatabase = () => {
         ids.forEach(id => batch.delete(doc(db, 'leads', id)));
         await batch.commit();
     };
-    const deleteLead = async (id) => { if (user) await deleteDoc(doc(db, 'leads', id)); };
+    const deleteLead = async (id) => { 
+        if (user) {
+            const leadToDelete = leads.find(l => l.id === id);
+            if (leadToDelete && leadToDelete.utcSlotId) {
+                try {
+                    await deleteDoc(doc(db, 'booked_slots', leadToDelete.utcSlotId));
+                } catch(e) {
+                    console.error("Error liberando horario estricto", e);
+                }
+            }
+            await deleteDoc(doc(db, 'leads', id)); 
+        }
+    };
     const deleteReview = async (id) => { if (user) await deleteDoc(doc(db, 'reviews', id)); };
     
     const saveAgent = async (agent) => {
@@ -405,7 +541,7 @@ const useFirebaseDatabase = () => {
     const adminLogin = async (email, password) => { await signInWithEmailAndPassword(auth, email, password); };
     const adminLogout = async () => { await signOut(auth); };
 
-    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
+    return { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, bookedSlots, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout };
 };
 
 const CustomDialog = ({ isOpen, title, message, type = 'info', onConfirm, onCancel }) => {
@@ -1112,7 +1248,7 @@ const FAQStep = ({ options, onContinue }) => {
     );
 };
 
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings }) => {
+const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, bookedSlots }) => {
     const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
     const [name, setName] = useState('');
     const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -1165,8 +1301,17 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
             }
         });
         slots.sort((a, b) => new Date('1970/01/01 ' + a.replace('a.m.','AM').replace('p.m.','PM')) - new Date('1970/01/01 ' + b.replace('a.m.','AM').replace('p.m.','PM')));
-        setAvailableSlots(slots); setTime(''); 
-    }, [date, scheduleConfig]);
+        
+        const finalSlots = slots.filter(timeStr => {
+            if (!generalSettings?.strictCalendarMode || !state) return true;
+            const tz = STATE_TZ[state];
+            if (!tz) return true;
+            const utcMs = zonedDateTimeToUtcMs(date, timeStr, tz);
+            return !bookedSlots.includes(String(utcMs));
+        });
+        
+        setAvailableSlots(finalSlots); setTime(''); 
+    }, [date, scheduleConfig, state, generalSettings?.strictCalendarMode, bookedSlots]);
 
     const ageNum = parseInt(age, 10);
     const isAgeValid = ageNum >= 18 && ageNum <= 85;
@@ -1200,12 +1345,23 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         // ----------------------------------------------------------
 
         if(!isFormValid || status !== 'idle') return;
-        setStatus('submitting');
-        await new Promise(r => setTimeout(r, 1500));
-        onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time });
-        setStatus('success');
-        onSuccess();
-    };
+        setStatus('submitting');
+        
+        const tz = STATE_TZ[state];
+        const utcSlotId = (generalSettings?.strictCalendarMode && tz) ? String(zonedDateTimeToUtcMs(date, time, tz)) : null;
+        
+        const result = await onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time, utcSlotId });
+        
+        if (result === "SLOT_TAKEN") {
+            setDateErrorMsg('Alguien más acaba de reservar este horario. Por favor, elija otro rápidamente.');
+            setStatus('idle');
+            setTime('');
+            return;
+        }
+
+        setStatus('success');
+        onSuccess();
+    };
 
     return (
         <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
@@ -1791,15 +1947,49 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             });
             
             if (hasConflict) {
-                setDialog({ title: 'Alerta de Colisión', message: `Ya tienes una cita activa programada a las ${previewLocalTime || editTime} (Tu hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`, type: 'warning', onConfirm: () => setDialog(null) });
-                return; 
-            }
-        }
-        
-        await onUpdate(lead.id, { date: editDate, time: editTime });
-        setIsEditingDateTime(false);
-        setDialog({ title: '¡Éxito!', message: 'La cita ha sido reagendada correctamente.', type: 'success', onConfirm: () => setDialog(null) });
-    };
+                setDialog({ title: 'Alerta de Colisión', message: `Ya tienes una cita activa programada a las ${previewLocalTime || editTime} (Tu hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`, type: 'warning', onConfirm: () => setDialog(null) });
+                return; 
+            }
+        }
+        
+        // NUEVO: Lógica de liberación y reasignación de espacios globales
+        const tz = STATE_TZ[lead.state];
+        let newUtcSlotId = null;
+        if (tz) {
+            const newUtcMs = zonedDateTimeToUtcMs(editDate, editTime, tz);
+            if (newUtcMs) newUtcSlotId = String(newUtcMs);
+        }
+
+        const updateData = { date: editDate, time: editTime };
+        if (newUtcSlotId) updateData.utcSlotId = newUtcSlotId;
+
+        await onUpdate(lead.id, updateData);
+        
+        // Si tenía un espacio anterior y acaba de cambiar, lo borramos de la bóveda pública para liberarlo
+        if (lead.utcSlotId && lead.utcSlotId !== newUtcSlotId) {
+            try {
+                const { getFirestore, deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const db = getFirestore();
+                await deleteDoc(doc(db, 'booked_slots', lead.utcSlotId));
+            } catch (e) {
+                console.error("Error liberando el espacio anterior:", e);
+            }
+        }
+
+        // Si estamos en modo estricto, ocupamos el NUEVO espacio en la bóveda pública
+        if (newUtcSlotId) {
+            try {
+                const { getFirestore, setDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const db = getFirestore();
+                await setDoc(doc(db, 'booked_slots', newUtcSlotId), { takenAt: Date.now() });
+            } catch (e) {
+                console.error("Error reservando el nuevo espacio:", e);
+            }
+        }
+
+        setIsEditingDateTime(false);
+        setDialog({ title: '¡Éxito!', message: 'La cita ha sido reagendada correctamente.', type: 'success', onConfirm: () => setDialog(null) });
+    };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
     const handleDelete = () => { 
@@ -3597,15 +3787,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                         </div>
                     </div>
                     {/* Botones Móvil */}
-                    <div className="flex items-center gap-2 md:hidden">
-                        <button 
-                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
-                        >
-                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                            <span>Auto</span>
-                        </button>
-                        <button onClick={() => setShowFullSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
+                    <div className="flex items-center gap-2 md:hidden">
+                        <button 
+                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
+                        >
+                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                            <span>Auto</span>
+                        </button>
+                        <button 
+                            onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-400 border-gray-200'}`}
+                        >
+                            <Calendar size={12} className={generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'} />
+                            <span>Estricto</span>
+                        </button>
+                        <button onClick={() => setShowFullSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
                         <button onClick={() => setShowLogoutConfirm(true)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
                     </div>
                 </div>
@@ -3618,15 +3815,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 )}
                 
                 {/* Botones Desktop */}
-                <div className="hidden md:flex items-center gap-2">
-                     <button 
-                         onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                     >
-                         <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                         <span>Auto-Marketplace</span>
-                     </button>
-                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                <div className="hidden md:flex items-center gap-2">
+                     <button 
+                         onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                     >
+                         <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                         <span>Auto-Marketplace</span>
+                     </button>
+                     <button 
+                         onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
+                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                     >
+                         <Calendar size={14} className={generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'} />
+                         <span>Estricto</span>
+                     </button>
+                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
                      <button onClick={() => setShowFullSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
                      <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
                 </div>
@@ -4449,106 +4653,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     );
 };
 
-// --- PORTAL DEL AGENTE (SaaS) ---
-// --- DICCIONARIO DE ESTADOS ---
-const STATE_ABBR = { "Arizona": "AZ", "California": "CA", "Colorado": "CO", "Florida": "FL", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Montana": "MT", "Nevada": "NV", "New Mexico": "NM", "Oregon": "OR", "Texas": "TX", "Utah": "UT", "Virginia": "VA", "Wisconsin": "WI" };
-// --- ✅ MAPA DE TIMEZONES POR ESTADO (solo los que usas) ---
-const STATE_TZ = {
-  "Arizona": "America/Phoenix",
-  "California": "America/Los_Angeles",
-  "Colorado": "America/Denver",
-  "Florida": "America/New_York", // simplificado (si quieres lo afinamos para FL)
-  "Hawaii": "Pacific/Honolulu",
-  "Idaho": "America/Boise",
-  "Illinois": "America/Chicago",
-  "Montana": "America/Denver",
-  "Nevada": "America/Los_Angeles",
-  "New Mexico": "America/Denver",
-  "Oregon": "America/Los_Angeles",
-  "Texas": "America/Chicago",
-  "Utah": "America/Denver",
-  "Virginia": "America/New_York",
-  "Wisconsin": "America/Chicago"
-};
-
-// --- ✅ Normaliza hora (A prueba de p.m., P.M., PM, pm) ---
-const normalizeTimeString = (t) => {
-  if (!t) return '';
-  let clean = String(t).toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-  let isPM = clean.includes('p');
-  let isAM = clean.includes('a');
-  let nums = clean.replace(/[^0-9]/g, '');
-  if (nums.length < 3) return null;
-  
-  let hh = parseInt(nums.slice(0, -2), 10);
-  const mm = nums.slice(-2);
-  
-  if (isPM && hh < 12) hh += 12;
-  if (isAM && hh === 12) hh = 0;
-  
-  return `${String(hh).padStart(2, '0')}:${mm}`;
-};
-
-// --- ✅ Convierte "fecha+hora" en timezone X a timestamp UTC ---
-const zonedDateTimeToUtcMs = (dateStr, timeStr, timeZone) => {
-  const hhmm = normalizeTimeString(timeStr);
-  if (!dateStr || !hhmm || !timeZone) return null;
-
-  const [Y, M, D] = dateStr.split('-').map(n => parseInt(n, 10));
-  const [h, m] = hhmm.split(':').map(n => parseInt(n, 10));
-
-  const utcGuess = new Date(Date.UTC(Y, M - 1, D, h, m, 0));
-
-  const dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour12: false,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  });
-
-  const parts = dtf.formatToParts(utcGuess).reduce((acc, p) => {
-    acc[p.type] = p.value;
-    return acc;
-  }, {});
-
-  const tzAsUtc = Date.UTC(
-    parseInt(parts.year, 10),
-    parseInt(parts.month, 10) - 1,
-    parseInt(parts.day, 10),
-    parseInt(parts.hour, 10),
-    parseInt(parts.minute, 10),
-    parseInt(parts.second, 10)
-  );
-
-  const offsetMs = tzAsUtc - utcGuess.getTime();
-  return utcGuess.getTime() - offsetMs;
-};
-
-// --- ✅ Devuelve "fecha+hora" ya en LOCAL DEL AGENTE ---
-const getAgentLocalDateTime = (dateStr, timeStr, prospectState) => {
-  const tz = STATE_TZ[prospectState] || null;
-  if (!tz) return null;
-
-  const utcMs = zonedDateTimeToUtcMs(dateStr, timeStr, tz);
-  if (utcMs == null) return null;
-
-  const local = new Date(utcMs); 
-  const yyyy = local.getFullYear();
-  const mm = String(local.getMonth() + 1).padStart(2, '0');
-  const dd = String(local.getDate()).padStart(2, '0');
-  const HH = local.getHours();
-  const MM = String(local.getMinutes()).padStart(2, '0');
-  
-  const ampm = HH >= 12 ? 'p.m.' : 'a.m.';
-  const displayHH = HH % 12 || 12;
-
-  return {
-    localDateStr: `${yyyy}-${mm}-${dd}`,
-    localTime24: `${String(HH).padStart(2, '0')}:${MM}`,
-    localTimeAmPm: `${String(displayHH).padStart(2, '0')}:${MM} ${ampm}`,
-    localMs: local.getTime()
-  };
-};
 // --- PORTAL DEL AGENTE (SaaS Premium V8 - Precios Dinámicos y Auto-Expiración) ---
 // --- NUEVO: MODAL ELEGANTE DE SOPORTE PARA AGENTES ---
 const AgentSupportModal = ({ onClose }) => {
@@ -6822,7 +6926,7 @@ const App = () => {
     
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
-    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();                                
+    const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, bookedSlots, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
     const currentStep = STEPS[stepIndex];
 
 
@@ -6898,11 +7002,12 @@ const App = () => {
     const next = () => { setReinforcement(null); if (stepIndex < STEPS.length - 1) setStepIndex(p => p + 1); };
     const handleOptClick = (id) => currentStep.multiSelect ? setTempSelections(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]) : proceed([id]);
     const handleContinue = () => tempSelections.length > 0 && proceed(tempSelections);
-    const saveData = async (form) => { 
-        const finalData = { ...leadData, ...form }; 
-        await addLead(finalData); 
-        
-        if (webhooks && webhooks.telegram) {
+    const saveData = async (form) => { 
+        const finalData = { ...leadData, ...form }; 
+        const res = await addLead(finalData); 
+        if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
+        
+        if (webhooks && webhooks.telegram) {
             try {
                 // --- 🛠️ TRADUCTOR PARA EL MENSAJE DE TELEGRAM ---
                 
@@ -7361,7 +7466,7 @@ const App = () => {
             
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
                 <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
+                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} bookedSlots={bookedSlots} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
                         <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
                     )}
                 </div>
