@@ -3787,24 +3787,24 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                         </div>
                     </div>
                     {/* Botones Móvil */}
-                    <div className="flex items-center gap-2 md:hidden">
+                    <div className="flex items-center gap-1.5 md:hidden">
                         <button 
                             onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
+                            className={`flex items-center justify-center gap-1 px-2.5 h-8 rounded-lg border text-[10px] font-bold transition-all shadow-sm whitespace-nowrap shrink-0 ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-400 border-gray-200'}`}
                         >
-                            <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                            <div className={`w-2 h-2 shrink-0 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                             <span>Auto</span>
                         </button>
                         <button 
                             onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all shadow-sm ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-400 border-gray-200'}`}
+                            className={`flex items-center justify-center gap-1 px-2.5 h-8 rounded-lg border text-[10px] font-bold transition-all shadow-sm whitespace-nowrap shrink-0 ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-400 border-gray-200'}`}
                         >
-                            <Calendar size={12} className={generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'} />
-                            <span>Estricto</span>
+                            <Calendar size={12} className={`shrink-0 ${generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'}`} />
+                            <span>Fijo</span>
                         </button>
-                        <button onClick={() => setShowFullSettings(true)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><Settings size={16}/></button>
-                        <button onClick={() => setShowLogoutConfirm(true)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-full shadow-sm"><LogOut size={16}/></button>
-                    </div>
+                        <button onClick={() => setShowFullSettings(true)} className="w-8 h-8 flex items-center justify-center shrink-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors bg-white border border-gray-200 rounded-lg shadow-sm"><Settings size={14}/></button>
+                        <button onClick={() => setShowLogoutConfirm(true)} className="w-8 h-8 flex items-center justify-center shrink-0 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors bg-white border border-gray-200 rounded-lg shadow-sm"><LogOut size={14}/></button>
+                    </div>
                 </div>
                 
                 {activeTab !== 'schedule' && (
@@ -3818,22 +3818,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 <div className="hidden md:flex items-center gap-2">
                      <button 
                          onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                         className={`flex items-center justify-center gap-2 px-4 h-10 rounded-xl border text-xs font-bold transition-all shadow-sm whitespace-nowrap shrink-0 ${generalSettings?.marketplaceMode ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                      >
-                         <div className={`w-2 h-2 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                         <div className={`w-2 h-2 shrink-0 rounded-full transition-colors ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                          <span>Auto-Marketplace</span>
                      </button>
                      <button 
                          onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
-                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                         className={`flex items-center justify-center gap-2 px-4 h-10 rounded-xl border text-xs font-bold transition-all shadow-sm mr-2 whitespace-nowrap shrink-0 ${generalSettings?.strictCalendarMode ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                      >
-                         <Calendar size={14} className={generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'} />
+                         <Calendar size={14} className={`shrink-0 ${generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'}`} />
                          <span>Estricto</span>
                      </button>
-                     <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                     <button onClick={() => setShowFullSettings(true)} className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
-                     <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
-                </div>
+                     <div className="w-px h-6 bg-gray-200 mx-1 shrink-0"></div>
+                     <button onClick={() => setShowFullSettings(true)} className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm"><Settings size={18} /></button>
+                     <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center justify-center gap-2 px-5 h-10 shrink-0 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm"><LogOut size={16}/> Salir</button>
+                </div>
             </div>
 
             {/* Pestañas de Navegación Admin */}
