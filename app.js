@@ -3897,17 +3897,16 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                       </button>
                     
                       <button
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className="flex items-center justify-center gap-2 px-5 h-10 whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all"
-                      >
-                        <LogOut size={16} />
-                        Salir
-                      </button>
-                    
-                    </div>
-            </div>
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="flex items-center justify-center gap-2 px-5 h-10 whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all"
+                      >
+                        <LogOut size={16} />
+                        Salir
+                      </button>
+                    
+                    </div>
 
-            {/* Pestañas de Navegación Admin */}
+            {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
                 {['active', 'marketplace', 'urgent', 'offers', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
