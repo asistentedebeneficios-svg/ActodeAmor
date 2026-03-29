@@ -3781,7 +3781,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     {/* IZQUIERDA: LOGO + TÍTULO + BOTONES MÓVILES */}
     <div className="flex items-center justify-between w-full md:w-auto shrink-0">
         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-100 p-1 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
                 <img 
                     src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
                     alt="Logo Asistente de Beneficios" 
