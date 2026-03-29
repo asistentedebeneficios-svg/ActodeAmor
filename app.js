@@ -3829,7 +3829,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             >
                 <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
                 <span className="hidden lg:inline">Auto-Marketplace</span>
-                <span className="lg:hidden">Auto</span>
+                <span className="lg:hidden">Auto-Marketplace</span>
             </button>
         
             <button
