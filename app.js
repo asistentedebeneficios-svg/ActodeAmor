@@ -3764,42 +3764,54 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             )}
 
             {/* FORMULARIO MODAL PARA EDITAR SOLICITUDES PENDIENTES */}
-                    {editingRequest && (
-                        <AgentRegistrationForm 
-                            initialData={editingRequest}
-                            onCancel={() => setEditingRequest(null)}
-                            onSubmit={async (data) => {
-                                await onUpdateAgentRequest(data.id, data);
-                                setEditingRequest(null);
-                            }}
-                        />
-                    )}
-                    
-                    {/* HEADER BLOQUE */}
-                    <div className="flex items-center justify-between w-full">
-                    
-                        {/* IZQUIERDA: LOGO + TÍTULO */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
-                                <img 
-                                    src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
-                                    alt="Logo Asistente de Beneficios" 
-                                    className="w-full h-full object-contain drop-shadow-sm"
-                                />
-                            </div>
-                        
-                            <div className="leading-tight">
-                                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">
-                                    Admin<span className="font-light">Panel</span>
-                                </h2>
-                            </div>
-                        </div>
-                    
-                        {/* DERECHA: (tus botones móviles siguen abajo sin romperse) */}
-                    
-                    </div>
-                    
-                    {/* Botones Móvil */}
+{editingRequest && (
+    <AgentRegistrationForm 
+        initialData={editingRequest}
+        onCancel={() => setEditingRequest(null)}
+        onSubmit={async (data) => {
+            await onUpdateAgentRequest(data.id, data);
+            setEditingRequest(null);
+        }}
+    />
+)}
+
+{/* HEADER + SEARCH */}
+<div className="flex flex-col md:flex-row items-center justify-between w-full gap-3">
+
+    {/* IZQUIERDA: LOGO + TÍTULO */}
+    <div className="flex items-center gap-3 shrink-0">
+        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
+            <img 
+                src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
+                alt="Logo Asistente de Beneficios" 
+                className="w-full h-full object-contain drop-shadow-sm"
+            />
+        </div>
+    
+        <div className="leading-tight">
+            <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">
+                Admin<span className="font-light">Panel</span>
+            </h2>
+        </div>
+    </div>
+
+    {/* SEARCH (NO ROMPE JSX) */}
+    {activeTab !== 'schedule' && (
+        <div className="relative w-full md:w-[400px] group shrink-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
+            <input
+                type="text"
+                placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-100/80 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-2xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
+        </div>
+    )}
+
+</div>
+
+{/* Botones Móvil */}
                     <div className="flex items-center gap-1.5 md:hidden shrink-0 self-start">
                       
                       <button
