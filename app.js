@@ -3764,32 +3764,41 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             )}
 
             {/* FORMULARIO MODAL PARA EDITAR SOLICITUDES PENDIENTES */}
-            {editingRequest && (
-                <AgentRegistrationForm 
-                    initialData={editingRequest}
-                    onCancel={() => setEditingRequest(null)}
-                    onSubmit={async (data) => {
-                        await onUpdateAgentRequest(data.id, data);
-                        setEditingRequest(null);
-                    }}
-                />
-            )}
-
-            <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
-                            <img 
-                                src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
-                                alt="Logo Asistente de Beneficios" 
-                                className="w-full h-full object-contain drop-shadow-sm"
-                            />
+                    {editingRequest && (
+                        <AgentRegistrationForm 
+                            initialData={editingRequest}
+                            onCancel={() => setEditingRequest(null)}
+                            onSubmit={async (data) => {
+                                await onUpdateAgentRequest(data.id, data);
+                                setEditingRequest(null);
+                            }}
+                        />
+                    )}
+                    
+                    {/* HEADER BLOQUE */}
+                    <div className="flex items-center justify-between w-full">
+                    
+                        {/* IZQUIERDA: LOGO + TÍTULO */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+                                <img 
+                                    src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
+                                    alt="Logo Asistente de Beneficios" 
+                                    className="w-full h-full object-contain drop-shadow-sm"
+                                />
+                            </div>
+                        
+                            <div className="leading-tight">
+                                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">
+                                    Admin<span className="font-light">Panel</span>
+                                </h2>
+                            </div>
                         </div>
                     
-                        <div className="leading-tight">
-                            <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">
-                                Admin<span className="font-light">Panel</span>
-                            </h2>
-                        </div>
+                        {/* DERECHA: (tus botones móviles siguen abajo sin romperse) */}
+                    
                     </div>
+                    
                     {/* Botones Móvil */}
                     <div className="flex items-center gap-1.5 md:hidden shrink-0 self-start">
                       
