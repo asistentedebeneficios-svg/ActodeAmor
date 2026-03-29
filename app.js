@@ -3853,7 +3853,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                       </button>
                 
                     </div>
-                </div>
                 
                 {activeTab !== 'schedule' && (
                     <div className="relative w-full md:w-[400px] group shrink-0">
@@ -3863,8 +3862,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 )}
                 
                 {/* Botones Desktop */}
-                    <div className="hidden md:flex items-center gap-2">
-                    
+                    <div className="hidden md:flex items-center gap-2">             
                       <button
                         onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
                         className={`flex items-center justify-center gap-2 px-4 h-10 rounded-xl border text-xs font-semibold transition-all whitespace-nowrap ${
