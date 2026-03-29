@@ -3842,7 +3842,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
             >
                 <Calendar size={13} className={`${generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'}`} />
                 <span className="hidden lg:inline">Estricto</span>
-                <span className="lg:hidden">Fijo</span>
+                <span className="lg:hidden">Estricto</span>
             </button>
         </div>
 
