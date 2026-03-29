@@ -3788,10 +3788,13 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     className="w-full h-full object-contain drop-shadow-sm"
                 />
             </div>
-            <div className="leading-tight">
-                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight">
+            <div className="flex flex-col justify-center">
+                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight leading-none">
                     Admin<span className="font-light">Panel</span>
                 </h2>
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">
+                    Asistente de Beneficios
+                </span>
             </div>
         </div>
 
