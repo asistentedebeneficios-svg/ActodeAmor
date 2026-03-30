@@ -390,11 +390,17 @@ const useFirebaseDatabase = () => {
         await batch.commit();
     };
     const bulkDeleteLeads = async (ids) => {
-        if (!user) return;
-        const batch = writeBatch(db);
-        ids.forEach(id => batch.delete(doc(db, 'leads', id)));
-        await batch.commit();
-    };
+        if (!user) return;
+        const batch = writeBatch(db);
+        ids.forEach(id => {
+            const leadToDelete = leads.find(l => l.id === id);
+            if (leadToDelete && leadToDelete.utcSlotId) {
+                batch.delete(doc(db, 'booked_slots', leadToDelete.utcSlotId));
+            }
+            batch.delete(doc(db, 'leads', id));
+        });
+        await batch.commit();
+    };
     const deleteLead = async (id) => { 
         if (user) {
             const leadToDelete = leads.find(l => l.id === id);
@@ -1968,8 +1974,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         // Si tenía un espacio anterior y acaba de cambiar, lo borramos de la bóveda pública para liberarlo
         if (lead.utcSlotId && lead.utcSlotId !== newUtcSlotId) {
             try {
-                const { getFirestore, deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                const db = getFirestore();
                 await deleteDoc(doc(db, 'booked_slots', lead.utcSlotId));
             } catch (e) {
                 console.error("Error liberando el espacio anterior:", e);
@@ -1979,8 +1983,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         // Si estamos en modo estricto, ocupamos el NUEVO espacio en la bóveda pública
         if (newUtcSlotId) {
             try {
-                const { getFirestore, setDoc, doc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                const db = getFirestore();
                 await setDoc(doc(db, 'booked_slots', newUtcSlotId), { takenAt: Date.now() });
             } catch (e) {
                 console.error("Error reservando el nuevo espacio:", e);
