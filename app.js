@@ -3780,93 +3780,93 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 {/* HEADER + SEARCH (UNIFICADO) */}
 <div className="w-full bg-white/95 backdrop-blur-md border-b border-gray-200/50 px-4 md:px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 z-20 sticky top-0 shrink-0">
 
-    {/* IZQUIERDA: LOGO + TÍTULO + BOTONES MÓVILES */}
-    <div className="flex items-center justify-between w-full md:w-auto shrink-0">
-        <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
-                <img 
-                    src="https://imnufit.com/wp-content/uploads/2026/03/log5.png" 
-                    alt="Logo Asistente de Beneficios" 
-                    className="w-full h-full object-contain drop-shadow-sm"
-                />
-            </div>
-            <div className="flex flex-col justify-center">
-                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight leading-none">
-                    Admin<span className="font-light">Panel</span>
-                </h2>
-                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">
-                    Asistente de Beneficios
-                </span>
-            </div>
-        </div>
+    {/* IZQUIERDA: LOGO + TÍTULO + BOTONES MÓVILES */}
+    <div className="flex items-center justify-between w-full md:w-auto shrink-0 order-1 md:order-1">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center shrink-0">
+                <img 
+                    src="https://imnufit.com/wp-content/uploads/2026/03/logoRedletraBlanco.png" 
+                    alt="Logo Asistente de Beneficios" 
+                    className="w-full h-full object-contain drop-shadow-sm"
+                />
+            </div>
+            <div className="flex flex-col justify-center">
+                <h2 className="font-bold text-gray-900 text-base md:text-lg tracking-tight leading-none">
+                    Admin<span className="font-light">Panel</span>
+                </h2>
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">
+                    Asistente de Beneficios
+                </span>
+            </div>
+        </div>
 
-        {/* Botones de acción solo visibles en Móvil */}
-        <div className="flex md:hidden items-center gap-2">
-            <button onClick={() => setShowFullSettings(true)} className="w-9 h-9 flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><Settings size={16} /></button>
-            <button onClick={() => setShowLogoutConfirm(true)} className="w-9 h-9 flex items-center justify-center bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 rounded-full transition-colors"><LogOut size={16} /></button>
-        </div>
-    </div>
+        {/* Botones de acción solo visibles en Móvil */}
+        <div className="flex md:hidden items-center gap-2">
+            <button onClick={() => setShowFullSettings(true)} className="w-9 h-9 flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><Settings size={16} /></button>
+            <button onClick={() => setShowLogoutConfirm(true)} className="w-9 h-9 flex items-center justify-center bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 rounded-full transition-colors"><LogOut size={16} /></button>
+        </div>
+    </div>
 
-    {/* CENTRO: BARRA DE BÚSQUEDA */}
-    {activeTab !== 'schedule' && (
-        <div className="relative w-full md:max-w-md lg:max-w-lg group shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
-            <input
-                type="text"
-                placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-            />
-        </div>
-    )}
+    {/* CENTRO: BARRA DE BÚSQUEDA */}
+    {activeTab !== 'schedule' && (
+        <div className="relative w-full md:max-w-md lg:max-w-lg group shrink-0 order-3 md:order-2">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-rose-500 transition-colors" size={16}/>
+            <input
+                type="text"
+                placeholder={`Buscar ${activeTab === 'agents' ? 'agente por estado o nombre' : 'prospecto globalmente'}...`}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-500/10 rounded-xl outline-none transition-all text-sm font-medium shadow-inner focus:shadow-sm"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
+        </div>
+    )}
 
-    {/* DERECHA: SWITCHES Y BOTONES DESKTOP */}
-    <div className="flex items-center justify-between w-full md:w-auto gap-2 md:gap-3 shrink-0">
-        <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
-            <button
-                onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 h-9 md:h-10 rounded-xl border text-[11px] md:text-xs font-semibold transition-all whitespace-nowrap ${
-                    generalSettings?.marketplaceMode
-                    ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
-                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                }`}
-            >
-                <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                <span className="hidden lg:inline">Auto-Marketplace</span>
-                <span className="lg:hidden">Auto-Marketplace</span>
-            </button>
-        
-            <button
-                onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 h-9 md:h-10 rounded-xl border text-[11px] md:text-xs font-semibold transition-all whitespace-nowrap ${
-                    generalSettings?.strictCalendarMode
-                    ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
-                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                }`}
-            >
-                <Calendar size={13} className={`${generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'}`} />
-                <span className="hidden lg:inline">Horario Estricto</span>
-                <span className="lg:hidden">Horario Estricto</span>
-            </button>
-        </div>
+    {/* DERECHA: SWITCHES Y BOTONES DESKTOP */}
+    <div className="flex items-center justify-between w-full md:w-auto gap-2 md:gap-3 shrink-0 order-2 md:order-3">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
+            <button
+                onClick={() => onUpdateGeneralSettings({ ...generalSettings, marketplaceMode: !generalSettings?.marketplaceMode })}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 h-9 md:h-10 rounded-xl border text-[11px] md:text-xs font-semibold transition-all whitespace-nowrap ${
+                    generalSettings?.marketplaceMode
+                    ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
+                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                }`}
+            >
+                <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${generalSettings?.marketplaceMode ? 'bg-amber-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                <span className="hidden lg:inline">Auto-Marketplace</span>
+                <span className="lg:hidden">Auto-Marketplace</span>
+            </button>
+        
+            <button
+                onClick={() => onUpdateGeneralSettings({ ...generalSettings, strictCalendarMode: !generalSettings?.strictCalendarMode })}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 h-9 md:h-10 rounded-xl border text-[11px] md:text-xs font-semibold transition-all whitespace-nowrap ${
+                    generalSettings?.strictCalendarMode
+                    ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                }`}
+            >
+                <Calendar size={13} className={`${generalSettings?.strictCalendarMode ? 'text-blue-500' : 'text-gray-400'}`} />
+                <span className="hidden lg:inline">Horario Estricto</span>
+                <span className="lg:hidden">Horario Estricto</span>
+            </button>
+        </div>
 
-        <div className="hidden md:block w-px h-6 bg-gray-200 mx-1"></div>
-        
-        <button
-            onClick={() => setShowFullSettings(true)}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm shrink-0"
-        >
-            <Settings size={16} />
-        </button>
-        
-        <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="hidden md:flex items-center justify-center gap-2 px-4 h-10 whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm shrink-0"
-        >
-            <LogOut size={14} /> Salir
-        </button>
-    </div>
+        <div className="hidden md:block w-px h-6 bg-gray-200 mx-1"></div>
+        
+        <button
+            onClick={() => setShowFullSettings(true)}
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm shrink-0"
+        >
+            <Settings size={16} />
+        </button>
+        
+        <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="hidden md:flex items-center justify-center gap-2 px-4 h-10 whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-600 hover:text-red-600 bg-white border border-gray-200 hover:border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm shrink-0"
+        >
+            <LogOut size={14} /> Salir
+        </button>
+        </div>
 </div>
 
             {/* Pestañas de Navegación Admin */}
