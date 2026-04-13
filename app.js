@@ -1389,35 +1389,57 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Felicidades! Su cita está confirmada</h2>
                         <p className="text-gray-500 mb-8 text-sm md:text-base leading-relaxed text-balance font-medium">Ha dado un hermoso paso para proteger a su familia. Ahora es momento de relajarse, nosotros nos encargamos del resto.</p>
 
-                        {/* --- NUEVO BLOQUE DE TRANQUILIDAD Y PRIVACIDAD (APPLE DESIGN PREMIUM) --- */}
+                        {/* --- BLOQUE DE TRANQUILIDAD Y PRIVACIDAD MEJORADO (SOLUCIÓN DE COMPRESIÓN) --- */}
                         <div className="w-full bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 text-left shadow-soft mb-8 animate-[slide-up_0.5s_ease-out_0.3s_both]">
-                            <ul className="space-y-6">
-                                <li className="flex items-start gap-4">
-                                    <div className="bg-blue-50 text-blue-600 p-3 rounded-2xl shrink-0 border border-blue-100 shadow-sm mt-0.5"><ShieldCheck size={22} strokeWidth={2.5}/></div>
+                            <ul className="space-y-8"> {/* Mayor espaciado entre secciones */}
+                                
+                                <li className="flex flex-col gap-4"> {/* Layout en columna */}
+                                    <div className="bg-blue-50 text-blue-600 p-3.5 rounded-2xl w-fit shrink-0 border border-blue-100 shadow-sm">
+                                        <ShieldCheck size={24} strokeWidth={2.5}/>
+                                    </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1 tracking-tight">Su búsqueda ha terminado</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Sabemos que buscar opciones de protección puede ser abrumador. <span className="text-gray-800 font-bold">Ya no necesita buscar más ni llenar formularios en otros sitios.</span> Aquí le brindaremos la atención exclusiva que merece, manteniendo sus datos 100% privados para que nadie interrumpa su tranquilidad.</p>
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Su búsqueda ha terminado</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                            Sabemos que buscar opciones de protección puede ser abrumador. 
+                                            <span className="text-gray-800 font-bold"> Ya no necesita buscar más ni llenar formularios en otros sitios.</span> 
+                                            Aquí le brindaremos la atención exclusiva que merece, manteniendo sus datos 100% privados para que nadie interrumpa su tranquilidad.
+                                        </p>
                                     </div>
                                 </li>
-                                <li className="flex items-start gap-4">
-                                    <div className="bg-rose-50 text-rose-600 p-3 rounded-2xl shrink-0 border border-rose-100 shadow-sm mt-0.5"><User size={22} strokeWidth={2.5}/></div>
+
+                                <li className="flex flex-col gap-4">
+                                    <div className="bg-rose-50 text-rose-600 p-3.5 rounded-2xl w-fit shrink-0 border border-rose-100 shadow-sm">
+                                        <User size={24} strokeWidth={2.5}/>
+                                    </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1 tracking-tight">Seleccionando a su experto</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">En este momento, estamos revisando sus preferencias para asignarle al especialista con licencia más calificado y empático para su caso específico.</p>
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Seleccionando a su experto</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                            En este momento, estamos revisando sus preferencias para asignarle al especialista con licencia más calificado y empático para su caso específico.
+                                        </p>
                                     </div>
                                 </li>
-                                <li className="flex items-start gap-4">
-                                    <div className="bg-amber-50 text-amber-600 p-3 rounded-2xl shrink-0 border border-amber-100 shadow-sm mt-0.5"><Mail size={22} strokeWidth={2.5}/></div>
+
+                                <li className="flex flex-col gap-4">
+                                    <div className="bg-amber-50 text-amber-600 p-3.5 rounded-2xl w-fit shrink-0 border border-amber-100 shadow-sm">
+                                        <Mail size={24} strokeWidth={2.5}/>
+                                    </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1 tracking-tight">Conozca a su asesor</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Para su total confianza, en breve le enviaremos un correo o mensaje con la foto y las credenciales oficiales del agente que le atenderá. Queremos que se sienta en familia antes de decir "hola".</p>
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Conozca a su asesor</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                            Para su total confianza, en breve le enviaremos un correo o mensaje con la foto y las credenciales oficiales del agente que le atenderá. Queremos que se sienta en familia antes de decir "hola".
+                                        </p>
                                     </div>
                                 </li>
-                                <li className="flex items-start gap-4">
-                                    <div className="bg-green-50 text-green-600 p-3 rounded-2xl shrink-0 border border-green-100 shadow-sm mt-0.5"><Check size={22} strokeWidth={3}/></div>
+
+                                <li className="flex flex-col gap-4 border-t border-gray-100 pt-6"> {/* Separador sutil para la instrucción final */}
+                                    <div className="bg-green-50 text-green-600 p-3.5 rounded-2xl w-fit shrink-0 border border-green-100 shadow-sm">
+                                        <Check size={24} strokeWidth={3}/>
+                                    </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1 tracking-tight">¿Qué debe hacer ahora?</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">¡Absolutamente nada! Solo descanse y espere nuestra comunicación en el día y hora que amablemente eligió.</p>
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">¿Qué debe hacer ahora?</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                            ¡Absolutamente nada! Solo descanse y espere nuestra comunicación en el día y hora que amablemente eligió.
+                                        </p>
                                     </div>
                                 </li>
                             </ul>
