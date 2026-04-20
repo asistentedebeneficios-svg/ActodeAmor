@@ -3464,13 +3464,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     }, [onLogout]);
     // -----------------------------------------------------------------
 
-    const ADMIN_TABS = ['active', 'marketplace', 'urgent', 'offers', 'assigned', 'archived', 'agents', 'schedule'];
+    const ADMIN_TABS = ['active', 'marketplace', 'offers', 'assigned', 'archived', 'agents', 'schedule'];
     const [activeTab, setActiveTab] = useState(() => {
         const hashParts = window.location.hash.replace('#', '').split('/');
         return ADMIN_TABS.includes(hashParts[0]) ? hashParts[0] : 'active';
     }); 
 
     const [agentSubTab, setAgentSubTab] = useState('activos'); 
+    const [inboxSubTab, setInboxSubTab] = useState('programadas'); // 'inmediatas', 'programadas', 'prioridad'
 
     // --- NUEVOS ESTADOS ---
     const [editingRequest, setEditingRequest] = useState(null);
@@ -3639,16 +3640,22 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 
     const [viewingBundle, setViewingBundle] = useState(null); // Estado para el desglose de la nota
 
+    // Colecciones estáticas para los contadores de la interfaz
+    const inboxInmediatas = processedLeads.filter(l => l.status === 'new' && !l.assignedTo && (l.isAsap || l.date === 'Inmediata'));
+    const inboxProgramadas = processedLeads.filter(l => l.status === 'new' && !l.assignedTo && (!l.isAsap && l.date !== 'Inmediata') && l.hoursUntil > 2);
+    // IMPORTANTE: Máxima Prioridad excluye expresamente a las llamadas inmediatas
+    const inboxPrioridad = processedLeads.filter(l => l.status === 'new' && !l.assignedTo && (!l.isAsap && l.date !== 'Inmediata') && l.hoursUntil <= 2 && l.hoursUntil > 0);
+
     const getFilteredLeads = () => {
         let list = [];
-        // BANDEJA: Solo lo nuevo que NO sea urgente (más de 2 horas)
-        if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo && l.hoursUntil > 2);
         
-        // MARKETPLACE: Solo lo que está en venta y NO es urgente todavía
-        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
-        
-        // URGENTE: Todo lo que falte menos de 2 horas o sea ASAP (Sin importar si está en 'new' o 'marketplace')
-        else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2);
+        if (activeTab === 'active') {
+            if (inboxSubTab === 'inmediatas') list = inboxInmediatas;
+            else if (inboxSubTab === 'programadas') list = inboxProgramadas;
+            else if (inboxSubTab === 'prioridad') list = inboxPrioridad;
+        }
+        // Marketplace: Muestra TODO lo que esté a la venta, sin ocultar a las 2 horas
+        else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'offers') list = processedLeads.filter(l => l.status === 'pending_payment');
         else if(activeTab === 'archived') list = processedLeads.filter(l => l.status === 'archived');
@@ -3963,12 +3970,6 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                     >
                         {tab === 'active' && 'Bandeja'}
                         {tab === 'marketplace' && 'Marketplace'}
-                        {tab === 'urgent' && (
-                            <>
-                                Urgente
-                                {urgentLeadsCount > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse leading-none">{urgentLeadsCount}</span>}
-                            </>
-                        )}
                         {tab === 'offers' && (
                             <>
                                 Ofertas
@@ -4299,6 +4300,20 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                         </>
                                     )}
                                 </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'active' && (
+                            <div className="flex gap-2 md:gap-4 px-4 md:px-6 py-4 border-b border-gray-100 bg-white overflow-x-auto scrollbar-hide shrink-0">
+                                <button onClick={() => setInboxSubTab('inmediatas')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${inboxSubTab === 'inmediatas' ? 'bg-black text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+                                    Llamada Inmediata <span className={`px-2 py-0.5 rounded-full text-[10px] ${inboxSubTab === 'inmediatas' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>{inboxInmediatas.length}</span>
+                                </button>
+                                <button onClick={() => setInboxSubTab('programadas')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${inboxSubTab === 'programadas' ? 'bg-black text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+                                    Citas Programadas <span className={`px-2 py-0.5 rounded-full text-[10px] ${inboxSubTab === 'programadas' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>{inboxProgramadas.length}</span>
+                                </button>
+                                <button onClick={() => setInboxSubTab('prioridad')} className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${inboxSubTab === 'prioridad' ? 'bg-red-600 text-white shadow-md' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}>
+                                    Máxima Prioridad <span className={`px-2 py-0.5 rounded-full text-[10px] ${inboxPrioridad.length > 0 ? 'bg-red-500 text-white animate-pulse shadow-sm' : (inboxSubTab === 'prioridad' ? 'bg-white/20 text-white' : 'bg-red-200 text-red-700')}`}>{inboxPrioridad.length}</span>
+                                </button>
                             </div>
                         )}
 
@@ -7063,12 +7078,13 @@ const App = () => {
         const checkExpirations = () => {
             const now = Date.now();
             
-            // 1. AUTO-ARCHIVADO DE CITAS PASADAS (Con margen de gracia de 2 horas)
-            const GRACE_PERIOD = 7200000; 
+            // 1. AUTO-ARCHIVADO DE CITAS PASADAS (Hora exacta: Sin margen de gracia)
             const toArchive = leads.filter(l => {
-                if (l.status === 'archived' || !l.date || !l.time) return false;
+                // No archivar si ya está asignado, archivado, o es Llamada Inmediata
+                if (l.status === 'archived' || l.assignedTo || l.isAsap || l.date === 'Inmediata') return false;
                 const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-                return timeInfo && (timeInfo.localMs + GRACE_PERIOD) < now;
+                // Si la hora de la cita ya llegó (localMs <= now), se archiva
+                return timeInfo && timeInfo.localMs <= now;
             }).map(l => l.id);
 
             if (toArchive.length > 0) {
@@ -7129,8 +7145,13 @@ const App = () => {
     const handleOptClick = (id) => currentStep.multiSelect ? setTempSelections(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]) : proceed([id]);
     const handleContinue = () => tempSelections.length > 0 && proceed(tempSelections);
     const saveData = async (form) => { 
-        const finalData = { ...leadData, ...form }; 
-        const res = await addLead(finalData); 
+        const isAutoMarketplace = generalSettings?.marketplaceMode;
+        const finalData = { 
+            ...leadData, 
+            ...form,
+            status: isAutoMarketplace ? 'marketplace' : 'new' 
+        }; 
+        const res = await addLead(finalData);
         if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
         
         if (webhooks && webhooks.telegram) {
