@@ -136,31 +136,12 @@ const STEPS = [
             { id: 'parents', label: 'Mis Padres', icon: ShieldCheck }
         ]
     },
-    { id: 'motivation', question: "¿Qué le preocupa dejar?", subtext: "Seleccione todo lo que aplique.", multiSelect: true, options: [
-        { id: 'funeral', label: 'Costos Funerales', icon: Activity },
-        { id: 'debt', label: 'Deudas', icon: DollarSign },
-        { id: 'legacy', label: 'Sin Herencia', icon: Heart },
-        { id: 'burden', label: 'Ser una Carga', icon: Users }
-    ]},
-    { id: 'coverage_amount', question: "¿Qué monto cree necesitar?", subtext: "Es un estimado, se puede ajustar.", multiSelect: false, options: [
-        { id: '5k', label: '$5,000 - $10,000', icon: DollarSign },
-        { id: '10k', label: '$10,000 - $15,000', icon: DollarSign },
-        { id: '15k', label: '$15,000 - $25,000', icon: DollarSign },
-        { id: '25k', label: '$25,000 o más', icon: DollarSign }
-    ]},
     { id: 'budget', question: "¿Qué presupuesto mensual podría destinar?", subtext: "Una pequeña inversión hoy es un gran alivio mañana.", multiSelect: false, options: [
         { id: '30-50', label: 'De $30 a $50', icon: Heart },
         { id: '50-80', label: 'De $50 a $80', icon: Heart },
         { id: '80-100', label: 'De $80 a $100', icon: Heart },
         { id: '100-150', label: 'De $100 a $150', icon: Heart }
     ]},
-    { id: 'faq_consult', isFAQ: true, question: "Dudas Frecuentes", subtext: "Seleccione las preguntas para ver la respuesta.", faqOptions: [ 
-        { id: 'cost', label: '¿Será muy costoso?', icon: DollarSign, answer: "Para nada. Estos planes están diseñados para ajustarse a presupuestos fijos y lo mejor: la cuota nunca sube con el tiempo." },
-        { id: 'health', label: '¿Piden examen médico?', icon: Stethoscope, answer: "¡Buenas noticias! La mayoría de los planes NO requieren examen médico, solo responder unas sencillas preguntas de salud." },
-        { id: 'age', label: '¿Mi edad es un problema?', icon: HelpCircle, answer: "No es un impedimento. Puede tomar su cobertura antes de los 86 años y quedará protegido de por vida." },
-        { id: 'waiting', label: '¿Cuándo empieza a cubrir?', icon: Clock, answer: "Dependiendo del plan para el que califique, muchas pólizas ofrecen protección inmediata desde el primer día." }
-    ]},
-    { id: 'letter', isLetter: true },
     { id: 'contact', isForm: true }
 ];
 
@@ -1267,6 +1248,7 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     const [callType, setCallType] = useState('video'); 
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
+    const [isAsap, setIsAsap] = useState(true); // Default a "Cuanto antes" para reducir fricción
     const [status, setStatus] = useState('idle'); 
     const [availableSlots, setAvailableSlots] = useState([]);
 
@@ -1320,8 +1302,9 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
     }, [date, scheduleConfig, state, generalSettings?.strictCalendarMode, bookedSlots]);
 
     const ageNum = parseInt(age, 10);
-    const isAgeValid = ageNum >= 18 && ageNum <= 85;
-    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && date && time && acceptedTerms;
+    const isAgeValid = ageNum >= 18 && ageNum <= 85;
+    const isScheduleValid = isAsap ? true : (date && time);
+    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && isScheduleValid && acceptedTerms;
 
     useEffect(() => {
         if (status === 'success') {
@@ -1354,9 +1337,14 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         setStatus('submitting');
         
         const tz = STATE_TZ[state];
-        const utcSlotId = (generalSettings?.strictCalendarMode && tz) ? String(zonedDateTimeToUtcMs(date, time, tz)) : null;
-        
-        const result = await onSubmit({ name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, date, time, utcSlotId });
+        const utcSlotId = (!isAsap && generalSettings?.strictCalendarMode && tz) ? String(zonedDateTimeToUtcMs(date, time, tz)) : null;
+        
+        const result = await onSubmit({ 
+            name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, 
+            date: isAsap ? 'Inmediata' : date, 
+            time: isAsap ? 'ASAP' : time, 
+            isAsap, utcSlotId 
+        });
         
         if (result === "SLOT_TAKEN") {
             setDateErrorMsg('Alguien más acaba de reservar este horario. Por favor, elija otro rápidamente.');
@@ -1596,31 +1584,58 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                         {callType === 'video' && <p className="text-[11px] md:text-xs text-green-700 bg-green-50 p-2 md:p-3 rounded-lg text-center border border-green-100">✨ Podrá conocer a su asesor cara a cara y ver los detalles en pantalla.</p>}
                     </div>
 
-                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Calendar size={16} className="text-rose-500"/> Fecha y Hora</h3>
-                        <div className="flex flex-col gap-4">
-                            {/* AQUÍ ESTÁ EL CAMBIO: min={minDate} restringe para que solo se pueda desde mañana */}
-                            <div>
-                                <div className="relative">
-                                    {!date && (
-                                        <div className="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
-                                            <span className="text-gray-400 text-sm md:text-base font-medium">Seleccione un día...</span>
-                                        </div>
-                                    )}
+                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-5">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Clock size={16} className="text-rose-500"/> ¿Cuándo prefiere su asesoría?</h3>
+                        
+                        <div className="grid grid-cols-1 gap-3">
+                            <button onClick={() => { setIsAsap(true); setDate(''); setTime(''); setDateErrorMsg(''); }} disabled={status !== 'idle'} className={`p-4 rounded-xl border-2 flex items-center gap-4 transition-all outline-none ${isAsap ? 'bg-rose-50 border-rose-500 shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isAsap ? 'bg-rose-500 text-white' : 'bg-gray-100'}`}><Activity size={20}/></div>
+                                <div className="text-left flex-1">
+                                    <p className={`font-bold text-sm ${isAsap ? 'text-rose-900' : 'text-gray-600'}`}>¡Lo antes posible!</p>
+                                    <p className="text-[10px] sm:text-xs opacity-70">Llamada prioritaria en los próximos minutos.</p>
+                                </div>
+                                {isAsap && <Check className="ml-auto text-rose-500 shrink-0" size={20} strokeWidth={3}/>}
+                            </button>
+
+                            <button onClick={() => setIsAsap(false)} disabled={status !== 'idle'} className={`p-4 rounded-xl border-2 flex items-center gap-4 transition-all outline-none ${!isAsap ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${!isAsap ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}><CalendarDays size={20}/></div>
+                                <div className="text-left flex-1">
+                                    <p className={`font-bold text-sm ${!isAsap ? 'text-blue-900' : 'text-gray-600'}`}>Programar para después</p>
+                                    <p className="text-[10px] sm:text-xs opacity-70">Elija el día y la hora de su preferencia.</p>
+                                </div>
+                                {!isAsap && <Check className="ml-auto text-blue-500 shrink-0" size={20} strokeWidth={3}/>}
+                            </button>
+                        </div>
+
+                        {!isAsap && (
+                            <div className="pt-4 border-t border-gray-50 animate-fade-in space-y-4">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Seleccione el Día</label>
                                     <input 
                                         type="date" 
                                         min={minDate} 
-                                        className={`w-full p-3 md:p-4 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm md:text-base font-medium outline-none focus:bg-white focus:ring-2 focus:ring-rose-500 transition-all ${!date ? 'text-transparent' : ''}`} 
+                                        className={`w-full p-3 md:p-4 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all`} 
                                         value={date} 
-                                        onChange={e => { setDate(e.target.value); setDateErrorMsg(''); }} 
+                                        onChange={e => { setDate(e.target.value); setDateErrorMsg(''); }}
                                         disabled={status !== 'idle'} 
                                     />
                                 </div>
+                                {date && (
+                                    <div className="animate-fade-in">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Horarios Disponibles</label>
+                                        {availableSlots.length > 0 ? (
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                {availableSlots.map(slot => (
+                                                    <button key={slot} onClick={() => setTime(slot)} disabled={status !== 'idle'} className={`py-2.5 px-2 text-xs md:text-sm rounded-lg border transition-all outline-none ${time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs text-gray-500">No hay cupos para este día.</p></div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            {date && (
-                                <div className="animate-fade-in"><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 mb-1.5 block tracking-wider">Horarios Disponibles</label>{availableSlots.length > 0 ? (<div className="grid grid-cols-2 md:grid-cols-3 gap-2">{availableSlots.map(slot => (<button key={slot} onClick={() => setTime(slot)} disabled={status !== 'idle'} className={`py-2.5 md:py-3 px-2 text-xs md:text-sm rounded-lg border transition-colors outline-none ${time === slot ? 'bg-rose-500 text-white border-rose-500 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600'}`}>{slot}</button>))}</div>) : (<div className="text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs md:text-sm text-gray-500">Lo sentimos, no hay cupos disponibles o está cerrado este día.</p></div>)}</div>
-                            )}
-                        </div>
+                        )}
                     </div>
                     
                     {/* --- SECCIÓN FINAL AGRUPADA PARA REDUCIR ESPACIOS --- */}
@@ -2344,18 +2359,14 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                     <span className="font-bold text-gray-900 text-sm text-right">{getLabelsForArray('policy_for', lead.policy_for)}</span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
-                                    <span className="text-sm text-gray-500 font-medium">Monto estimado</span>
-                                    <span className="font-bold text-green-600 text-sm bg-green-50 px-2 py-0.5 rounded">{getLabelForValue('coverage_amount', lead.coverage_amount)}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
-                                    <span className="text-sm text-gray-500 font-medium">Presupuesto</span>
+                                    <span className="text-sm text-gray-500 font-medium">Presupuesto Mensual</span>
                                     <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
                                 </div>
-                                <div className="px-1 pt-1">
-                                    <span className="text-sm text-gray-500 font-medium block mb-2">Motivaciones</span>
-                                    <p className="font-bold text-sm text-gray-800">
-                                        {Array.isArray(lead.motivation) ? lead.motivation.map(m => getLabelForValue('motivation', m)).join(' • ') : lead.motivation}
-                                    </p>
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 pt-3">
+                                    <span className="text-sm text-gray-500 font-medium">Preferencia de Contacto</span>
+                                    <span className={`font-bold text-sm px-2 py-0.5 rounded ${lead.isAsap ? 'bg-rose-50 text-rose-600' : 'bg-gray-50 text-gray-600'}`}>
+                                        {lead.isAsap ? '⚡ Atender Inmediatamente' : '📅 Cita Programada'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -3696,24 +3707,20 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
         if (!webhooks || !webhooks.assignment) return;
         const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
         const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
-        const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
-        const coverageMap = { '5k': '$5,000', '10k': '$10,000 - $15,000', '15k': '$15,000 - $20,000', '20k': '$20,000 - $25,000', '25k': '$25,000 o más' };
         
         let formattedDate = leadObj.date;
-        if (leadObj.date) {
+        if (leadObj.date && leadObj.date !== 'Inmediata') {
             const dateObj = new Date(leadObj.date + 'T12:00:00');
             formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         }
         
-        const safeCoverage = String(leadObj.coverage_amount || '').toLowerCase();
         const translatedLead = {
             ...leadObj,
-            date: formattedDate,
+            date: leadObj.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
             callType: callTypeMap[leadObj.callType] || leadObj.callType,
             policy_for: leadObj.policy_for ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : '',
-            motivation: leadObj.motivation ? leadObj.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') : '',
-            coverage_amount: coverageMap[safeCoverage] || leadObj.coverage_amount,
-            time: leadObj.localTime || leadObj.time
+            time: leadObj.isAsap ? 'Lo antes posible' : (leadObj.localTime || leadObj.time),
+            urgencia: leadObj.isAsap ? '🔥 ASAP' : 'Normal'
         };
 
         const url = webhooks.master || webhooks.telegram || webhooks.assignment;
@@ -5205,24 +5212,20 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         if (!webhooks || (!webhooks.assignment && !webhooks.master && !webhooks.telegram)) return;
         const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
         const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
-        const motivationMap = { 'funeral': 'Gastos Funerarios', 'debt': 'Pagar Deudas', 'income': 'Reemplazo de Ingresos', 'legacy': 'Dejar Herencia', 'burden': 'Evitar carga financiera' };
-        const coverageMap = { '5k': '$5,000', '10k': '$10,000 - $15,000', '15k': '$15,000 - $20,000', '20k': '$20,000 - $25,000', '25k': '$25,000 o más' };
         
         let formattedDate = leadObj.date;
-        if (leadObj.date) {
+        if (leadObj.date && leadObj.date !== 'Inmediata') {
             const dateObj = new Date(leadObj.date + 'T12:00:00');
             formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         }
         
-        const safeCoverage = String(leadObj.coverage_amount || '').toLowerCase();
         const translatedLead = {
             ...leadObj,
-            date: formattedDate,
+            date: leadObj.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
             callType: callTypeMap[leadObj.callType] || leadObj.callType,
             policy_for: leadObj.policy_for ? (Array.isArray(leadObj.policy_for) ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : policyMap[leadObj.policy_for] || leadObj.policy_for) : '',
-            motivation: leadObj.motivation ? (Array.isArray(leadObj.motivation) ? leadObj.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') : motivationMap[leadObj.motivation.toLowerCase()] || leadObj.motivation) : '',
-            coverage_amount: coverageMap[safeCoverage] || leadObj.coverage_amount,
-            time: leadObj.localTime || leadObj.time
+            time: leadObj.isAsap ? 'Lo antes posible' : (leadObj.localTime || leadObj.time),
+            urgencia: leadObj.isAsap ? '🔥 ASAP' : 'Normal'
         };
 
         const url = webhooks.master || webhooks.telegram || webhooks.assignment;
@@ -7099,70 +7102,31 @@ const App = () => {
     const next = () => { setReinforcement(null); if (stepIndex < STEPS.length - 1) setStepIndex(p => p + 1); };
     const handleOptClick = (id) => currentStep.multiSelect ? setTempSelections(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]) : proceed([id]);
     const handleContinue = () => tempSelections.length > 0 && proceed(tempSelections);
-    const saveData = async (form) => { 
-        const finalData = { ...leadData, ...form }; 
-        const res = await addLead(finalData); 
-        if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
-        
-        if (webhooks && webhooks.telegram) {
+    const saveData = async (form) => { 
+        const finalData = { ...leadData, ...form }; 
+        const res = await addLead(finalData); 
+        if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
+        
+        if (webhooks && webhooks.telegram) {
             try {
-                // --- 🛠️ TRADUCTOR PARA EL MENSAJE DE TELEGRAM ---
-                
-                // 1. Fecha elegante (ej. lunes, 23 de febrero de 2026)
                 let formattedDate = finalData.date;
-                if (finalData.date) {
+                if (finalData.date && finalData.date !== 'Inmediata') {
                     const dateObj = new Date(finalData.date + 'T12:00:00');
                     formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 }
 
-                // 2. Tipo de llamada
-                const callTypeMap = {
-                    'video': 'Videollamada',
-                    'call': 'Llamada Regular'
-                };
-
-                // 3. A quién protege
-                const policyMap = {
-                    'me': 'A mí mismo',
-                    'spouse': 'A mi cónyuge',
-                    'children': 'A mis hijos',
-                    'parents': 'A mis padres'
-                };
+                const callTypeMap = { 'video': 'Videollamada', 'call': 'Llamada Regular' };
+                const policyMap = { 'me': 'A mí mismo', 'spouse': 'A mi cónyuge', 'children': 'A mis hijos', 'parents': 'A mis padres' };
                 const translatedPolicy = finalData.policy_for ? finalData.policy_for.map(val => policyMap[val] || val).join(', ') : '';
 
-                // 4. Motivación (A prueba de mayúsculas)
-                const motivationMap = {
-                    'funeral': 'Gastos Funerarios',
-                    'debt': 'Pagar Deudas',
-                    'income': 'Reemplazo de Ingresos',
-                    'legacy': 'Dejar Herencia',
-                    'burden': 'Evitar carga financiera'
-                };
-                const translatedMotivation = finalData.motivation 
-                    ? finalData.motivation.map(val => motivationMap[val.toLowerCase()] || val).join(', ') 
-                    : '';
-
-                // 5. Cobertura (A prueba de mayúsculas)
-                const coverageMap = {
-                    '5k': '$5,000',
-                    '10k': '$10,000 - $15,000',
-                    '15k': '$15,000 - $20,000',
-                    '20k': '$20,000 - $25,000',
-                    '25k': '$25,000 o más'
-                };
-                
-                const safeCoverage = String(finalData.coverage_amount || '').toLowerCase();
-                const formattedCoverage = coverageMap[finalData.coverage_amount] || finalData.coverage_amount;
-
-                // Armamos el "Maletín VIP" solo para Make
                 const webhookPayload = {
                     ...finalData,
                     age: finalData.age || 'No especificada',
-                    date: formattedDate,
+                    date: finalData.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
+                    time: finalData.isAsap ? 'Lo antes posible' : finalData.time,
                     callType: callTypeMap[finalData.callType] || finalData.callType,
                     policy_for: translatedPolicy,
-                    motivation: translatedMotivation,
-                    coverage_amount: formattedCoverage
+                    urgencia: finalData.isAsap ? '🔥 ASAP' : 'Normal'
                 };
 
                 // Enviamos los datos al Webhook Maestro con su etiqueta
