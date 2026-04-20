@@ -3641,8 +3641,13 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 
     const getFilteredLeads = () => {
         let list = [];
-        if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo);
+        // BANDEJA: Solo lo nuevo que NO sea urgente (más de 2 horas)
+        if(activeTab === 'active') list = processedLeads.filter(l => l.status === 'new' && !l.assignedTo && l.hoursUntil > 2);
+        
+        // MARKETPLACE: Solo lo que está en venta y NO es urgente todavía
         else if(activeTab === 'marketplace') list = processedLeads.filter(l => l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2);
+        
+        // URGENTE: Todo lo que falte menos de 2 horas o sea ASAP (Sin importar si está en 'new' o 'marketplace')
         else if(activeTab === 'urgent') list = processedLeads.filter(l => l.status !== 'archived' && !l.assignedTo && l.hoursUntil <= 2);
         else if(activeTab === 'assigned') list = processedLeads.filter(l => l.status !== 'archived' && l.assignedTo);
         else if(activeTab === 'offers') list = processedLeads.filter(l => l.status === 'pending_payment');
