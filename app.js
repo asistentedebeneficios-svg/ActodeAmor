@@ -4364,8 +4364,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                             )}
                                         </div>
                                             <div className="flex flex-col items-start gap-1">
-                                            <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
+                                                <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (lead.status === 'marketplace' && lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata') ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : (!lead.assignedTo && lead.hoursUntil <= 2 && !lead.isAsap && lead.date !== 'Inmediata') ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                    {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (lead.status === 'marketplace' && lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata') ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : (!lead.assignedTo && lead.hoursUntil <= 2 && !lead.isAsap && lead.date !== 'Inmediata') ? 'Máx. Prioridad' : 'Bandeja'}
+                                                </span>
+                                                {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' ? (lead.hoursUntil <= 3 ? <>Oferta <span className="opacity-70 text-[10px]">🔥</span></> : 'En Tienda') : (!lead.isAsap && lead.hoursUntil <= 2) ? 'Máx. Prioridad' : 'Bandeja'}
                                             </span>
                                             {lead.assignedTo && (activeTab === 'assigned' || activeTab === 'archived') && (
                                                 <span className={`inline-flex px-1.5 py-0.5 rounded shadow-sm text-[8px] font-extrabold uppercase tracking-widest shrink-0 ${
@@ -4404,8 +4406,10 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                         
                                         <div className="pr-8 mb-3">
                                             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                                                    {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (!lead.assignedTo && lead.hoursUntil <= 2) ? 'Urgente' : (lead.status === 'marketplace' && lead.hoursUntil <= 3) ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : 'Bandeja'}
+                                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest items-center gap-1 ${lead.status === 'archived' ? 'bg-gray-100 text-gray-500' : lead.assignedTo ? 'bg-purple-50 text-purple-700 border border-purple-100' : (lead.status === 'marketplace' && lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata') ? 'bg-orange-50 text-orange-600 border border-orange-200 shadow-sm' : lead.status === 'marketplace' ? 'bg-amber-50 text-amber-700 border border-amber-100' : (!lead.assignedTo && lead.hoursUntil <= 2 && !lead.isAsap && lead.date !== 'Inmediata') ? 'bg-red-50 text-red-600 border border-red-100 animate-pulse' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                                                    {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : (lead.status === 'marketplace' && lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata') ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : lead.status === 'marketplace' ? 'En Tienda' : (!lead.assignedTo && lead.hoursUntil <= 2 && !lead.isAsap && lead.date !== 'Inmediata') ? 'Máx. Prioridad' : 'Bandeja'}
+                                                </span>
+                                                    {lead.status === 'archived' ? 'Archivado' : lead.assignedTo ? 'Asignado' : lead.status === 'marketplace' ? (lead.hoursUntil <= 3 ? <>Oferta <span className="opacity-70 text-[9px]">🔥</span></> : 'En Tienda') : (!lead.isAsap && lead.hoursUntil <= 2) ? 'Máx. Prioridad' : 'Bandeja'}
                                                 </span>
                                                 {lead.assignedTo && (activeTab === 'assigned' || activeTab === 'archived') && (
                                                     <span className={`inline-flex px-1.5 py-0.5 rounded shadow-sm text-[8px] font-extrabold uppercase tracking-widest shrink-0 ${
@@ -5092,7 +5096,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     const nowMs = Date.now();
 
     const allAvailableLeads = processedLeads.filter(l => {
-        const isMarketplace = l.status === 'marketplace' && !l.assignedTo && l.hoursUntil > 2;
+        // Un lead está a la venta si su status es 'marketplace' y no está asignado
+        const isMarketplace = l.status === 'marketplace' && !l.assignedTo;
         if (!isMarketplace) return false;
         
         // 1. Bloqueo de Seguridad: Licencia
@@ -5129,7 +5134,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     const cartTotal = cart.reduce((total, leadId) => {
         const lead = availableLeads.find(l => l.id === leadId);
         if (!lead) return total;
-        const isFireSale = lead.hoursUntil <= 3; 
+        // Solo es oferta si faltan menos de 3 horas Y NO es una llamada inmediata
+        const isFireSale = lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata'; 
         return total + (isFireSale ? offerPrice : regularPrice); 
     }, 0);
 
@@ -5323,7 +5329,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
             const items = directItems || checkoutLeadIds.map(leadId => {
                 // Buscamos en 'processedLeads' (la base de datos completa) para no perder los leads de Ofertas
                 const lead = processedLeads.find(l => l.id === leadId);
-                const isFireSale = lead && lead.hoursUntil <= 3;
+                const isFireSale = lead && lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata';
                 return {
                     name: `Prospecto en ${lead ? lead.state : 'US'}`,
                     price: isFireSale ? offerPrice : regularPrice
@@ -5551,8 +5557,8 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                 const conflictClient = activeClients.find(c => c.date === lead.date && c.time === lead.time);
                                 const isBlocked = !!conflictClient;
                                 
-                                // ¿Es una Oferta Relámpago? (Faltan <= 3 horas)
-                                const isFireSale = lead.hoursUntil <= 3;
+                                // ¿Es una Oferta Relámpago? (Solo si no es Inmediata)
+                                const isFireSale = lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata';
 
                                 return (
                                     <div key={lead.id} onClick={() => toggleCart(lead.id, isBlocked)} className={`flex items-start gap-3 md:gap-4 p-4 transition-all ${isBlocked ? 'bg-gray-50/50 opacity-60 cursor-not-allowed' : isFireSale && !isSelected ? 'bg-orange-50/30 hover:bg-orange-50/60 cursor-pointer group' : isSelected ? 'bg-blue-50/40 cursor-pointer' : 'hover:bg-gray-50/80 cursor-pointer group'}`}>
@@ -7078,13 +7084,20 @@ const App = () => {
         const checkExpirations = () => {
             const now = Date.now();
             
-            // 1. AUTO-ARCHIVADO DE CITAS PASADAS (Hora exacta: Sin margen de gracia)
+            // 1. AUTO-ARCHIVADO DE CITAS Y LLAMADAS INMEDIATAS
             const toArchive = leads.filter(l => {
-                // No archivar si ya está asignado, archivado, o es Llamada Inmediata
-                if (l.status === 'archived' || l.assignedTo || l.isAsap || l.date === 'Inmediata') return false;
-                const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
-                // Si la hora de la cita ya llegó (localMs <= now), se archiva
-                return timeInfo && timeInfo.localMs <= now;
+                // Si ya está asignado o archivado, lo ignoramos
+                if (l.status === 'archived' || l.assignedTo) return false;
+
+                if (l.isAsap || l.date === 'Inmediata') {
+                    // REGLA ASAP: Se archiva si pasan 2 horas (2 * 60 * 60 * 1000 ms) desde que se creó
+                    const LIMITE_ASAP = 2 * 60 * 60 * 1000; 
+                    return (now - l.timestamp) >= LIMITE_ASAP;
+                } else {
+                    // REGLA PROGRAMADA: Se archiva exactamente cuando llega la hora de su cita
+                    const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
+                    return timeInfo && timeInfo.localMs <= now;
+                }
             }).map(l => l.id);
 
             if (toArchive.length > 0) {
