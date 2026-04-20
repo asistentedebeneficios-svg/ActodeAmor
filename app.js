@@ -1445,12 +1445,21 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fecha y Hora</span>
-                                    <p className="font-bold text-slate-900 text-sm capitalize">{date ? new Date(date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}</p>
-                                    <p className="text-blue-600 font-bold text-sm flex items-center gap-1 mt-0.5"><Clock size={12}/> {time}</p>
-                                </div>
-                                <div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fecha y Hora</span>
+                                        {isAsap ? (
+                                            <div className="flex flex-col gap-1 mt-0.5">
+                                                <p className="font-bold text-rose-600 text-sm capitalize">Llamada Inmediata</p>
+                                                <p className="text-rose-500 font-bold text-xs flex items-center gap-1"><Clock size={12}/> Lo antes posible</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <p className="font-bold text-slate-900 text-sm capitalize">{date ? new Date(date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}</p>
+                                                <p className="text-blue-600 font-bold text-sm flex items-center gap-1 mt-0.5"><Clock size={12}/> {time}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Método</span>
                                     {callType === 'video' ? (
                                         <p className="font-bold text-green-600 text-sm flex items-center gap-1"><Video size={14}/> Videollamada</p>
@@ -1465,27 +1474,29 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                                 <p className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Phone size={14} className="text-slate-400"/> {phone}</p>
                             </div>
 
-                            <a href={(() => {
-                                // Generador Inteligente del enlace para Google Calendar
-                                if (!date || !time) return '#';
-                                let cleanTime = time.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-                                let h = parseInt(cleanTime.replace(/[^0-9]/g, '').slice(0, -2), 10);
-                                const m = cleanTime.replace(/[^0-9]/g, '').slice(-2);
-                                if (cleanTime.includes('p') && h < 12) h += 12;
-                                if (cleanTime.includes('a') && h === 12) h = 0;
-                                
-                                const [Y, M, D] = date.split('-');
-                                const startDate = new Date(Y, M - 1, D, h, parseInt(m, 10));
-                                const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hora de duración
-                                
-                                const fmt = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
-                                const details = `Cita para Asesoría de Beneficios (Gastos Finales). Método: ${callType === 'video' ? 'Videollamada' : 'Llamada Telefónica'}.`;
-                                return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Asesoría+de+Beneficios&dates=${fmt(startDate)}/${fmt(endDate)}&details=${encodeURIComponent(details)}`;
-                            })()} 
-                            target="_blank" rel="noopener noreferrer" 
-                            className="w-full bg-white border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                                <Calendar size={16}/> Guardar en Google Calendar
-                            </a>
+                            {!isAsap && (
+                                        <a href={(() => {
+                                            // Generador Inteligente del enlace para Google Calendar
+                                            if (!date || !time) return '#';
+                                            let cleanTime = time.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
+                                            let h = parseInt(cleanTime.replace(/[^0-9]/g, '').slice(0, -2), 10);
+                                            const m = cleanTime.replace(/[^0-9]/g, '').slice(-2);
+                                            if (cleanTime.includes('p') && h < 12) h += 12;
+                                            if (cleanTime.includes('a') && h === 12) h = 0;
+                                            
+                                            const [Y, M, D] = date.split('-');
+                                            const startDate = new Date(Y, M - 1, D, h, parseInt(m, 10));
+                                            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hora de duración
+                                            
+                                            const fmt = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
+                                            const details = `Cita para Asesoría de Beneficios (Gastos Finales). Método: ${callType === 'video' ? 'Videollamada' : 'Llamada Telefónica'}.`;
+                                            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Asesoría+de+Beneficios&dates=${fmt(startDate)}/${fmt(endDate)}&details=${encodeURIComponent(details)}`;
+                                        })()} 
+                                        target="_blank" rel="noopener noreferrer" 
+                                        className="w-full bg-white border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                            <Calendar size={16}/> Guardar en Google Calendar
+                                        </a>
+                                    )}
 
                             <p className="text-xs text-slate-500 mt-4 text-center italic">
                                 En breve recibirá por correo electrónico todos los datos de su especialista. Gracias por utilizar nuestos servicios.
@@ -2304,12 +2315,12 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         ) : (
                                             <div className="flex flex-col gap-2 mt-1">
                                                 <span className="font-bold text-gray-900 capitalize text-sm">
-                                                    {lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                    {lead.date === 'Inmediata' ? 'Llamada Inmediata' : (lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A')}
                                                 </span>
-                                                <div className="flex flex-col gap-1.5 bg-blue-50/50 p-3 rounded-xl border border-blue-100 shadow-sm mt-1">
-                                                    <div className="flex items-center gap-2 text-blue-700 font-bold">
+                                                <div className={`flex flex-col gap-1.5 p-3 rounded-xl border shadow-sm mt-1 ${lead.isAsap || lead.time === 'ASAP' ? 'bg-rose-50/50 border-rose-100' : 'bg-blue-50/50 border-blue-100'}`}>
+                                                    <div className={`flex items-center gap-2 font-bold ${lead.isAsap || lead.time === 'ASAP' ? 'text-rose-700' : 'text-blue-700'}`}>
                                                         <Clock size={16}/> 
-                                                        <span className="text-sm">{lead.localTime || lead.time}</span>
+                                                        <span className="text-sm">{lead.isAsap || lead.time === 'ASAP' ? 'Lo antes posible' : (lead.localTime || lead.time)}</span>
                                                         <span className="text-[9px] uppercase tracking-widest bg-blue-100 px-2 py-1 rounded-md text-blue-600 shadow-sm">Tu Hora</span>
                                                     </div>
                                                     {lead.localTime && lead.localTime !== lead.time && (
@@ -3583,6 +3594,7 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
     }, [viewingLead]);
 
     const getHoursUntil = (dateStr, timeStr) => {
+        if (dateStr === 'Inmediata' || timeStr === 'ASAP') return 0;
         if (!dateStr || !timeStr) return 999;
         try {
             let clean = timeStr.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
@@ -4323,9 +4335,9 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                                             <span className="text-[9px] text-gray-400 block mt-0.5">{new Date(lead.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                         </div>
                                         <div className="text-gray-500 text-xs font-medium">
-                                            <span className="block text-gray-900 font-bold">{lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
-                                            <span className="flex items-center gap-1 mt-0.5 text-blue-600 font-bold"><Clock size={10}/> {lead.localTime || lead.time}</span>
-                                            {lead.localTime && lead.localTime !== lead.time && (
+                                            <span className="block text-gray-900 font-bold">{lead.date === 'Inmediata' ? 'Inmediata' : (lead.date ? new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A')}</span>
+                                            <span className={`flex items-center gap-1 mt-0.5 font-bold ${lead.isAsap || lead.time === 'ASAP' ? 'text-rose-600' : 'text-blue-600'}`}><Clock size={10}/> {lead.isAsap || lead.time === 'ASAP' ? 'Lo antes posible' : (lead.localTime || lead.time)}</span>
+                                            {lead.localTime && lead.localTime !== lead.time && lead.time !== 'ASAP' && (
                                                 <span className="text-[9px] text-gray-400 font-medium mt-1 flex items-center gap-1">
                                                     ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-white border border-gray-100 px-1.5 py-0.5 rounded shadow-sm text-gray-500">en {lead.state}</span>
                                                 </span>
@@ -4971,7 +4983,14 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
     const processedLeads = leads.map(l => {
         const timeInfo = getAgentLocalDateTime(l.date, l.time, l.state);
         const now = Date.now();
-        const hoursUntil = timeInfo ? (timeInfo.localMs - now) / (1000 * 60 * 60) : 999;
+        
+        let hoursUntil = 999;
+        if (l.isAsap || l.time === 'ASAP' || l.date === 'Inmediata') {
+            hoursUntil = 0;
+        } else if (timeInfo) {
+            hoursUntil = (timeInfo.localMs - now) / (1000 * 60 * 60);
+        }
+
         return { 
             ...l, 
             hoursUntil, 
@@ -5817,7 +5836,9 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
                                 {displayClients.map(lead => {
                                 let fDate = "Sin fecha";
-                                if (lead.date) {
+                                if (lead.date === 'Inmediata') {
+                                    fDate = "Inmediata";
+                                } else if (lead.date) {
                                     fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
                                 }
                                 return (
@@ -5852,10 +5873,10 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                                     <span className="flex items-center gap-1 font-medium"><Phone size={12}/> {lead.phone}</span>
                                                     
                                                     <div className="flex items-center gap-2">
-                                                        <span className="hidden sm:inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
-                                                        <span className="font-bold text-blue-600 flex items-center gap-1 bg-blue-50/50 px-1.5 rounded"><Clock size={12}/> {lead.localTime || lead.time} <span className="text-[9px] font-normal text-blue-400 uppercase tracking-widest">(Local)</span></span>
-                                                        
-                                                        {lead.localTime !== lead.time && (
+                                                    <span className="hidden sm:inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
+                                                    <span className={`font-bold flex items-center gap-1 px-1.5 rounded ${lead.isAsap || lead.time === 'ASAP' ? 'text-rose-600 bg-rose-50/50' : 'text-blue-600 bg-blue-50/50'}`}><Clock size={12}/> {lead.isAsap || lead.time === 'ASAP' ? 'Lo antes posible' : (lead.localTime || lead.time)} {lead.time !== 'ASAP' && <span className="text-[9px] font-normal text-blue-400 uppercase tracking-widest">(Local)</span>}</span>
+                                                    
+                                                    {lead.localTime !== lead.time && lead.time !== 'ASAP' && (
                                                             <span className="flex items-center gap-1 font-medium text-gray-400 pl-1 border-l border-gray-200">
                                                                 {lead.time} <span className="text-[9px] uppercase tracking-widest">en {lead.state}</span>
                                                             </span>
