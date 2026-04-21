@@ -5548,13 +5548,19 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                 const abbr = STATE_ABBR[lead.state] || "US";
                                 const isSelected = cart.includes(lead.id);
                                 let fDate = "Sin fecha";
-                                if (lead.date) fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                                if (lead.date === 'Inmediata') {
+                                    fDate = "Llamada Inmediata";
+                                } else if (lead.date) {
+                                    fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                                }
 
                                 const conflictClient = activeClients.find(c => c.date === lead.date && c.time === lead.time);
                                 const isBlocked = !!conflictClient;
                                 
-                                // ¿Es una Oferta Relámpago? (Solo si no es Inmediata)
-                                const isFireSale = lead.hoursUntil <= 3 && !lead.isAsap && lead.date !== 'Inmediata';
+                                // Identificamos si es un lead caliente (ASAP)
+                                const isAsapLead = lead.isAsap || lead.date === 'Inmediata';
+                                // Es oferta solo si es programada y faltan <= 3h
+                                const isFireSale = !isAsapLead && lead.hoursUntil <= 3;
 
                                 return (
                                     <div key={lead.id} onClick={() => toggleCart(lead.id, isBlocked)} className={`flex items-start gap-3 md:gap-4 p-4 transition-all ${isBlocked ? 'bg-gray-50/50 opacity-60 cursor-not-allowed' : isFireSale && !isSelected ? 'bg-orange-50/30 hover:bg-orange-50/60 cursor-pointer group' : isSelected ? 'bg-blue-50/40 cursor-pointer' : 'hover:bg-gray-50/80 cursor-pointer group'}`}>
@@ -5567,12 +5573,16 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                             )}
                                         </div>
 
-                                        <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border shrink-0 transition-colors mt-0.5 ${isBlocked ? 'bg-gray-100 text-gray-400 border-gray-200' : isFireSale && !isSelected ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white border-transparent shadow-sm' : isSelected ? 'bg-black text-white border-black shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 group-hover:border-gray-300'}`}>
-                                            {isFireSale && !isSelected ? '🔥' : abbr}
+                                        <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border shrink-0 transition-colors mt-0.5 ${isBlocked ? 'bg-gray-100 text-gray-400 border-gray-200' : (isAsapLead && !isSelected) ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent shadow-lg shadow-purple-500/20' : (isFireSale && !isSelected) ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white border-transparent shadow-sm' : isSelected ? 'bg-black text-white border-black shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 group-hover:border-gray-300'}`}>
+                                            {isAsapLead && !isSelected ? <Activity size={24} className="animate-pulse" /> : (isFireSale && !isSelected ? '🔥' : abbr)}
                                         </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
-                                            <span className={`font-bold uppercase text-sm tracking-wide truncate ${isBlocked ? 'text-gray-500' : 'text-gray-900'}`}>{lead.state || 'ESTADO'} {isFireSale && !isBlocked && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest font-extrabold">Oferta</span>}</span>                                                
+                                            <span className={`font-bold uppercase text-sm tracking-wide truncate ${isBlocked ? 'text-gray-500' : 'text-gray-900'}`}>
+                                                {lead.state || 'ESTADO'} 
+                                                {isAsapLead && !isBlocked && <span className="ml-2 text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm border border-purple-200">¡Prioritario ⚡!</span>}
+                                                {isFireSale && !isBlocked && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-extrabold border border-red-200">Oferta 🔥</span>}
+                                            </span>
                                                 {/* PRECIO DINÁMICO */}
                                                 {!isBlocked && (
                                                     <div className="text-right">
