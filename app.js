@@ -1291,15 +1291,21 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
         slots.sort((a, b) => new Date('1970/01/01 ' + a.replace('a.m.','AM').replace('p.m.','PM')) - new Date('1970/01/01 ' + b.replace('a.m.','AM').replace('p.m.','PM')));
         
         const finalSlots = slots.filter(timeStr => {
-            if (!generalSettings?.strictCalendarMode || !state) return true;
-            const tz = STATE_TZ[state];
-            if (!tz) return true;
-            const utcMs = zonedDateTimeToUtcMs(date, timeStr, tz);
-            return !bookedSlots.includes(String(utcMs));
-        });
-        
-        setAvailableSlots(finalSlots); setTime(''); 
-    }, [date, scheduleConfig, state, generalSettings?.strictCalendarMode, bookedSlots]);
+                if (!generalSettings?.strictCalendarMode || !state) return true;
+                const tz = STATE_TZ[state];
+                if (!tz) return true;
+                const utcMs = zonedDateTimeToUtcMs(date, timeStr, tz);
+                return !bookedSlots.includes(String(utcMs));
+            });
+            
+            setAvailableSlots(finalSlots); 
+            
+            // Solo borramos la hora si el cliente está llenando el formulario (idle)
+            // Si ya le dio a enviar, congelamos la hora para que el ticket de éxito la pueda mostrar
+            if (status === 'idle') {
+                setTime(prevTime => finalSlots.includes(prevTime) ? prevTime : ''); 
+            }
+        }, [date, scheduleConfig, state, generalSettings?.strictCalendarMode, bookedSlots, status]);
 
     const ageNum = parseInt(age, 10);
     const isAgeValid = ageNum >= 18 && ageNum <= 85;
