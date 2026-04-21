@@ -3964,14 +3964,14 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
 
             {/* Pestañas de Navegación Admin */}
             <div className="flex px-4 md:px-6 gap-6 md:gap-8 border-b border-gray-200/50 bg-white/50 backdrop-blur-sm overflow-x-auto z-10 scrollbar-hide shrink-0 pt-2 pb-0">
-                {['active', 'marketplace', 'urgent', 'offers', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
+                {['active', 'marketplace', 'offers', 'assigned', 'archived', 'agents', 'schedule'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => {setActiveTab(tab); setSelectedLeads([]); setSearchTerm('');}}
                         className={`py-3 text-xs md:text-sm font-semibold tracking-wide border-b-2 whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === tab 
-                                ? (tab === 'urgent' ? 'border-red-600 text-red-600' : 'border-gray-900 text-gray-900') 
-                                : (tab === 'urgent' ? 'border-transparent text-red-500/80 hover:text-red-600' : 'border-transparent text-gray-400 hover:text-gray-600')
+                                ? 'border-gray-900 text-gray-900' 
+                                : 'border-transparent text-gray-400 hover:text-gray-600'
                         }`}
                     >
                         {tab === 'active' && 'Bandeja'}
