@@ -3740,11 +3740,11 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
         
         const translatedLead = {
             ...leadObj,
-            date: leadObj.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
+            date: leadObj.isAsap ? 'Cita Inmediata' : formattedDate,
             callType: callTypeMap[leadObj.callType] || leadObj.callType,
-            policy_for: leadObj.policy_for ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : '',
-            time: leadObj.isAsap ? 'Lo antes posible' : (leadObj.localTime || leadObj.time),
-            urgencia: leadObj.isAsap ? '🔥 ASAP' : 'Normal'
+            policy_for: leadObj.policy_for ? (Array.isArray(leadObj.policy_for) ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : policyMap[leadObj.policy_for] || leadObj.policy_for) : '',
+            time: leadObj.isAsap ? 'A la brevedad posible' : (leadObj.localTime || leadObj.time),
+            urgencia: leadObj.isAsap ? '⚡ Prioritaria' : 'Normal'
         };
 
         const url = webhooks.master || webhooks.telegram || webhooks.assignment;
@@ -5262,11 +5262,11 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
         
         const translatedLead = {
             ...leadObj,
-            date: leadObj.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
+            date: leadObj.isAsap ? 'Cita Inmediata' : formattedDate,
             callType: callTypeMap[leadObj.callType] || leadObj.callType,
-            policy_for: leadObj.policy_for ? (Array.isArray(leadObj.policy_for) ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : policyMap[leadObj.policy_for] || leadObj.policy_for) : '',
-            time: leadObj.isAsap ? 'Lo antes posible' : (leadObj.localTime || leadObj.time),
-            urgencia: leadObj.isAsap ? '🔥 ASAP' : 'Normal'
+            policy_for: leadObj.policy_for ? leadObj.policy_for.map(val => policyMap[val] || val).join(', ') : '',
+            time: leadObj.isAsap ? 'A la brevedad posible' : (leadObj.localTime || leadObj.time),
+            urgencia: leadObj.isAsap ? '⚡ Prioritaria' : 'Normal'
         };
 
         const url = webhooks.master || webhooks.telegram || webhooks.assignment;
@@ -7194,11 +7194,11 @@ const App = () => {
                 const webhookPayload = {
                     ...finalData,
                     age: finalData.age || 'No especificada',
-                    date: finalData.isAsap ? 'Llamada Inmediata (ASAP)' : formattedDate,
-                    time: finalData.isAsap ? 'Lo antes posible' : finalData.time,
+                    date: finalData.isAsap ? 'Cita Inmediata' : formattedDate,
+                    time: finalData.isAsap ? 'A la brevedad posible' : finalData.time,
                     callType: callTypeMap[finalData.callType] || finalData.callType,
                     policy_for: translatedPolicy,
-                    urgencia: finalData.isAsap ? '🔥 ASAP' : 'Normal'
+                    urgencia: finalData.isAsap ? '⚡ Prioritaria' : 'Normal'
                 };
 
                 // Enviamos los datos al Webhook Maestro con su etiqueta
