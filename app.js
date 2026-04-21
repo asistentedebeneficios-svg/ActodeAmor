@@ -5549,7 +5549,7 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                 const isSelected = cart.includes(lead.id);
                                 let fDate = "Sin fecha";
                                 if (lead.date === 'Inmediata') {
-                                    fDate = "Llamada Inmediata";
+                                    fDate = "Cita Inmediata";
                                 } else if (lead.date) {
                                     fDate = new Date(lead.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                                 }
@@ -5603,12 +5603,18 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
                                                 <span className="md:hidden text-gray-300 mx-1">|</span>
                                                 <span className="md:inline hidden"> • </span>
                                                 
-                                                <span className={`font-bold ${isBlocked ? 'text-gray-500' : 'text-gray-800'}`}>
-                                                    {lead.localTime || lead.time} <span className="text-[10px] font-bold text-blue-500">(Tu hora)</span>
-                                                </span>
+                                                {isAsapLead ? (
+                                                    <span className={`font-bold ${isBlocked ? 'text-gray-500' : 'text-gray-800'}`}>
+                                                        Lo antes posible
+                                                    </span>
+                                                ) : (
+                                                    <span className={`font-bold ${isBlocked ? 'text-gray-500' : 'text-gray-800'}`}>
+                                                        {lead.localTime || lead.time} <span className="text-[10px] font-bold text-blue-500">(Tu hora)</span>
+                                                    </span>
+                                                )}
 
-                                                {/* NUEVO: Muestra la hora original del estado del prospecto */}
-                                                {lead.localTime !== lead.time && (
+                                                {/* NUEVO: Muestra la hora original del estado del prospecto (Oculto en leads inmediatos) */}
+                                                {lead.localTime !== lead.time && !isAsapLead && (
                                                     <span className="block mt-1.5 text-[10px] text-gray-400 font-medium flex items-center gap-1">
                                                         ↳ {lead.time} <span className="uppercase tracking-widest text-[8px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">en {lead.state}</span>
                                                     </span>
