@@ -7078,7 +7078,15 @@ const App = () => {
             setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
             setIsActivationRoute(window.location.hash.startsWith('#activar/'));
             setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
+
+            if (window.location.hash === '#terminos') {
+                setShowProspectTermsFromMenu(true);
+            }
         };
+
+        if (window.location.hash === '#terminos') {
+            setShowProspectTermsFromMenu(true);
+        }
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -7591,8 +7599,13 @@ const App = () => {
 
                 </footer>
             
-            {/* Modal de Términos (Llamado desde el menú) */}
-            {showProspectTermsFromMenu && <TermsModal type="prospect" onClose={() => setShowProspectTermsFromMenu(false)} />}
+            {/* Modal de Términos (Llamado desde el menú o enlace directo) */}
+            {showProspectTermsFromMenu && <TermsModal type="prospect" onClose={() => { 
+                setShowProspectTermsFromMenu(false);
+                if (window.location.hash === '#terminos') {
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+            }} />}
             {/* Modal de Contacto (Llamado desde el menú) */}
             {showContactUsModal && <ContactUsModal onClose={() => setShowContactUsModal(false)} />}
         </div>
