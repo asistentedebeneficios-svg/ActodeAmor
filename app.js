@@ -7021,25 +7021,27 @@ const App = () => {
     }, []);
 
     // --- MENU Y MODALES GLOBALES ---
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [showProspectTermsFromMenu, setShowProspectTermsFromMenu] = useState(false);
-    const [showContactUsModal, setShowContactUsModal] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showProspectTermsFromMenu, setShowProspectTermsFromMenu] = useState(() => window.location.hash.includes('#terminos'));
+    const [showContactUsModal, setShowContactUsModal] = useState(false);
 
-    // --- MEMORIA DEL EMBUDO ---
-    const [stepIndex, setStepIndex] = useState(() => {
-        // NUEVO: Detector de enlaces directos para campañas de Meta Ads
-        const isDirectCampaign = window.location.href.toLowerCase().includes('proteger');
-        
-        const savedStep = sessionStorage.getItem('funnelStepIndex');
-        const parsedSavedStep = savedStep !== null ? parseInt(savedStep, 10) : 0;
-        
-        // Si el enlace tiene la palabra clave y es una sesión nueva, salta al paso 1
-        if (isDirectCampaign && parsedSavedStep === 0) {
-            return 1; 
-        }
-        
-        return parsedSavedStep;
-    });
+    // --- MEMORIA DEL EMBUDO ---
+    const [stepIndex, setStepIndex] = useState(() => {
+        if (window.location.hash.includes('#terminos')) return 0; // Fuerza ir a la Home para mostrar el modal
+
+        // NUEVO: Detector de enlaces directos para campañas de Meta Ads
+        const isDirectCampaign = window.location.href.toLowerCase().includes('proteger');
+        
+        const savedStep = sessionStorage.getItem('funnelStepIndex');
+        const parsedSavedStep = savedStep !== null ? parseInt(savedStep, 10) : 0;
+        
+        // Si el enlace tiene la palabra clave y es una sesión nueva, salta al paso 1
+        if (isDirectCampaign && parsedSavedStep === 0) {
+            return 1; 
+        }
+        
+        return parsedSavedStep;
+    });
     const [leadData, setLeadData] = useState(() => {
         const savedData = sessionStorage.getItem('funnelLeadData');
         return savedData ? JSON.parse(savedData) : {};
@@ -7071,26 +7073,25 @@ const App = () => {
     const activationEmail = isActivationRoute ? decodeURIComponent(window.location.hash.split('/')[1]) : null;
 
     useEffect(() => {
-        if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
+        if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
 
-        const handleHashChange = () => {
-            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
-            setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
-            setIsActivationRoute(window.location.hash.startsWith('#activar/'));
-            setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
+        const handleHashChange = () => {
+            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+            setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
+            setIsActivationRoute(window.location.hash.startsWith('#activar/'));
+            setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
+            
+            if (window.location.hash.includes('#terminos')) {
+                setShowProspectTermsFromMenu(true);
+                setStepIndex(0);
+            }
+        };
 
-            if (window.location.hash === '#terminos') {
-                setShowProspectTermsFromMenu(true);
-            }
-        };
+        handleHashChange(); // <-- Esta línea fuerza la lectura del enlace al entrar
 
-        if (window.location.hash === '#terminos') {
-            setShowProspectTermsFromMenu(true);
-        }
-
-        window.addEventListener('hashchange', handleHashChange);
-        return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
     
     // --- CAMBIO 1: Leer la memoria al cargar la página ---
     const [showAdmin, setShowAdmin] = useState(() => {
