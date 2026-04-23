@@ -580,11 +580,16 @@ const TermsModal = ({ type = 'prospect', onClose }) => {
                         </>
                     ) : (
                         <>
+                            <div className="mb-4">
+                                <p className="text-rose-600 font-bold uppercase tracking-widest text-[10px] mb-2">Última actualización: 23 de abril de 2026</p>
+                                <p>Bienvenido a Asistente de Beneficios. Al utilizar nuestra plataforma, usted acepta los siguientes términos y condiciones:</p>
+                            </div>
                             <p><strong>1. Servicio de Conexión Segura:</strong> <strong>asistentedebeneficios.com</strong> es una plataforma tecnológica y gratuita diseñada exclusivamente para facilitar el enlace entre familias en búsqueda de asesoría y especialistas con licencia activa en su estado de residencia.</p>
                             <p><strong>2. Nuestra Función e Independencia Legal:</strong> Nuestra plataforma funciona estrictamente como un puente informativo. <strong>asistentedebeneficios.com</strong> no es una compañía de seguros, no emite coberturas ni representa a ninguna aseguradora en particular. Al utilizar nuestro servicio, usted comprende que nuestro alcance finaliza al conectarlo con un especialista. Cualquier trámite, aprobación de póliza, pagos, reclamaciones de siniestros o adquisición de nuevos servicios en el futuro, se gestionarán directamente entre usted, su especialista asignado y la compañía aseguradora que usted elija, eximiendo a <strong>asistentedebeneficios.com</strong> de cualquier responsabilidad sobre dichos procesos.</p>
-                            <p><strong>3. Privacidad y Protección de Datos:</strong> Su tranquilidad es nuestra prioridad. Su información es tratada bajo los más altos estándares de encriptación y privacidad. Únicamente compartiremos sus datos básicos de contacto con el especialista certificado asignado a su caso para poder brindarle la asesoría solicitada. Jamás venderemos su información a terceros ni a bases de telemarketing masivo.</p>
+                            <p><strong>3. Privacidad y Protección de Datos:</strong> Su tranquilidad es nuestra prioridad. Su información es tratada bajo los más altos estándares de encriptación y privacidad. Únicamente compartiremos sus datos básicos de contacto con el especialista certificado asignado a su caso para poder brindarle la asesoría solicitada. Jamás venderemos su información a terceros ni a bases de telemarketing masivo. Para más detalles sobre el tratamiento de sus datos, consulte nuestra <a href="#privacidad" onClick={(e) => { e.preventDefault(); onClose(); window.location.hash = '#privacidad'; }} className="font-bold text-rose-600 hover:underline">Política de Privacidad</a>.</p>
                             <p><strong>4. Asesoría Consultiva sin Compromiso:</strong> Nuestra misión es educar y proteger. Solicitar y recibir una asesoría a través de nuestra red no le genera ninguna obligación contractual ni financiera. Usted es completamente libre de decidir si desea o no adquirir una cobertura de protección tras escuchar sus opciones.</p>
-                            <p><strong>5. Consentimiento de Comunicación:</strong> Al aceptar estos términos, usted otorga su consentimiento expreso para ser contactado (mediante llamada, mensaje de texto SMS o correo electrónico) exclusivamente por <strong>asistentedebeneficios.com</strong> para fines de confirmación de cita, y por el especialista asignado a su caso para brindarle la asesoría solicitada.</p>
+                            <p><strong>5. Consentimiento de Comunicación:</strong> Al aceptar estos términos, usted otorga su consentimiento expreso por escrito para ser contactado por Asistente de Beneficios, los especialistas asignados a su caso y sus compañías aseguradoras afiliadas, mediante llamadas telefónicas (incluidos sistemas de marcación automática y mensajes pregrabados), mensajes de texto SMS y correo electrónico, en los números y correos que usted proporcione, con fines de confirmación de cita, asesoría consultiva y gestión de productos de seguros.</p>
+                            <p className="mt-2 text-sm italic">Usted entiende que este consentimiento no es condición para recibir asesoría ni para adquirir productos, y que puede revocarlo en cualquier momento respondiendo "BAJA" o "STOP" a cualquier mensaje de texto, solicitando dejar de recibir comunicaciones durante cualquier llamada, o escribiendo a contacto@asistentedebeneficios.com. Aplican las tarifas estándar de su proveedor de telefonía o mensajería.</p>
                             <p><strong>6. Su Voz es Importante (Sistema de Evaluación):</strong> Creemos en la excelencia y la transparencia. Tras su asesoría, usted tendrá el poder de evaluar y calificar el nivel de empatía, claridad y profesionalismo de su especialista asignado. Sus comentarios son fundamentales para mantener los más altos estándares de calidad en nuestra red y asegurar que cada familia reciba el trato excepcional que merece.</p>
                         </>
                     )}
@@ -956,14 +961,14 @@ const AgentRegistrationForm = ({ onCancel, onSubmit, initialData = null, general
                                 </span>
                             </label>
 
-                            {/* Checkbox de Términos y Condiciones */}
+                            {/* Checkbox de Términos y Condiciones y Privacidad */}
                             <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                                 <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                                     <input type="checkbox" required checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-black checked:border-black transition-all" />
                                     <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                                 </div>
                                 <span className="text-xs font-medium text-gray-600 leading-relaxed">
-                                    He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-black underline decoration-2 decoration-gray-300 hover:decoration-black cursor-pointer">Términos y Condiciones de Uso</span> para formar parte del equipo.
+                                    He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-black underline decoration-2 decoration-gray-300 hover:decoration-black cursor-pointer">Términos y Condiciones de Uso</span> y la <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.hash = '#privacidad'; }} className="font-bold text-black underline decoration-2 decoration-gray-300 hover:decoration-black cursor-pointer">Política de Privacidad</span> para formar parte del equipo.
                                 </span>
                             </label>
                         </div>
@@ -1658,14 +1663,14 @@ const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger
                     {/* --- SECCIÓN FINAL AGRUPADA PARA REDUCIR ESPACIOS --- */}
                     <div className="flex flex-col gap-3 !mt-2 px-2 sm:px-0">
                         
-                        {/* Términos y Condiciones */}
+                        {/* Términos y Condiciones y Privacidad */}
                         <label className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors shadow-sm">
                             <div className="relative flex items-center justify-center shrink-0 mt-0.5">
                                 <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} disabled={status !== 'idle'} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-rose-500 checked:border-rose-500 transition-all disabled:opacity-50" />
                                 <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
                             </div>
                             <span className="text-[10px] md:text-xs font-medium text-gray-500 leading-normal">
-                                He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Términos y Condiciones de Uso</span>. Entiendo que seré contactado por un especialista licenciado.
+                                He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Términos y Condiciones de Uso</span> y la <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.hash = '#privacidad'; }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Política de Privacidad</span>. Entiendo que seré contactado por un especialista licenciado.
                             </span>
                         </label>
 
