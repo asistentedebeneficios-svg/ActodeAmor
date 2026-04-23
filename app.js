@@ -6993,6 +6993,100 @@ const ProcessFlow = () => {
     );
 };
 
+// --- NUEVO: PÁGINA POLÍTICA DE PRIVACIDAD ---
+const PrivacyPolicyPage = ({ onClose }) => {
+    useEffect(() => { window.scrollTo(0, 0); }, []);
+
+    return (
+        <div className="min-h-screen bg-[#F5F5F7] font-sans animate-fade-in pb-20 relative selection:bg-rose-500 selection:text-white">
+            <header className="fixed top-0 left-0 w-full z-50 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-gray-200/50">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <button onClick={onClose} className="px-4 py-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-full transition-all flex items-center gap-2 text-gray-700 text-sm font-bold group">
+                        <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-800 transition-colors shrink-0"/> 
+                        <span className="hidden sm:inline">Volver</span>
+                    </button>
+                    <div className="flex items-center w-[150px] sm:w-[180px] shrink-0">
+                        <img src="https://imnufit.com/wp-content/uploads/2026/03/lognomb1.png" alt="Asistente de Beneficios" className="h-8 sm:h-10 w-auto object-contain" />
+                    </div>
+                </div>
+            </header>
+
+            <div className="pt-32 md:pt-40 px-4 md:px-8 max-w-4xl mx-auto">
+                <div className="bg-white rounded-[2.5rem] p-8 md:p-12 lg:p-16 shadow-sm border border-gray-100">
+                    <div className="mb-12 border-b border-gray-100 pb-8 text-center md:text-left">
+                        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 mx-auto md:mx-0 shadow-inner">
+                            <ShieldCheck size={32} />
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">Política de Privacidad</h1>
+                        <p className="text-rose-600 font-bold uppercase tracking-widest text-[10px] md:text-xs">Última actualización: 23 de abril de 2026</p>
+                    </div>
+
+                    <div className="space-y-10 text-gray-600 leading-relaxed text-sm md:text-base">
+                        <p className="text-lg font-medium text-gray-800 text-balance">
+                            En Asistente de Beneficios ("nosotros", "nuestro" o "la Plataforma"), su privacidad y la protección de su información personal son pilares fundamentales de nuestra relación con usted. Al utilizar nuestro sitio web o nuestros servicios, usted acepta las prácticas descritas en esta política.
+                        </p>
+
+                        <section>
+                            <h2 className="text-gray-900 font-bold text-xl mb-4 flex items-center gap-2 border-l-4 border-rose-500 pl-3">1. Información que Recopilamos</h2>
+                            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 space-y-4">
+                                <div>
+                                    <p className="font-bold text-gray-800 mb-2">1.1 Directamente de usted:</p>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li>Nombre completo, teléfono y correo electrónico.</li>
+                                        <li>Estado de residencia y edad de la persona a proteger.</li>
+                                        <li>Respuestas del formulario (presupuesto, personas a proteger, etc).</li>
+                                    </ul>
+                                </div>
+                                <div className="pt-2 border-t border-gray-200/60">
+                                    <p className="font-bold text-gray-800 mb-2">1.2 Recopilación automática & Terceros:</p>
+                                    <p className="text-sm">Dirección IP, tipo de dispositivo, páginas visitadas, origen del tráfico (Meta Ads). Cuando usa formularios de Meta (Facebook/Instagram), recibimos los datos que autorizó compartir.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 className="text-gray-900 font-bold text-xl mb-4 flex items-center gap-2 border-l-4 border-rose-500 pl-3">2. Cómo Utilizamos su Información</h2>
+                            <p>Utilizamos su información única y exclusivamente para conectarle con un especialista licenciado, confirmar citas, y mejorar nuestra plataforma. <strong className="text-gray-900">No vendemos sus datos a terceros ni enviamos publicidad no solicitada.</strong></p>
+                        </section>
+
+                        <section>
+                            <h2 className="text-gray-900 font-bold text-xl mb-4 flex items-center gap-2 border-l-4 border-rose-500 pl-3">3. Con Quién la Compartimos</h2>
+                            <ul className="list-disc pl-5 space-y-2">
+                                <li><strong>Especialistas y agentes con licencia:</strong> Para brindarle la asesoría solicitada.</li>
+                                <li><strong>Compañías aseguradoras:</strong> Solo cuando decida adquirir una póliza.</li>
+                                <li><strong>Proveedores tecnológicos:</strong> Como nuestro CRM y servidores seguros.</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h2 className="text-gray-900 font-bold text-xl mb-4 flex items-center gap-2 border-l-4 border-rose-500 pl-3">4. Consentimiento (TCPA)</h2>
+                            <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 text-blue-900">
+                                <p className="font-medium italic text-sm">
+                                    "Al aceptar nuestros términos, usted otorga su consentimiento expreso para ser contactado por Asistente de Beneficios y sus especialistas mediante llamadas, SMS o correo electrónico para la gestión de su asesoría."
+                                </p>
+                                <p className="mt-3 text-xs opacity-70 font-medium">Este consentimiento no es condición de compra. Puede revocarlo respondiendo "BAJA" o "STOP" a cualquier mensaje.</p>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 className="text-gray-900 font-bold text-xl mb-4 flex items-center gap-2 border-l-4 border-rose-500 pl-3">5. Sus Derechos & Seguridad</h2>
+                            <p className="mb-4">Protegemos su información con encriptación SSL/TLS y servidores seguros. Usted tiene derecho a acceder, rectificar, eliminar o portar sus datos.</p>
+                            <p>Para ejercer estos derechos, escríbanos a: <a href="mailto:asistentedebeneficios@gmail.com" className="font-bold text-rose-600 hover:underline">asistentedebeneficios@gmail.com</a>. Las leyes que nos rigen incluyen TCPA, FIPA, CAN-SPAM Act y GLBA.</p>
+                        </section>
+
+                        <div className="pt-12 mt-12 border-t border-gray-100 flex flex-col items-center">
+                            <Lock size={24} className="text-gray-300 mb-4" />
+                            <p className="text-center text-gray-400 text-[10px] uppercase tracking-[0.3em] font-bold">
+                                Su confianza es nuestro fundamento
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+              
 const App = () => {
     // --- META PIXEL ANDROMEDA LOADER ---
     useEffect(() => {
@@ -7053,7 +7147,7 @@ const App = () => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [showAgentFormFromHome, setShowAgentFormFromHome] = useState(false);
     const [showAboutUs, setShowAboutUs] = useState(false);
-
+    const [showPrivacy, setShowPrivacy] = useState(() => window.location.hash.includes('#privacidad'));
     // --- GUARDAR EN TIEMPO REAL ---
     useEffect(() => {
         sessionStorage.setItem('funnelStepIndex', stepIndex.toString());
@@ -7076,16 +7170,21 @@ const App = () => {
         if (window.location.hostname.startsWith('portal.')) setIsPortalRoute(true);
 
         const handleHashChange = () => {
-            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
-            setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
-            setIsActivationRoute(window.location.hash.startsWith('#activar/'));
-            setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
-            
-            if (window.location.hash.includes('#terminos')) {
-                setShowProspectTermsFromMenu(true);
-                setStepIndex(0);
-            }
-        };
+            setIsPortalRoute(window.location.hash === '#portal' || window.location.hostname.startsWith('portal.'));
+            setIsReviewRoute(window.location.hash.startsWith('#evaluar/'));
+            setIsActivationRoute(window.location.hash.startsWith('#activar/'));
+            setIsRecoveryRoute(window.location.hash.startsWith('#recuperar') || window.location.href.includes('mode=resetPassword'));
+            
+            if (window.location.hash.includes('#privacidad')) {
+                setShowPrivacy(true);
+                setStepIndex(0);
+            }
+
+            if (window.location.hash.includes('#terminos')) {
+                setShowProspectTermsFromMenu(true);
+                setStepIndex(0);
+            }
+        };
 
         handleHashChange(); // <-- Esta línea fuerza la lectura del enlace al entrar
 
@@ -7441,8 +7540,17 @@ const App = () => {
 // --- PANTALLA: QUIÉNES SOMOS ---
     if (showAboutUs) {
         return <AboutUsPage onClose={() => setShowAboutUs(false)} />;
-    }                                                                   
-                                                                   
+    }
+// --- PANTALLA: PRIVACIDAD ---
+    if (showPrivacy) {
+        return <PrivacyPolicyPage onClose={() => { 
+            setShowPrivacy(false); 
+            if (window.location.hash.includes('#privacidad')) {
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+        }} />;
+    }
+                                                                    
     if (stepIndex === 0) return (
         <div className="min-h-[100dvh] w-full flex flex-col bg-white overflow-y-auto font-sans relative">
             {/* CABECERA PÁGINA PRINCIPAL Y MENÚ */}
@@ -7482,6 +7590,9 @@ const App = () => {
                                 </button>
                                 <button onClick={() => { setShowProspectTermsFromMenu(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
                                     <FileText size={18} className="text-gray-400 shrink-0 group-hover:scale-110 transition-transform" /> Términos y Condiciones
+                                </button>
+                                <button onClick={() => { window.location.hash = '#privacidad'; setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <Shield size={18} className="text-rose-500 shrink-0 group-hover:scale-110 transition-transform" /> Política de Privacidad
                                 </button>
                                 <button onClick={() => { setShowAgentFormFromHome(true); setIsMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-colors text-left w-full group">
                                     <UserPlus size={18} className="text-blue-500 shrink-0 group-hover:scale-110 transition-transform" /> Únete al equipo
