@@ -1019,7 +1019,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const [step, setStep] = useState(1);
     const [data, setData] = useState({
         para: null, age: 50, sexo: null, tabaco: null,
-        healthA: null, healthB: null, coverage: null, contactType: null,
+        healthA: null, healthB: null, healthC: null, coverage: null, contactType: null,
         plan: null, monthly: null, name: '', phone: '', email: '', state: '', date: '', time: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1100,7 +1100,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         if (data.healthA === 'yes') {
             setShowNI(true);
         } else {
-            const plan = data.healthB === 'yes' ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
+            const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
             updateData('plan', plan);
             setStep(4);
         }
@@ -1280,14 +1280,22 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
                     <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthB === 'no' ? 'border-green-500 bg-green-50' : data.healthB === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
                         <p className={`text-sm font-bold mb-1 ${data.healthB ? 'text-gray-900' : 'text-gray-700'}`}>2. En los últimos 2 años, ¿fue diagnosticado o recibió tratamiento para alguna de estas enfermedades?</p>
-                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">Corazón · Derrame cerebral · Cáncer · Pulmones (EPOC/enfisema) · Hígado o riñones · Alzheimer o demencia · Abuso de alcohol o drogas · Complicaciones de diabetes · Exámenes médicos pendientes de resultado</p>
+                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">Corazón · Derrame cerebral · Cáncer · Pulmones (EPOC/enfisema) · Hígado o riñones · Alzheimer o demencia · Abuso de alcohol o drogas · Complicaciones de diabetes (amputación, coma diabético, ceguera)</p>
                         <div className="flex gap-2">
-                            <button onClick={() => updateData('healthB', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
-                            <button onClick={() => updateData('healthB', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                                <button onClick={() => updateData('healthB', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
+                                <button onClick={() => updateData('healthB', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                            </div>
+                        </div>
+
+                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthC === 'no' ? 'border-green-500 bg-green-50' : data.healthC === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
+                        <p className={`text-sm font-bold mb-1 ${data.healthC ? 'text-gray-900' : 'text-gray-700'}`}>3. ¿Tiene algún examen médico pendiente de resultados para descartar o confirmar alguna de las condiciones anteriores?</p>
+                        <div className="flex gap-2 mt-4">
+                            <button onClick={() => updateData('healthC', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthC === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
+                            <button onClick={() => updateData('healthC', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthC === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
                         </div>
                     </div>
 
-                    <button onClick={handleHealthNext} disabled={!data.healthA || !data.healthB} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                    <button onClick={handleHealthNext} disabled={!data.healthA || !data.healthB || !data.healthC} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
                     <button onClick={() => setStep(2)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
                  </div>
             )}
