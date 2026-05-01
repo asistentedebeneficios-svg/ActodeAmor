@@ -1170,6 +1170,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </button>
                     </div>
                     <button onClick={() => setStep(2)} disabled={!data.para} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                    <button onClick={() => { sessionStorage.removeItem('funnelStepIndex'); window.location.reload(); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar al inicio</button>
                 </div>
             )}
 
