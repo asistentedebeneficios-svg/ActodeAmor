@@ -1444,8 +1444,9 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     </div>
 
                     {/* Formulario (Datos del Titular) */}
-                    <div className="mb-2 pl-2 border-l-2 border-rose-500">
-                        <h3 className="text-sm font-bold text-gray-900">📋 Datos del Titular</h3>
+                    <div className="mb-4 pl-3 border-l-2 border-rose-500 flex items-center gap-2">
+                        <FileText size={16} className="text-gray-400"/>
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Datos del Titular</h3>
                     </div>
                     <div className="space-y-4 mb-8">
                         <div className="relative">
@@ -1486,7 +1487,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     </div>
 
                     <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
-                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><CalendarDays size={18} className="text-blue-600"/> 📞 ¿Cuándo realizamos su llamada de activación?</h3>
+                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><Phone size={18} className="text-blue-600"/> ¿Cuándo realizamos su llamada de activación?</h3>
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
                             <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Programar luego</button>
