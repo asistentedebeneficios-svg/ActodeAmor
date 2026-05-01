@@ -1221,7 +1221,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">¿Consumió tabaco en los últimos 12 meses?</label>
                      <div className="grid grid-cols-2 gap-3 mb-8">
                          <button onClick={() => updateData('tabaco', false)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === false ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>No</button>
-                         <button onClick={() => updateData('tabaco', true)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === true ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>Sí</button>
+                         <button onClick={() => updateData('tabaco', true)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === true ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>Sí</button>
                      </div>
 
                      <button onClick={() => setStep(3)} disabled={data.sexo === null || data.tabaco === null} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
@@ -1235,20 +1235,20 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Preguntas Médicas</h2>
                     <p className="text-gray-500 mb-6 text-sm">Responda con honestidad. Todo es confidencial.</p>
 
-                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-4 ${data.healthA === 'no' ? 'border-green-500 bg-green-50' : data.healthA === 'yes' ? 'border-red-500 bg-red-50' : 'border-gray-100 bg-white'}`}>
+                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-4 ${data.healthA === 'no' ? 'border-green-500 bg-green-50' : data.healthA === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
                         <p className={`text-sm font-bold mb-3 ${data.healthA ? 'text-gray-900' : 'text-gray-700'}`}>1. ¿Tiene actualmente alguna enfermedad terminal, VIH, o está en cuidados paliativos?</p>
                         <div className="flex gap-2">
                             <button onClick={() => updateData('healthA', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthA === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
-                            <button onClick={() => updateData('healthA', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthA === 'yes' ? 'border-red-500 bg-red-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                            <button onClick={() => updateData('healthA', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthA === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
                         </div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthB === 'no' ? 'border-green-500 bg-green-50' : data.healthB === 'yes' ? 'border-red-500 bg-red-50' : 'border-gray-100 bg-white'}`}>
+                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthB === 'no' ? 'border-green-500 bg-green-50' : data.healthB === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
                         <p className={`text-sm font-bold mb-1 ${data.healthB ? 'text-gray-900' : 'text-gray-700'}`}>2. En los últimos 2 años, ¿fue diagnosticado o tratado por:</p>
                         <p className="text-xs text-gray-500 mb-4 leading-relaxed">Problemas del corazón, cáncer, derrames, complicaciones renales o pulmonares?</p>
                         <div className="flex gap-2">
                             <button onClick={() => updateData('healthB', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
-                            <button onClick={() => updateData('healthB', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'yes' ? 'border-red-500 bg-red-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                            <button onClick={() => updateData('healthB', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
                         </div>
                     </div>
 
