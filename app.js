@@ -122,29 +122,6 @@ const formatPhoneNumber = (value) => {
     return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
 };
 
-const STEPS = [
-    { id: 'intro', question: "Un Acto de Amor", subtext: "Llene este corazón paso a paso para descubrir si califica para proteger a su familia.", buttonStart: "Comenzar" },
-    { 
-        id: 'policy_for', 
-        question: "¿A quién desea proteger?", 
-        subtext: "Puede seleccionar a varias personas importantes.", 
-        multiSelect: true, 
-        options: [
-            { id: 'me', label: 'A mí', icon: User },
-            { id: 'spouse', label: 'Mi Pareja', icon: Heart },
-            { id: 'children', label: 'Mis Hijos', icon: Baby },
-            { id: 'parents', label: 'Mis Padres', icon: ShieldCheck }
-        ]
-    },
-    { id: 'budget', question: "¿Qué presupuesto mensual podría destinar?", subtext: "Una pequeña inversión hoy es un gran alivio mañana.", multiSelect: false, options: [
-        { id: '30-50', label: 'De $30 a $50', icon: Heart },
-        { id: '50-80', label: 'De $50 a $80', icon: Heart },
-        { id: '80-100', label: 'De $80 a $100', icon: Heart },
-        { id: '100-150', label: 'De $100 a $150', icon: Heart }
-    ]},
-    { id: 'contact', isForm: true }
-];
-
 const DEFAULT_SCHEDULE = {
     weekly: {
         0: { active: false, blocks: [{ start: '09:00', end: '17:00' }] }, 
@@ -159,61 +136,6 @@ const DEFAULT_SCHEDULE = {
 };
 
 const DAYS_MAP = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-
-const getLabelForValue = (stepId, value) => {
-    const step = STEPS.find(s => s.id === stepId);
-    if (!step || !step.options) return value;
-    const valToCheck = Array.isArray(value) ? value[0] : value;
-    const option = step.options.find(o => o.id === valToCheck);
-    return option ? option.label : valToCheck;
-};
-const getLabelsForArray = (stepId, values) => {
-    if (!Array.isArray(values)) return getLabelForValue(stepId, values);
-    const step = STEPS.find(s => s.id === stepId);
-    if (!step) return values.join(', ');
-    return values.map(v => step.options.find(o => o.id === v)?.label || v).join(', ');
-};
-
-const getReinforcementMessage = (stepId, selections) => {
-    const sels = Array.isArray(selections) ? selections : [selections];
-    if (stepId === 'policy_for') {
-        if (sels.length > 1) return { title: "Un Gran Gesto de Amor", text: "Cuidar de varias personas importantes en tu vida es el legado más noble que puedes dejar.", icon: Users };
-        if (sels.includes('me')) return { title: "Un Acto de Responsabilidad", text: "Proteger a su familia de estos gastos finales es el regalo más desinteresado.", icon: User };
-        if (sels.includes('parents')) return { title: "Gratitud Eterna", text: "Ellos cuidaron de usted toda la vida. Ahora es el turno de cuidar de ellos.", icon: ShieldCheck };
-        if (sels.includes('spouse')) return { title: "Promesa de Amor", text: "Asegurar que su pareja o cónyuge no tenga cargas financieras es la prueba máxima de cariño.", icon: Heart };
-        if (sels.includes('children')) return { title: "Futuro Seguro", text: "Garantizar la protección de sus hijos es la prioridad de todo padre.", icon: Baby };
-    }
-    if (stepId === 'motivation') return { title: "Paz Mental", text: "Transforma una futura preocupación en un recuerdo de amor.", icon: Star };
-    if (stepId === 'coverage_amount') return { title: "Va por buen camino", text: "El costo promedio de un funeral supera los $9,000. Su elección ayudará a cubrir esa diferencia.", icon: DollarSign };
-    if (stepId === 'budget') return { title: "Una inversión de amor", text: "Cuidar a su familia no requiere una fortuna. Con esta pequeña inversión mensual, les garantizará paz mental y tranquilidad para siempre.", icon: Heart };
-    return null;
-};
-
-const generateUserLetter = (data) => {
-    const insuredArray = data.policy_for || ['me'];
-    let salutation = "A mis seres amados,", body = "", closing = "Con mucho amor,";
-
-    if (insuredArray.length > 1) {
-        salutation = "A mi querida familia,";
-        body = "He estado reflexionando sobre lo importantes que son para mí. Ustedes son mi razón de ser y mi mayor deseo es que siempre tengan paz y tranquilidad. Por eso, he decidido tomar acción hoy para proteger a las personas que más amo. No quiero que el dinero o las deudas sean jamás una preocupación. Este plan es mi escudo de amor para proteger nuestro futuro.";
-    } else {
-        const insured = insuredArray[0];
-        if (insured === 'me') {
-            salutation = "A mi querida familia,";
-            body = "Sé que un día tendré que partir, y mi mayor miedo no es irme, sino dejarles preocupaciones. No quiero que mi despedida sea una carga financiera para ustedes. Por eso he tomado esta decisión hoy: dejar todo resuelto para que puedan recordarme con amor y no con deudas.";
-        } else if (insured === 'parents') {
-            salutation = "A mis queridos padres,";
-            body = "Ustedes me dieron la vida y cuidaron de mí siempre. Ahora es mi turno de devolverles esa paz. No quiero que se preocupen por el futuro ni por gastos inesperados. Esta cobertura es mi forma de decirles 'Gracias' y asegurar que siempre estén tranquilos.";
-        } else if (insured === 'spouse') {
-            salutation = "Al amor de mi vida,";
-            body = "Prometí cuidarte en la salud y en la enfermedad, y esta decisión es para cumplir esa promesa más allá de todo. No quiero que enfrentes momentos difíciles con estrés financiero. Esto es para ti, para tu seguridad y nuestro futuro.";
-        } else if (insured === 'children') {
-            salutation = "A mis hijos adorados,";
-            body = "Desde que nacieron, mi misión ha sido protegerlos. Esta decisión es para garantizar que, pase lo que pase, tengan un respaldo. Es mi último regalo de protección para asegurar su futuro.";
-        }
-    }
-    return { salutation, body, closing };
-};
 
 // --- FIREBASE CONFIGURATION (CON SEGURO ANTI-DUPLICADOS) ---
 const firebaseConfig = {
@@ -1064,642 +986,317 @@ const AdminLogin = ({ onClose, onLogin, onOpenRegister }) => {
     );
 };
 
-const HeartProgress = ({ percentage, isBeating }) => {
-    return (
-        <div className="relative w-24 h-24 mx-auto mb-4 transition-all duration-700 ease-out">
-            <div className={`absolute inset-0 bg-rose-500/20 blur-xl rounded-full transform scale-75 translate-y-2 ${isBeating ? 'animate-pulse' : ''}`}></div>
-            <svg viewBox="0 0 24 24" fill="none" className={`w-full h-full drop-shadow-md transition-transform duration-300 ${isBeating ? 'scale-110' : 'scale-100'}`}>
-                <defs>
-                    <linearGradient id="heartFill" x1="0" x2="0" y1="1" y2="0">
-                        <stop offset={`${percentage}%`} stopColor="#E11D48" style={{transition: 'offset 1s ease-in-out'}} />
-                        <stop offset={`${percentage}%`} stopColor="#FFE4E6" style={{transition: 'offset 1s ease-in-out'}} />
-                    </linearGradient>
-                </defs>
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
-                      fill="url(#heartFill)" stroke="#E11D48" strokeWidth="1" strokeLinejoin="round" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1">
-                <span className={`text-sm font-bold ${percentage >= 50 ? 'text-white' : 'text-rose-600'}`}>{percentage}%</span>
-            </div>
-        </div>
-    );
+// ── RATES TABLE COMPLETA ──────────────────────────────────────
+const R = {
+  F:{0:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},1:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},2:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},3:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},4:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},5:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},6:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},7:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},8:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},9:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},10:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},11:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},12:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},13:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},14:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},15:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},16:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},17:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},18:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},19:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},20:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},21:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},22:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},23:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},24:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},25:{rnt:1.68,rt:1.68,mod:3.04,add:1.00},26:{rnt:1.73,rt:1.84,mod:3.15,add:1.00},27:{rnt:1.77,rt:1.99,mod:3.26,add:1.00},28:{rnt:1.83,rt:2.14,mod:3.38,add:1.00},29:{rnt:1.87,rt:2.30,mod:3.49,add:1.00},30:{rnt:1.92,rt:2.45,mod:3.60,add:1.00},31:{rnt:1.99,rt:2.52,mod:3.78,add:1.00},32:{rnt:2.06,rt:2.60,mod:3.97,add:1.00},33:{rnt:2.13,rt:2.67,mod:4.15,add:1.00},34:{rnt:2.20,rt:2.75,mod:4.34,add:1.00},35:{rnt:2.27,rt:2.83,mod:4.52,add:1.00},36:{rnt:2.29,rt:2.88,mod:4.80,add:1.00},37:{rnt:2.30,rt:2.93,mod:5.09,add:1.00},38:{rnt:2.32,rt:2.98,mod:5.37,add:1.00},39:{rnt:2.33,rt:3.03,mod:5.65,add:1.00},40:{rnt:2.35,rt:3.08,mod:5.94,add:1.00},41:{rnt:2.41,rt:3.17,mod:6.15,add:1.00},42:{rnt:2.48,rt:3.27,mod:6.36,add:1.00},43:{rnt:2.54,rt:3.37,mod:6.58,add:1.00},44:{rnt:2.62,rt:3.46,mod:6.79,add:1.00},45:{rnt:2.68,rt:3.56,mod:7.01,add:1.00},46:{rnt:2.78,rt:3.68,mod:7.24,add:1.00},47:{rnt:2.88,rt:3.81,mod:7.49,add:1.00},48:{rnt:2.98,rt:3.93,mod:7.72,add:1.00},49:{rnt:3.08,rt:4.05,mod:7.97,add:1.00},50:{rnt:3.18,rt:4.18,mod:8.20,add:1.00},51:{rnt:3.28,rt:4.33,mod:8.25,add:1.00},52:{rnt:3.37,rt:4.48,mod:8.30,add:1.00},53:{rnt:3.47,rt:4.63,mod:8.36,add:1.00},54:{rnt:3.56,rt:4.79,mod:8.42,add:1.00},55:{rnt:3.66,rt:4.93,mod:8.47,add:1.00},56:{rnt:3.79,rt:5.09,mod:8.65,add:1.00},57:{rnt:3.91,rt:5.24,mod:8.83,add:1.00},58:{rnt:4.05,rt:5.40,mod:9.01,add:1.00},59:{rnt:4.17,rt:5.54,mod:9.19,add:1.00},60:{rnt:4.31,rt:5.70,mod:9.37,add:1.00},61:{rnt:4.55,rt:6.04,mod:9.59,add:1.00},62:{rnt:4.80,rt:6.36,mod:9.81,add:1.00},63:{rnt:5.05,rt:6.70,mod:10.03,add:1.00},64:{rnt:5.30,rt:7.02,mod:10.25,add:1.00},65:{rnt:5.55,rt:7.36,mod:10.47,add:1.00},66:{rnt:5.92,rt:7.69,mod:10.92,add:1.00},67:{rnt:6.28,rt:8.01,mod:11.38,add:1.00},68:{rnt:6.64,rt:8.34,mod:11.84,add:1.00},69:{rnt:7.01,rt:8.66,mod:12.30,add:1.00},70:{rnt:7.37,rt:8.99,mod:12.76,add:1.00},71:{rnt:7.91,rt:9.61,mod:13.18,add:1.50},72:{rnt:8.43,rt:10.24,mod:13.60,add:1.50},73:{rnt:8.96,rt:10.86,mod:14.02,add:1.50},74:{rnt:9.48,rt:11.49,mod:14.45,add:1.50},75:{rnt:10.01,rt:12.11,mod:14.87,add:1.50},76:{rnt:10.90,rt:12.78,mod:15.61,add:2.00},77:{rnt:11.80,rt:13.45,mod:16.35,add:2.00},78:{rnt:12.44,rt:14.12,mod:17.09,add:2.00},79:{rnt:13.32,rt:14.79,mod:17.83,add:2.00},80:{rnt:14.20,rt:15.47,mod:18.57,add:2.00},81:{rnt:14.73,rt:15.86,mod:18.75,add:2.25},82:{rnt:15.26,rt:16.26,mod:18.82,add:2.25},83:{rnt:15.79,rt:16.37,mod:18.85,add:2.25},84:{rnt:16.32,rt:16.91,mod:19.16,add:2.25},85:{rnt:16.85,rt:17.46,mod:19.47,add:2.25}},
+  M:{0:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},1:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},2:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},3:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},4:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},5:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},6:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},7:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},8:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},9:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},10:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},11:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},12:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},13:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},14:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},15:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},16:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},17:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},18:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},19:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},20:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},21:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},22:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},23:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},24:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},25:{rnt:1.91,rt:1.91,mod:3.91,add:1.00},26:{rnt:2.01,rt:2.10,mod:4.00,add:1.00},27:{rnt:2.11,rt:2.30,mod:4.09,add:1.00},28:{rnt:2.22,rt:2.49,mod:4.18,add:1.00},29:{rnt:2.32,rt:2.68,mod:4.27,add:1.00},30:{rnt:2.43,rt:2.88,mod:4.36,add:1.00},31:{rnt:2.44,rt:2.94,mod:4.53,add:1.00},32:{rnt:2.45,rt:3.00,mod:4.69,add:1.00},33:{rnt:2.46,rt:3.05,mod:4.87,add:1.00},34:{rnt:2.47,rt:3.11,mod:5.03,add:1.00},35:{rnt:2.48,rt:3.17,mod:5.19,add:1.00},36:{rnt:2.56,rt:3.25,mod:5.50,add:1.00},37:{rnt:2.65,rt:3.34,mod:5.81,add:1.00},38:{rnt:2.73,rt:3.42,mod:6.12,add:1.00},39:{rnt:2.81,rt:3.50,mod:6.44,add:1.00},40:{rnt:2.89,rt:3.58,mod:6.74,add:1.00},41:{rnt:2.97,rt:3.72,mod:6.94,add:1.00},42:{rnt:3.05,rt:3.86,mod:7.13,add:1.00},43:{rnt:3.12,rt:4.00,mod:7.32,add:1.00},44:{rnt:3.20,rt:4.14,mod:7.52,add:1.00},45:{rnt:3.28,rt:4.28,mod:7.71,add:1.00},46:{rnt:3.41,rt:4.46,mod:8.09,add:1.00},47:{rnt:3.53,rt:4.63,mod:8.47,add:1.00},48:{rnt:3.67,rt:4.81,mod:8.85,add:1.00},49:{rnt:3.79,rt:4.98,mod:9.23,add:1.00},50:{rnt:3.92,rt:5.16,mod:9.61,add:1.00},51:{rnt:4.07,rt:5.40,mod:9.79,add:1.00},52:{rnt:4.22,rt:5.64,mod:9.98,add:1.00},53:{rnt:4.37,rt:5.89,mod:10.16,add:1.00},54:{rnt:4.52,rt:6.13,mod:10.34,add:1.00},55:{rnt:4.67,rt:6.37,mod:10.53,add:1.00},56:{rnt:4.88,rt:6.64,mod:10.64,add:1.00},57:{rnt:5.09,rt:6.90,mod:10.76,add:1.00},58:{rnt:5.31,rt:7.16,mod:10.87,add:1.00},59:{rnt:5.52,rt:7.42,mod:11.00,add:1.00},60:{rnt:5.73,rt:7.69,mod:11.11,add:1.00},61:{rnt:5.92,rt:8.03,mod:11.45,add:1.00},62:{rnt:6.09,rt:8.38,mod:11.80,add:1.00},63:{rnt:6.27,rt:8.72,mod:12.14,add:1.00},64:{rnt:6.45,rt:9.07,mod:12.48,add:1.00},65:{rnt:6.63,rt:9.41,mod:12.83,add:1.00},66:{rnt:7.01,rt:9.81,mod:13.38,add:1.00},67:{rnt:7.38,rt:10.22,mod:13.93,add:1.00},68:{rnt:7.75,rt:10.62,mod:14.49,add:1.00},69:{rnt:8.13,rt:11.02,mod:15.05,add:1.00},70:{rnt:8.51,rt:11.42,mod:15.60,add:1.00},71:{rnt:9.26,rt:12.22,mod:16.26,add:1.50},72:{rnt:10.02,rt:13.01,mod:16.93,add:1.50},73:{rnt:10.78,rt:13.81,mod:17.60,add:1.50},74:{rnt:11.54,rt:14.60,mod:18.26,add:1.50},75:{rnt:12.29,rt:15.39,mod:18.93,add:1.50},76:{rnt:13.50,rt:16.22,mod:19.41,add:2.00},77:{rnt:14.73,rt:17.05,mod:19.90,add:2.00},78:{rnt:15.63,rt:17.89,mod:20.40,add:2.00},79:{rnt:16.83,rt:18.72,mod:20.89,add:2.00},80:{rnt:18.02,rt:19.55,mod:20.97,add:2.00},81:{rnt:18.37,rt:19.73,mod:20.99,add:2.25},82:{rnt:18.73,rt:19.91,mod:21.01,add:2.25},83:{rnt:19.08,rt:20.08,mod:21.04,add:2.25},84:{rnt:19.44,rt:20.26,mod:21.06,add:2.25},85:{rnt:19.79,rt:20.44,mod:21.08,add:2.25}}
 };
+const FEE = 3;
 
-const LetterStep = ({ data, onContinue }) => {
-    const letter = generateUserLetter(data);
-    const [isSigned, setIsSigned] = useState(false);
-    const [isWritingComplete, setIsWritingComplete] = useState(false);
-
-    // Temporizador para el efecto de Fade-In ajustado a 3 segundos
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsWritingComplete(true);
-        }, 3000); // <-- CAMBIO A 3 SEGUNDOS
-        return () => clearTimeout(timer);
-    }, []);
-
-    return (
-        <div className="flex flex-col w-full pt-4 pb-10 min-h-0 px-2 md:px-0">
-            <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
-                @keyframes letterFadeIn {
-                    0% { opacity: 0; }
-                    100% { opacity: 1; }
-                }
-            `}} />
-
-            {/* Diseño del papel texturizado/crema */}
-            <div className="bg-[#FCFBF8] p-6 md:p-10 rounded-[2rem] border border-[#EBE5D9] relative mb-6 shadow-xl overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E11D48] via-rose-400 to-[#E11D48] opacity-80"></div>
-                
-                {/* SOLUCIÓN AL CORAZÓN NEGRO: Color incrustado y opacidad pura */}
-                <div className="absolute -bottom-10 -right-10 pointer-events-none" style={{ opacity: 0.03 }}>
-                    <Heart size={200} color="#E11D48" fill="#E11D48" />
-                </div>
-                
-                {/* SOLUCIÓN AL PESTAÑEO: Se inicia invisible (opacity: 0) desde la línea 1 de ejecución */}
-                <div 
-                    className="italic space-y-4 leading-relaxed pb-4 relative z-10 mt-2 min-h-[150px]"
-                    style={{ fontFamily: "'Crimson Text', Georgia, serif", opacity: 0, animation: 'letterFadeIn 3s ease-in-out forwards' }}
-                >
-                    <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl">{letter.salutation}</p>
-                    <p className="text-xl md:text-2xl text-gray-800 tracking-wide">{letter.body}</p>
-                    <p className="font-semibold text-[#9F1239] text-2xl md:text-3xl pt-4">{letter.closing}</p>
-                </div>
-                
-                {/* ÁREA DE ACCIÓN REDUCIDA */}
-                <div 
-                    className={`mt-8 md:mt-10 relative w-full flex items-center justify-center p-5 md:p-6 rounded-3xl transition-all duration-500 ${
-                        !isWritingComplete
-                        ? 'bg-gray-100 border border-gray-200 opacity-50 cursor-not-allowed'
-                        : !isSigned 
-                        ? 'bg-rose-50/80 border-2 border-dashed border-[#E11D48] hover:bg-rose-100/80 shadow-inner cursor-pointer' 
-                        : 'bg-white border border-gray-100 shadow-sm'
-                    }`} 
-                    onClick={(!isSigned && isWritingComplete) ? () => setIsSigned(true) : undefined}
-                >
-                    {!isSigned ? (
-                        <div className={`flex flex-col items-center justify-center text-center ${isWritingComplete ? 'animate-pulse' : 'text-gray-400'}`}>
-                            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-3 shadow-sm transition-colors ${isWritingComplete ? 'bg-[#E11D48] text-white shadow-rose-500/40' : 'bg-gray-200 text-gray-400 shadow-none'}`}>
-                                <PenTool size={24} />
-                            </div>
-                            <span className={`font-black text-lg md:text-xl uppercase tracking-widest mb-1 font-sans ${isWritingComplete ? 'text-[#E11D48]' : 'text-gray-400'}`}>
-                                {isWritingComplete ? "Tocar Aquí" : "Espere..."}
-                            </span>
-                            <span className={`font-bold text-xs md:text-sm font-sans ${isWritingComplete ? 'text-rose-800' : 'text-gray-400'}`}>
-                                {isWritingComplete ? "Para sellar la promesa" : "Leyendo carta..."}
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="animate-stamp relative py-2">
-                            <div className="border-[4px] border-[#E11D48] rounded-full w-24 h-24 md:w-28 md:h-28 flex items-center justify-center transform -rotate-12 opacity-95 bg-white shadow-xl">
-                                <div className="border-2 border-[#E11D48] rounded-full w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center text-[#E11D48] border-dashed">
-                                    <Heart size={24} fill="currentColor" className="mb-1" />
-                                    <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] leading-none font-sans">Promesa</span>
-                                    <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] mt-1 text-rose-800 font-sans">Sellada</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-            
-            <div className="shrink-0 animate-slide-up pb-8">
-                <p className="text-center text-gray-500 text-sm md:text-base font-medium mb-4">
-                    {!isWritingComplete ? "Por favor lea la carta de compromiso..." : isSigned ? "✓ Su compromiso de amor ha quedado registrado." : "Descuide, esto es sólo un acto simbólico."}
-                </p>
-                <button 
-                    onClick={onContinue} 
-                    disabled={!isSigned || !isWritingComplete} 
-                    className={`w-full py-4 md:py-5 rounded-full font-bold text-lg md:text-xl shadow-xl transition-all flex items-center justify-center gap-2 ${isSigned && isWritingComplete ? 'bg-[#E11D48] text-white hover:scale-[1.02]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                >
-                    Continuar <ChevronRight size={24}/>
-                </button>
-            </div>
-        </div>
-    );
-};
-
-const FAQStep = ({ options, onContinue }) => {
-    const [selectedQuestions, setSelectedQuestions] = useState([]);
-    const [showAnswers, setShowAnswers] = useState(false);
-
-    const toggleQuestion = (id) => setSelectedQuestions(prev => prev.includes(id) ? prev.filter(q => q !== id) : [...prev, id]);
-    const handleViewAnswers = () => { if (selectedQuestions.length === 0) onContinue(); else { setShowAnswers(true); window.scrollTo(0, 0); } };
-    const selectedAnswers = options.filter(opt => selectedQuestions.includes(opt.id));
-
-    if (showAnswers) {
-        return (
-            <div className="flex flex-col w-full relative animate-fade-in pb-10 px-4 md:px-0">
-                <div className="text-center mb-6 mt-4">
-                    <div className="inline-flex p-3 bg-green-50 rounded-full text-green-600 mb-2"><Check size={32} /></div>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">Aquí están sus respuestas</h2>
-                    <p className="text-sm md:text-base text-gray-500 mt-2">Información clara para su tranquilidad.</p>
-                </div>
-                <div className="space-y-4 md:space-y-6">
-                    {selectedAnswers.map(ans => (
-                        <div key={ans.id} className="bg-white p-5 md:p-6 rounded-2xl border border-rose-100 shadow-sm animate-slide-up">
-                            <h4 className="font-bold text-rose-700 text-base md:text-lg mb-2 flex items-center gap-2 border-b border-rose-50 pb-2"><ans.icon size={18}/> {ans.label}</h4>
-                            <p className="text-gray-700 text-sm md:text-base leading-relaxed">{ans.answer}</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="pt-8 pb-12">
-                    <button onClick={onContinue} className="w-full bg-[#E11D48] text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:scale-[1.02] transition-transform animate-scale-up flex items-center justify-center gap-2">Entendido, Continuar <ChevronRight size={20}/></button>
-                    <button onClick={() => {setShowAnswers(false); window.scrollTo(0, 0);}} className="w-full mt-4 text-gray-400 text-sm font-medium hover:text-gray-600 underline">Volver a las preguntas</button>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex flex-col w-full relative pb-10 px-4 md:px-0">
-            <div className="text-center mb-8 mt-4">
-                <div className="inline-flex p-3 bg-blue-50 rounded-full text-blue-500 mb-2"><MessageSquare size={32} /></div>
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">¿Tiene alguna duda?</h2>
-                <p className="text-sm md:text-base text-gray-500 mt-2">Seleccione todas las que desee aclarar ahora.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-8">
-                {options.map((opt) => {
-                    const isSelected = selectedQuestions.includes(opt.id);
-                    return (
-                        <button key={opt.id} onClick={() => toggleQuestion(opt.id)} className={`p-4 md:p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 text-center transition-all min-h-[140px] md:min-h-[160px] ${isSelected ? 'bg-blue-50 border-blue-500 shadow-md scale-[1.02]' : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200 hover:bg-gray-50'}`}>
-                            <div className={`p-2.5 rounded-full ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}><opt.icon size={28} /></div>
-                            <span className={`text-sm md:text-base font-bold leading-tight px-2 ${isSelected ? 'text-blue-700' : 'text-gray-600'}`}>{opt.label}</span>
-                            {isSelected && <div className="absolute top-3 right-3 text-blue-500"><Check size={20} strokeWidth={3}/></div>}
-                        </button>
-                    );
-                })}
-            </div>
-            <div className="mt-auto pb-8">
-                <button onClick={handleViewAnswers} className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg hover:scale-[1.02] transition-transform animate-scale-up flex items-center justify-center gap-2 ${selectedQuestions.length > 0 ? 'bg-[#E11D48] text-white' : 'bg-white border-2 border-gray-200 text-gray-400'}`}>
-                    {selectedQuestions.length > 0 ? "Ver Respuestas" : "No tengo dudas, Continuar"} <ChevronRight size={20}/>
-                </button>
-            </div>
-        </div>
-    );
-};
-
-const ContactForm = ({ onSubmit, onSuccess, data, scheduleConfig, onAdminTrigger, generalSettings, bookedSlots }) => {
-    const availableStates = generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES;
-    const [name, setName] = useState('');
-    const [acceptedTerms, setAcceptedTerms] = useState(false);
-    const [showTermsModal, setShowTermsModal] = useState(false);
-    const [age, setAge] = useState(''); // <-- NUEVO CAMPO EDAD
-    const [phone, setPhone] = useState('');
-    const [email, setEmail] = useState('');
-    const [noEmail, setNoEmail] = useState(false);
-    const [state, setState] = useState('');
-    const [callType, setCallType] = useState('video'); 
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
-    const [isAsap, setIsAsap] = useState(true); // Default a "Cuanto antes" para reducir fricción
-    const [status, setStatus] = useState('idle'); 
+// --- NUEVO COMPONENTE: EMBUDO INTELIGENTE REACT/TAILWIND ---
+const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, availableStates }) => {
+    const [step, setStep] = useState(1);
+    const [data, setData] = useState({
+        para: null, age: 50, sexo: null, tabaco: null,
+        healthA: null, healthB: null, coverage: null, contactType: null,
+        plan: null, monthly: null, name: '', phone: '', email: '', state: '', date: '', time: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showNI, setShowNI] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
+    const [dateErrorMsg, setDateErrorMsg] = useState('');
+
+    const pct = step === 1 ? 0 : step === 2 ? 25 : step === 3 ? 50 : step === 4 ? 75 : 100;
+    const updateData = (field, value) => setData(prev => ({ ...prev, [field]: value }));
 
     useEffect(() => {
-        if(!date) { setAvailableSlots([]); return; }
+        if (!data.date || data.contactType !== 'schedule') { setAvailableSlots([]); return; }
         
-        // Convertimos la fecha de forma segura para evitar saltos de zona horaria
-        const selectedParts = date.split('-');
+        const selectedParts = data.date.split('-');
         const selectedDate = new Date(selectedParts[0], selectedParts[1] - 1, selectedParts[2]);
         const dayIndex = selectedDate.getDay(); 
-        
-        let dayConfig = scheduleConfig.exceptions[date] || scheduleConfig.weekly[dayIndex];
+        let dayConfig = scheduleConfig.exceptions[data.date] || scheduleConfig.weekly[dayIndex];
 
-        if(!dayConfig || !dayConfig.active || !dayConfig.blocks) { setAvailableSlots([]); return; }
+        if (!dayConfig || !dayConfig.active || !dayConfig.blocks) { setAvailableSlots([]); return; }
 
         const slots = [];
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const isToday = date === todayStr;
-        
-        // Sumamos 1 hora (60 minutos) a la hora actual para crear el margen de preparación
+        const isToday = data.date === todayStr;
         const bufferTime = new Date(now.getTime() + 60 * 60 * 1000);
 
         dayConfig.blocks.forEach(block => {
-            let current = new Date(`${date}T${block.start}`);
-            const end = new Date(`${date}T${block.end}`);
-            while(current < end) {
+            let current = new Date(`${data.date}T${block.start}`);
+            const end = new Date(`${data.date}T${block.end}`);
+            while (current < end) {
                 const timeStr = current.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true}).toLowerCase().replace('am', 'a.m.').replace('pm', 'p.m.');
-                
-                // Si es hoy, bloqueamos si la hora del bloque es menor al margen de preparación (ahora + 1 hr)
-                if(isToday && current < bufferTime) { 
-                    current.setMinutes(current.getMinutes() + 60); 
-                    continue; 
-                }
-                
+                if (isToday && current < bufferTime) { current.setMinutes(current.getMinutes() + 60); continue; }
                 slots.push(timeStr);
                 current.setMinutes(current.getMinutes() + 60); 
             }
         });
         slots.sort((a, b) => new Date('1970/01/01 ' + a.replace('a.m.','AM').replace('p.m.','PM')) - new Date('1970/01/01 ' + b.replace('a.m.','AM').replace('p.m.','PM')));
-        
-        const finalSlots = slots.filter(timeStr => {
-                if (!generalSettings?.strictCalendarMode || !state) return true;
-                const tz = STATE_TZ[state];
-                if (!tz) return true;
-                const utcMs = zonedDateTimeToUtcMs(date, timeStr, tz);
-                return !bookedSlots.includes(String(utcMs));
-            });
-            
-            setAvailableSlots(finalSlots); 
-            
-            // Solo borramos la hora si el cliente está llenando el formulario (idle)
-            // Si ya le dio a enviar, congelamos la hora para que el ticket de éxito la pueda mostrar
-            if (status === 'idle') {
-                setTime(prevTime => finalSlots.includes(prevTime) ? prevTime : ''); 
-            }
-        }, [date, scheduleConfig, state, generalSettings?.strictCalendarMode, bookedSlots, status]);
+        
+        const finalSlots = slots.filter(timeStr => {
+            if (!generalSettings?.strictCalendarMode || !data.state) return true;
+            const tz = STATE_TZ[data.state];
+            if (!tz) return true;
+            const utcMs = zonedDateTimeToUtcMs(data.date, timeStr, tz);
+            return !bookedSlots.includes(String(utcMs));
+        });
+        
+        setAvailableSlots(finalSlots); 
+        updateData('time', finalSlots.includes(data.time) ? data.time : ''); 
+    }, [data.date, scheduleConfig, data.state, generalSettings?.strictCalendarMode, bookedSlots, data.contactType]);
 
-    const ageNum = parseInt(age, 10);
-    const isAgeValid = ageNum >= 18 && ageNum <= 85;
-    const isScheduleValid = isAsap ? true : (date && time);
-    const isFormValid = name && age && isAgeValid && phone.replace(/\D/g, '').length === 10 && state && (noEmail || email) && isScheduleValid && acceptedTerms;
-
-    useEffect(() => {
-        if (status === 'success') {
-            setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 1000);
-        }
-    }, [status]);
-
-    // --- NUEVO ESTADO: Manejador de error para fechas pasadas ---
-    const [dateErrorMsg, setDateErrorMsg] = useState('');
-
-    // Calculamos la fecha de HOY para permitir citas el mismo día (Movido arriba para poder usarlo en la validación)
     const todayObj = new Date();
-    // Ajuste de zona horaria básico: evitamos que a las 11:59pm se desfase
     const minDate = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
 
-    const handleFinalSubmit = async (e) => {
-        e.preventDefault();
-        
-        // --- 🛡️ BARRERA CONTRA FECHAS DEL PASADO (Para Móviles) ---
-        setDateErrorMsg(''); // Limpiamos errores previos
-        if (date && date < minDate) {
-            setDateErrorMsg('Ha seleccionado una fecha que ya pasó. Por favor, elija el día de hoy o una fecha futura.');
-            return; // Detiene el envío
+    const calcPrice = (cov) => {
+        const rate = R[data.sexo]?.[data.age] || R[data.sexo]?.[50]; 
+        const thou = cov / 1000;
+        let base = data.plan === 'Modificado' ? rate.mod : (data.plan === 'Regular-Tabaco' ? rate.rt : rate.rnt);
+        const monthly = ((base * thou) + rate.add + FEE);
+        updateData('coverage', cov);
+        updateData('monthly', monthly.toFixed(2));
+    };
+
+    const handleHealthNext = () => {
+        if (data.healthA === 'yes') {
+            setShowNI(true);
+        } else {
+            const plan = data.healthB === 'yes' ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
+            updateData('plan', plan);
+            setStep(4);
         }
-        // ----------------------------------------------------------
+    };
 
-        if(!isFormValid || status !== 'idle') return;
-        setStatus('submitting');
-        
-        const tz = STATE_TZ[state];
-        const utcSlotId = (!isAsap && generalSettings?.strictCalendarMode && tz) ? String(zonedDateTimeToUtcMs(date, time, tz)) : null;
+    const handleFinalSubmit = async () => {
+        setDateErrorMsg('');
+        if (data.contactType === 'schedule' && data.date < minDate) {
+            setDateErrorMsg('Elija el día de hoy o una fecha futura.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        const tz = STATE_TZ[data.state];
+        const utcSlotId = (data.contactType === 'schedule' && generalSettings?.strictCalendarMode && tz) 
+            ? String(zonedDateTimeToUtcMs(data.date, data.time, tz)) 
+            : null;
+
+        const finalPayload = {
+            name: data.name, phone: data.phone, email: data.email, state: data.state,
+            age: data.age.toString(),
+            policy_for: [data.para],
+            isAsap: data.contactType === 'asap',
+            date: data.contactType === 'asap' ? 'Inmediata' : data.date,
+            time: data.contactType === 'asap' ? 'ASAP' : data.time,
+            callType: 'call',
+            budget: `$${data.monthly}`,
+            planRecomendado: data.plan,
+            cobertura: `$${data.coverage}`,
+            utcSlotId
+        };
         
-        const result = await onSubmit({ 
-            name, age, phone, email: noEmail ? 'No proporcionado' : email, state, callType, 
-            date: isAsap ? 'Inmediata' : date, 
-            time: isAsap ? 'ASAP' : time, 
-            isAsap, utcSlotId 
-        });
-        
-        if (result === "SLOT_TAKEN") {
-            setDateErrorMsg('Alguien más acaba de reservar este horario. Por favor, elija otro rápidamente.');
-            setStatus('idle');
-            setTime('');
-            return;
-        }
+        const result = await onSubmit(finalPayload);
+        if (result === "SLOT_TAKEN") {
+            setDateErrorMsg('Este horario acaba de ser reservado. Elija otro.');
+            setIsSubmitting(false);
+            updateData('time', '');
+            return;
+        }
+    };
 
-        setStatus('success');
-        onSuccess();
-    };
+    if (showNI) {
+        return (
+            <div className="w-full max-w-md mx-auto p-8 bg-white rounded-3xl shadow-xl text-center mt-10 animate-fade-in border border-gray-100">
+                <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner"><AlertTriangle size={32}/></div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Evaluación Personalizada</h2>
+                <p className="text-gray-500 mb-6 text-sm">Basado en sus respuestas, un especialista certificado revisará su caso para encontrarle la mejor opción disponible. Sin costo.</p>
+                <div className="space-y-4 mb-6">
+                    <input type="text" placeholder="Su nombre" className="w-full p-4 bg-gray-50 rounded-xl outline-none font-medium border border-gray-200 focus:border-rose-400 focus:bg-white transition-colors" value={data.name} onChange={e => updateData('name', e.target.value)} />
+                    <input type="tel" placeholder="Su teléfono" maxLength="14" className="w-full p-4 bg-gray-50 rounded-xl outline-none font-medium border border-gray-200 focus:border-rose-400 focus:bg-white transition-colors" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
+                </div>
+                <button onClick={() => { updateData('contactType', 'asap'); handleFinalSubmit(); }} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || isSubmitting} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">
+                    {isSubmitting ? 'Enviando...' : <><Phone size={18}/> Hablar con un especialista</>}
+                </button>
+                <button onClick={() => { setShowNI(false); setStep(3); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors">Volver</button>
+            </div>
+        );
+    }
 
     return (
-        <div className="w-full max-w-md mx-auto animate-slide-up flex flex-col pb-12 pt-4 relative px-4 md:px-0">
-             {status !== 'success' && (
-                <div className="text-center mb-6 md:mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Agendar Asesoría</h2>
-                    <p className="text-sm md:text-base text-gray-500">Un experto le ayudará a activar su plan.</p>
+        <div className="w-full max-w-md mx-auto pt-6 pb-12 animate-fade-in px-4 md:px-0">
+            <div className="flex flex-col items-center mb-6">
+                <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-xl transition-all duration-700 shadow-sm ${pct === 100 ? 'bg-rose-500 text-white border-rose-600 animate-pulse' : 'bg-white border-rose-100 text-rose-500 font-bold'}`}>
+                    {pct}%
                 </div>
-             )}
-            
-            <div className="space-y-4 md:space-y-6">
-                {status === 'success' ? (
-                    <div className="bg-white p-6 md:p-8 rounded-3xl border border-rose-100 shadow-xl text-center animate-fade-in flex flex-col items-center justify-center py-10 relative">
-                        
-                        <div className="mb-4 animate-[slide-up_0.5s_ease-out_0.2s_both]">
-                            <HeartProgress percentage={100} isBeating={true} />
-                        </div>
-                        
-                        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Felicidades! Su cita está confirmada</h2>
-                        <p className="text-gray-500 mb-8 text-sm md:text-base leading-relaxed text-balance font-medium">Ha dado un hermoso paso para proteger a su familia. Ahora es momento de relajarse, nosotros nos encargamos del resto.</p>
+            </div>
 
-                        {/* --- BLOQUE DE TRANQUILIDAD Y PRIVACIDAD MEJORADO (SOLUCIÓN DE COMPRESIÓN) --- */}
-                        <div className="w-full bg-white border border-gray-100 rounded-[2rem] p-6 md:p-8 text-left shadow-soft mb-8 animate-[slide-up_0.5s_ease-out_0.3s_both]">
-                            <ul className="space-y-8"> {/* Mayor espaciado entre secciones */}
-                                
-                                <li className="flex flex-col gap-4"> {/* Layout en columna */}
-                                    <div className="bg-blue-50 text-blue-600 p-3.5 rounded-2xl w-fit shrink-0 border border-blue-100 shadow-sm">
-                                        <ShieldCheck size={24} strokeWidth={2.5}/>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Su búsqueda ha terminado</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                            Sabemos que buscar opciones de protección puede ser abrumador. 
-                                            <span className="text-gray-800 font-bold"> Ya no necesita buscar más ni llenar formularios en otros sitios.</span> 
-                                            Aquí le brindaremos la atención exclusiva que merece, manteniendo sus datos 100% privados para que nadie interrumpa su tranquilidad.
-                                        </p>
-                                    </div>
-                                </li>
-
-                                <li className="flex flex-col gap-4">
-                                    <div className="bg-rose-50 text-rose-600 p-3.5 rounded-2xl w-fit shrink-0 border border-rose-100 shadow-sm">
-                                        <User size={24} strokeWidth={2.5}/>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Seleccionando a su experto</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                            En este momento, estamos revisando sus preferencias para asignarle al especialista con licencia más calificado y empático para su caso específico.
-                                        </p>
-                                    </div>
-                                </li>
-
-                                <li className="flex flex-col gap-4">
-                                    <div className="bg-amber-50 text-amber-600 p-3.5 rounded-2xl w-fit shrink-0 border border-amber-100 shadow-sm">
-                                        <Mail size={24} strokeWidth={2.5}/>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">Conozca a su asesor</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                            Para su total confianza, en breve le enviaremos un correo o mensaje con la foto y las credenciales oficiales del agente que le atenderá. Queremos que se sienta en familia antes de decir "hola".
-                                        </p>
-                                    </div>
-                                </li>
-
-                                <li className="flex flex-col gap-4 border-t border-gray-100 pt-6"> {/* Separador sutil para la instrucción final */}
-                                    <div className="bg-green-50 text-green-600 p-3.5 rounded-2xl w-fit shrink-0 border border-green-100 shadow-sm">
-                                        <Check size={24} strokeWidth={3}/>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-1.5 tracking-tight">¿Qué debe hacer ahora?</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                            ¡Absolutamente nada! Solo descanse y espere nuestra comunicación en el día y hora que amablemente eligió.
-                                        </p>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-rose-50/80 border border-rose-100 p-5 md:p-6 rounded-2xl text-rose-800 italic text-sm md:text-base shadow-inner mb-8 w-full font-medium">
-                            "Gracias por darnos el privilegio de ayudarle a cuidar el futuro de quienes más ama."
-                        </div>
-
-                        {/* --- TARJETA ELEGANTE DE CITA --- */}
-                        <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left shadow-sm mb-6 animate-[slide-up_0.5s_ease-out_0.4s_both]">
-                            <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3">
-                                <CalendarDays size={18} className="text-slate-600"/>
-                                <h3 className="font-bold text-slate-800 text-sm uppercase tracking-widest">Su Cita Confirmada</h3>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Fecha y Hora</span>
-                                        {isAsap ? (
-                                            <div className="flex flex-col gap-1 mt-0.5">
-                                                <p className="font-bold text-rose-600 text-sm capitalize">Llamada Inmediata</p>
-                                                <p className="text-rose-500 font-bold text-xs flex items-center gap-1"><Clock size={12}/> Lo antes posible</p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <p className="font-bold text-slate-900 text-sm capitalize">{date ? new Date(date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}</p>
-                                                <p className="text-blue-600 font-bold text-sm flex items-center gap-1 mt-0.5"><Clock size={12}/> {time}</p>
-                                            </>
-                                        )}
-                                    </div>
-                                    <div>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Método</span>
-                                    {callType === 'video' ? (
-                                        <p className="font-bold text-green-600 text-sm flex items-center gap-1"><Video size={14}/> Videollamada</p>
-                                    ) : (
-                                        <p className="font-bold text-blue-600 text-sm flex items-center gap-1"><Phone size={14}/> Llamada</p>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div className="mb-5 bg-slate-100/50 p-3 rounded-xl border border-slate-200/50">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Teléfono de Contacto</span>
-                                <p className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Phone size={14} className="text-slate-400"/> {phone}</p>
-                            </div>
-
-                            {!isAsap && (
-                                        <a href={(() => {
-                                            // Generador Inteligente del enlace para Google Calendar
-                                            if (!date || !time) return '#';
-                                            let cleanTime = time.toLowerCase().replace(/[\s\.\u202F\u00A0]/g, '');
-                                            let h = parseInt(cleanTime.replace(/[^0-9]/g, '').slice(0, -2), 10);
-                                            const m = cleanTime.replace(/[^0-9]/g, '').slice(-2);
-                                            if (cleanTime.includes('p') && h < 12) h += 12;
-                                            if (cleanTime.includes('a') && h === 12) h = 0;
-                                            
-                                            const [Y, M, D] = date.split('-');
-                                            const startDate = new Date(Y, M - 1, D, h, parseInt(m, 10));
-                                            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hora de duración
-                                            
-                                            const fmt = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
-                                            const details = `Cita para Asesoría de Beneficios (Gastos Finales). Método: ${callType === 'video' ? 'Videollamada' : 'Llamada Telefónica'}.`;
-                                            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Asesoría+de+Beneficios&dates=${fmt(startDate)}/${fmt(endDate)}&details=${encodeURIComponent(details)}`;
-                                        })()} 
-                                        target="_blank" rel="noopener noreferrer" 
-                                        className="w-full bg-white border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold hover:bg-slate-100 hover:border-slate-300 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                                            <Calendar size={16}/> Guardar en Google Calendar
-                                        </a>
-                                    )}
-
-                            <p className="text-xs text-slate-500 mt-4 text-center italic">
-                                En breve recibirá por correo electrónico todos los datos de su especialista. Gracias por utilizar nuestos servicios.
-                            </p>
-                        </div>
-
-                        <button onClick={() => window.location.reload()} className="mt-2 text-gray-400 font-medium hover:text-gray-600 text-xs md:text-sm underline transition-colors">Volver al inicio</button>
+            {step === 1 && (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
+                    <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 1 de 4</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Un Acto de Amor</h2>
+                    <p className="text-gray-500 mb-6 text-sm">¿Para quién es esta protección?</p>
+                    
+                    <div className="space-y-3 mb-8">
+                        <button onClick={() => updateData('para', 'me')} className={`w-full p-4 rounded-2xl border-2 flex items-center gap-4 transition-all outline-none ${data.para === 'me' ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100 hover:border-rose-200'}`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${data.para === 'me' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><User size={24}/></div>
+                            <div className="text-left"><p className={`font-bold ${data.para === 'me' ? 'text-rose-700' : 'text-gray-900'}`}>Para mí mismo</p><p className="text-xs text-gray-500">Quiero proteger mi futuro</p></div>
+                            {data.para === 'me' && <Check className="ml-auto text-rose-500" size={20} strokeWidth={3}/>}
+                        </button>
+                        <button onClick={() => updateData('para', 'family')} className={`w-full p-4 rounded-2xl border-2 flex items-center gap-4 transition-all outline-none ${data.para === 'family' ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100 hover:border-rose-200'}`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${data.para === 'family' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><Users size={24}/></div>
+                            <div className="text-left"><p className={`font-bold ${data.para === 'family' ? 'text-rose-700' : 'text-gray-900'}`}>Para un familiar</p><p className="text-xs text-gray-500">Mi pareja, padres o hijos</p></div>
+                            {data.para === 'family' && <Check className="ml-auto text-rose-500" size={20} strokeWidth={3}/>}
+                        </button>
                     </div>
-                ) : (
-               <>
-                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><User size={16} className="text-rose-500"/> Datos de Contacto</h3>
-                        <div className="space-y-3">
-                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Nombre Completo</label><input type="text" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej. Maria Perez" value={name} onChange={e => setName(e.target.value)} disabled={status !== 'idle'} /></div>
-                            <div>
-                                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Edad</label>
-                                <input 
-                                    type="number" 
-                                    min="18" 
-                                    max="85" 
-                                    className={`w-full p-3 md:p-4 rounded-xl border text-sm md:text-base font-medium outline-none transition-all focus:ring-2 ${age && !isAgeValid ? 'border-red-400 bg-red-50 text-red-700 focus:bg-red-50 focus:ring-red-400' : 'border-gray-200 bg-gray-50 text-gray-700 focus:bg-white focus:ring-rose-500'}`} 
-                                    placeholder="Ej: 55" 
-                                    value={age} 
-                                    onChange={e => setAge(e.target.value)} 
-                                    disabled={status !== 'idle'} 
-                                />
-                                {age && !isAgeValid && (
-                                    <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1 animate-fade-in flex items-center gap-1">
-                                        <AlertTriangle size={10} strokeWidth={3}/> Edad para agendar: 18 a 85 años.
-                                    </p>
-                                )}
+                    <button onClick={() => setStep(2)} disabled={!data.para} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                </div>
+            )}
+
+            {step === 2 && (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
+                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 2 de 4</p>
+                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Sus Datos</h2>
+                     
+                     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-center mb-6">
+                         <span className="text-5xl font-bold text-gray-900 block leading-none mb-1">{data.age}</span>
+                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Años de Edad</span>
+                     </div>
+                     <input type="range" min="18" max="85" value={data.age} onChange={e => updateData('age', Number(e.target.value))} className="w-full mb-8 accent-rose-500 cursor-pointer" />
+
+                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Sexo Biológico</label>
+                     <div className="grid grid-cols-2 gap-3 mb-6">
+                         <button onClick={() => updateData('sexo', 'M')} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none flex flex-col items-center gap-2 ${data.sexo === 'M' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}><User size={20}/> Hombre</button>
+                         <button onClick={() => updateData('sexo', 'F')} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none flex flex-col items-center gap-2 ${data.sexo === 'F' ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}><User size={20} className="text-rose-400"/> Mujer</button>
+                     </div>
+
+                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">¿Consumió tabaco en los últimos 12 meses?</label>
+                     <div className="grid grid-cols-2 gap-3 mb-8">
+                         <button onClick={() => updateData('tabaco', false)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === false ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>No</button>
+                         <button onClick={() => updateData('tabaco', true)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === true ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>Sí</button>
+                     </div>
+
+                     <button onClick={() => setStep(3)} disabled={data.sexo === null || data.tabaco === null} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                     <button onClick={() => setStep(1)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                </div>
+            )}
+
+            {step === 3 && (
+                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
+                    <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 3 de 4</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Preguntas Médicas</h2>
+                    <p className="text-gray-500 mb-6 text-sm">Responda con honestidad. Todo es confidencial.</p>
+
+                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-4 ${data.healthA === 'no' ? 'border-green-500 bg-green-50' : data.healthA === 'yes' ? 'border-red-500 bg-red-50' : 'border-gray-100 bg-white'}`}>
+                        <p className={`text-sm font-bold mb-3 ${data.healthA ? 'text-gray-900' : 'text-gray-700'}`}>1. ¿Tiene actualmente alguna enfermedad terminal, VIH, o está en cuidados paliativos?</p>
+                        <div className="flex gap-2">
+                            <button onClick={() => updateData('healthA', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthA === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
+                            <button onClick={() => updateData('healthA', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthA === 'yes' ? 'border-red-500 bg-red-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                        </div>
+                    </div>
+
+                    <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthB === 'no' ? 'border-green-500 bg-green-50' : data.healthB === 'yes' ? 'border-red-500 bg-red-50' : 'border-gray-100 bg-white'}`}>
+                        <p className={`text-sm font-bold mb-1 ${data.healthB ? 'text-gray-900' : 'text-gray-700'}`}>2. En los últimos 2 años, ¿fue diagnosticado o tratado por:</p>
+                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">Problemas del corazón, cáncer, derrames, complicaciones renales o pulmonares?</p>
+                        <div className="flex gap-2">
+                            <button onClick={() => updateData('healthB', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
+                            <button onClick={() => updateData('healthB', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthB === 'yes' ? 'border-red-500 bg-red-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
+                        </div>
+                    </div>
+
+                    <button onClick={handleHealthNext} disabled={!data.healthA || !data.healthB} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                    <button onClick={() => setStep(2)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                 </div>
+            )}
+
+            {step === 4 && (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
+                    <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Check size={12}/> Pre-Calificado</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Opciones de Cobertura</h2>
+                    <p className="text-gray-500 mb-6 text-sm">Seleccione el monto que desea dejar a su familia.</p>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        {[5000, 8000, 10000, 12000].map((cov, i) => (
+                            <button key={cov} onClick={() => calcPrice(cov)} className={`p-4 border-2 rounded-xl transition-all outline-none relative ${data.coverage === cov ? 'border-rose-500 bg-rose-50 shadow-md transform scale-[1.02]' : 'border-gray-200 text-gray-600 hover:border-rose-300'}`}>
+                                {cov === 10000 && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">Popular</span>}
+                                <span className={`block font-bold text-xl ${data.coverage === cov ? 'text-rose-600' : 'text-gray-800'}`}>${cov.toLocaleString()}</span>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 block ${data.coverage === cov ? 'text-rose-400' : 'text-gray-400'}`}>{i===0?'Básico':i===1?'Estándar':i===2?'Completo':'Premium'}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {data.monthly && (
+                        <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-6 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
+                            <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-rose-500/20 rounded-full blur-[40px]"></div>
+                            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad Estimada</p>
+                            <p className="text-6xl font-black text-white flex items-start justify-center gap-1"><span className="text-3xl text-rose-500 mt-2">$</span>{data.monthly}</p>
+                            <p className="text-xs text-gray-400 mt-3 font-medium bg-white/10 inline-block px-3 py-1 rounded-full">Tarifa: {data.plan}</p>
+                        </div>
+                    )}
+
+                    {data.monthly && (
+                        <div className="space-y-4 animate-fade-in pt-4 border-t border-gray-100">
+                            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-2"><User size={16} className="text-rose-500"/> Datos Finales</h3>
+                            <input type="text" placeholder="Su Nombre Completo" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.name} onChange={e => updateData('name', e.target.value)} />
+                            <input type="tel" placeholder="Teléfono" maxLength="14" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
+                            <input type="email" placeholder="Correo Electrónico" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
+                            
+                            <div className="relative">
+                                <select className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
+                                    <option value="">Seleccione su Estado</option>
+                                    {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                                </select>
+                                <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 rotate-90 pointer-events-none"/>
                             </div>
-                            <div><label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Teléfono Celular</label><input type="tel" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all" placeholder="Ej: (555) 123-4567" value={phone} onChange={e => setPhone(formatPhoneNumber(e.target.value))} maxLength="14" disabled={status !== 'idle'} /></div>
-                            <div>
-                                <label className="text-[10px] md:text-xs font-bold text-gray-400 uppercase ml-1 tracking-wider">Estado (EE.UU.)</label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-3.5 md:left-4 top-3.5 md:top-4 text-gray-400" size={18}/>
-                                    <select className="w-full p-3 md:p-4 pl-10 md:pl-10 rounded-xl border border-gray-200 bg-gray-50 text-sm md:text-base font-medium focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-gray-700" value={state} onChange={e => setState(e.target.value)} disabled={status !== 'idle'}>
-                                        <option value="">Seleccione su Estado</option>
-                                        {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
-                                    </select>
-                                    {availableStates.length < 50 && (
-                                        <p className="text-[10px] text-gray-400 mt-2 ml-1 leading-tight font-medium">
-                                            Si su estado no aparece, es porque por el momento no contamos con cobertura en esa área.{' '}
-                                            {generalSettings?.waitlistUrl && (
-                                                <a href={generalSettings.waitlistUrl} target="_blank" rel="noopener noreferrer" className="text-black font-bold hover:text-gray-700 underline underline-offset-2 transition-colors">
-                                                    Únase a nuestra lista de espera aquí.
-                                                </a>
+
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 mb-2 ml-1">¿Cuándo prefiere la asesoría gratuita?</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-sm outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-rose-500 bg-rose-50 text-rose-600 shadow-sm' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
+                                <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-sm outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Programar luego</button>
+                            </div>
+
+                            {data.contactType === 'schedule' && (
+                                <div className="pt-4 border-t border-gray-50 animate-fade-in space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Seleccione el Día</label>
+                                        <input type="date" min={minDate} className={`w-full p-3.5 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm font-medium outline-none focus:bg-white focus:border-blue-400 transition-all`} value={data.date} onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} />
+                                    </div>
+                                    {data.date && (
+                                        <div className="animate-fade-in">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Horarios Disponibles</label>
+                                            {availableSlots.length > 0 ? (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {availableSlots.map(slot => (
+                                                        <button key={slot} onClick={() => updateData('time', slot)} className={`py-2 px-1 text-xs rounded-lg border transition-all outline-none ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs text-gray-500">No hay cupos disponibles.</p></div>
                                             )}
-                                        </p>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            )}
 
-                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Mail size={16} className="text-rose-500"/> Correo Electrónico (Seguridad)</h3>
-                        <p className="text-[11px] md:text-xs text-gray-500 bg-gray-50 p-2 md:p-3 rounded-lg leading-relaxed">Por su seguridad, le enviaremos la <strong>foto y credenciales</strong> del especialista asignado a su correo antes de la cita.</p>
-                        <div className="grid grid-cols-2 gap-2 md:gap-3 mb-2">
-                            <button onClick={() => setNoEmail(false)} disabled={status !== 'idle'} className={`p-2.5 md:p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${!noEmail ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' : 'bg-white border-gray-200 text-gray-400'}`}><span className="text-xs md:text-sm font-bold">Ingresar Correo</span></button>
-                            <button onClick={() => setNoEmail(true)} disabled={status !== 'idle'} className={`p-2.5 md:p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${noEmail ? 'bg-gray-100 border-gray-400 text-gray-700 ring-1 ring-gray-400' : 'bg-white border-gray-200 text-gray-400'}`}><span className="text-xs md:text-sm font-bold">No tengo Correo</span></button>
-                        </div>
-                        {!noEmail ? (
-                            <div className="space-y-2.5">
-                                <input type="email" className="w-full p-3 md:p-4 rounded-xl border border-gray-200 bg-white text-sm md:text-base font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)} disabled={status !== 'idle'} />
-                                {/* Botones de Autocompletado para Adultos Mayores */}
-                                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                                    {['@gmail.com', '@yahoo.com', '@hotmail.com', '@icloud.com'].map(domain => (
-                                        <button 
-                                            key={domain}
-                                            type="button"
-                                            disabled={status !== 'idle'}
-                                            onClick={() => {
-                                                const base = email.split('@')[0]; // Toma solo el nombre si ya pusieron un arroba (corrige errores)
-                                                setEmail(base + domain);
-                                            }}
-                                            className="px-3.5 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-gray-600 hover:text-blue-700 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 disabled:opacity-50"
-                                        >
-                                            {domain}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-3 bg-yellow-50 text-yellow-700 rounded-xl text-xs md:text-sm flex items-start gap-2"><Shield size={16} className="shrink-0 mt-0.5"/><span>No hay problema, conocerá a su especialista en su cita.</span></div>
-                        )}
-                    </div>
-
-                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><MessageSquare size={16} className="text-rose-500"/> Tipo de Cita</h3>
-                        <div className="grid grid-cols-2 gap-2 md:gap-3">
-                            <button onClick={() => setCallType('video')} disabled={status !== 'idle'} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all relative ${callType === 'video' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}><div className="absolute -top-2.5 md:-top-3 bg-green-600 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm uppercase tracking-wider">Recomendado</div><Video size={20} className={`md:w-6 md:h-6 ${callType === 'video' ? 'text-green-600' : 'text-gray-400'}`}/><span className="text-xs md:text-sm font-bold text-center leading-tight">Videollamada<br/><span className="text-[10px] md:text-xs font-normal">(WhatsApp)</span></span></button>
-                            <button onClick={() => setCallType('call')} disabled={status !== 'idle'} className={`p-3 md:p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${callType === 'call' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}><Phone size={20} className={`md:w-6 md:h-6 ${callType === 'call' ? 'text-blue-600' : 'text-gray-400'}`}/><span className="text-xs md:text-sm font-bold">Llamada</span></button>
-                        </div>
-                        {callType === 'video' && <p className="text-[11px] md:text-xs text-green-700 bg-green-50 p-2 md:p-3 rounded-lg text-center border border-green-100">✨ Podrá conocer a su asesor cara a cara y ver los detalles en pantalla.</p>}
-                    </div>
-
-                    <div className="bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm space-y-5">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm"><Clock size={16} className="text-rose-500"/> ¿Cuándo prefiere su asesoría?</h3>
-                        
-                        <div className="grid grid-cols-1 gap-3">
-                            <button onClick={() => { setIsAsap(true); setDate(''); setTime(''); setDateErrorMsg(''); }} disabled={status !== 'idle'} className={`p-4 rounded-xl border-2 flex items-center gap-4 transition-all outline-none ${isAsap ? 'bg-rose-50 border-rose-500 shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isAsap ? 'bg-rose-500 text-white' : 'bg-gray-100'}`}><Activity size={20}/></div>
-                                <div className="text-left flex-1">
-                                    <p className={`font-bold text-sm ${isAsap ? 'text-rose-900' : 'text-gray-600'}`}>¡Lo antes posible!</p>
-                                    <p className="text-[10px] sm:text-xs opacity-70">Llamada prioritaria en los próximos minutos.</p>
-                                </div>
-                                {isAsap && <Check className="ml-auto text-rose-500 shrink-0" size={20} strokeWidth={3}/>}
-                            </button>
-
-                            <button onClick={() => setIsAsap(false)} disabled={status !== 'idle'} className={`p-4 rounded-xl border-2 flex items-center gap-4 transition-all outline-none ${!isAsap ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${!isAsap ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}><CalendarDays size={20}/></div>
-                                <div className="text-left flex-1">
-                                    <p className={`font-bold text-sm ${!isAsap ? 'text-blue-900' : 'text-gray-600'}`}>Programar para después</p>
-                                    <p className="text-[10px] sm:text-xs opacity-70">Elija el día y la hora de su preferencia.</p>
-                                </div>
-                                {!isAsap && <Check className="ml-auto text-blue-500 shrink-0" size={20} strokeWidth={3}/>}
-                            </button>
-                        </div>
-
-                        {!isAsap && (
-                            <div className="pt-4 border-t border-gray-50 animate-fade-in space-y-4">
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Seleccione el Día</label>
-                                    <input 
-                                        type="date" 
-                                        min={minDate} 
-                                        className={`w-full p-3 md:p-4 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all`} 
-                                        value={date} 
-                                        onChange={e => { setDate(e.target.value); setDateErrorMsg(''); }}
-                                        disabled={status !== 'idle'} 
-                                    />
-                                </div>
-                                {date && (
-                                    <div className="animate-fade-in">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Horarios Disponibles</label>
-                                        {availableSlots.length > 0 ? (
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                {availableSlots.map(slot => (
-                                                    <button key={slot} onClick={() => setTime(slot)} disabled={status !== 'idle'} className={`py-2.5 px-2 text-xs md:text-sm rounded-lg border transition-all outline-none ${time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs text-gray-500">No hay cupos para este día.</p></div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    
-                    {/* --- SECCIÓN FINAL AGRUPADA PARA REDUCIR ESPACIOS --- */}
-                    <div className="flex flex-col gap-3 !mt-2 px-2 sm:px-0">
-                        
-                        {/* Términos y Condiciones y Privacidad */}
-                        <label className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors shadow-sm">
-                            <div className="relative flex items-center justify-center shrink-0 mt-0.5">
-                                <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} disabled={status !== 'idle'} className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-rose-500 checked:border-rose-500 transition-all disabled:opacity-50" />
-                                <Check size={14} className="text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
-                            </div>
-                            <span className="text-[10px] md:text-xs font-medium text-gray-500 leading-normal">
-                                He leído y acepto los <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Términos y Condiciones de Uso</span> y la <span onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.hash = '#privacidad'; }} className="font-bold text-gray-700 underline decoration-2 decoration-gray-300 hover:decoration-gray-700 cursor-pointer transition-colors">Política de Privacidad</span>. Entiendo que seré contactado por un especialista licenciado.
-                            </span>
-                        </label>
-
-                        {/* Botón y Textos inferiores */}
-                        <div className="w-full flex flex-col gap-2">
-                            {date && date < minDate && (
-                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-bold animate-fade-in shadow-sm mb-1">
-                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                                    <p>Ha seleccionado una fecha pasada. Por favor, elija hoy o una fecha futura.</p>
+                            {dateErrorMsg && (
+                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-bold animate-fade-in shadow-sm mt-2">
+                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" /> <p>{dateErrorMsg}</p>
                                 </div>
                             )}
-                            <button onClick={(e) => { if(date && date < minDate) { e.preventDefault(); return; } handleFinalSubmit(e); }} disabled={!isFormValid || status !== 'idle'} className={`w-full py-3.5 md:py-4 rounded-xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2 md:gap-3 hover:scale-[1.02] ${status === 'success' ? 'bg-green-600 text-white cursor-default' : 'bg-[#E11D48] text-white'}`}>
-                                {status === 'submitting' ? (<>Enviando... <div className="animate-spin h-4 w-4 md:h-5 md:w-5 border-2 border-white border-t-transparent rounded-full"></div></>) : (<>Programar Cita <Check className="inline" size={20} strokeWidth={3} /></>)}
+
+                            <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.email || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-4 md:py-5 rounded-xl font-bold mt-6 disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-xl flex items-center justify-center gap-2">
+                                {isSubmitting ? 'Procesando...' : <><Shield size={20}/> Sellar y Proteger a mi Familia</>}
                             </button>
-                            
-                            {status === 'idle' && (
-                                <div className="flex flex-col items-center gap-1.5 mt-1">
-                                    <p className="text-center text-[10px] md:text-xs text-gray-400 px-2 leading-tight">Cuando sea asignado un especialista le notificaremos por correo electrónico si lo proporcionó.</p>
-                                    <button type="button" onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('funnelLeadData'); window.location.reload(); }} className="text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-800 transition-colors border-b-2 border-transparent hover:border-gray-800 pb-0.5">Volver a la pantalla principal</button>
-                                </div>
-                            )}
+                            <p className="text-[10px] text-center text-gray-400 font-medium px-4 mt-2 leading-relaxed">Su información es confidencial. Al continuar acepta nuestra política de privacidad y ser contactado por un especialista licenciado.</p>
                         </div>
-                    </div>
-                </>
-                )}
-            </div>
-            {showTermsModal && <TermsModal type="prospect" onClose={() => setShowTermsModal(false)} />}
-        </div>
-    );
+                    )}
+                    <button onClick={() => setStep(3)} className="w-full text-gray-400 font-bold mt-6 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                </div>
+            )}
+        </div>
+    );
 };
 
 const AgentSelectionModal = ({ agents, onClose, onSelect, contextLeads = [], allLeads = [] }) => {
@@ -7730,17 +7327,23 @@ const App = () => {
     return (
         <div className="min-h-[100dvh] w-full flex flex-col bg-[#FAFAFA] relative">
         
-            {reinforcement && (<div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-8 bg-immediate-red text-white text-center"><div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30"><reinforcement.icon size={48} fill="currentColor" className="text-white" /></div><h2 className="text-3xl font-bold mb-4">{reinforcement.title}</h2><p className="text-lg leading-relaxed opacity-90 mb-10 max-w-sm">"{reinforcement.text}"</p><button onClick={next} className="bg-white text-rose-600 px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">Continuar <ChevronRight size={20} /></button></div>)}
-            
-            <div className={`pt-8 pb-4 px-6 flex flex-col items-center shrink-0 ${currentStep.isLetter || isSuccess ? 'opacity-0 h-0 overflow-hidden pt-0 pb-0' : ''} transition-all duration-500`}><HeartProgress percentage={fillPercent} isBeating={false} /></div>
-            
-            <div className="w-full max-w-xl mx-auto flex flex-col flex-1">
-                <div key={stepIndex} className="flex-1 px-4 md:px-6 pb-12 flex flex-col animate-slide-up">
-                    {currentStep.isForm ? <ContactForm onSubmit={saveData} onSuccess={completeSuccess} data={leadData} scheduleConfig={schedule} onAdminTrigger={() => setShowLogin(true)} generalSettings={generalSettings} bookedSlots={bookedSlots} /> : currentStep.isFAQ ? <FAQStep options={currentStep.faqOptions} onContinue={() => { setLeadData(p => ({ ...p, userQuestion: "Vio FAQ" })); next(); }} /> : currentStep.isLetter ? <LetterStep data={leadData} onContinue={next} /> : (
-                        <><div className="text-center mb-8"><h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStep.question}</h2><p className="text-gray-500">{currentStep.subtext}</p></div><div className="grid grid-cols-2 gap-4">{currentStep.options.map((opt, idx) => (<button key={idx} onClick={() => handleOptClick(opt.id)} className={`btn-option border p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px] h-auto py-4 ${tempSelections.includes(opt.id) ? 'bg-rose-50 border-rose-500 shadow-md transform scale-[1.02]' : 'bg-white border-gray-100'}`}><div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-colors ${tempSelections.includes(opt.id) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'}`}><opt.icon size={24} /></div><span className={`text-sm font-bold text-center ${tempSelections.includes(opt.id) ? 'text-rose-600' : 'text-gray-700'}`}>{opt.label}</span>{currentStep.multiSelect && tempSelections.includes(opt.id) && <div className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-0.5"><Check size={12} /></div>}</button>))}</div></>
-                    )}
-                </div>
-                {!currentStep.isForm && !currentStep.isFAQ && !currentStep.isLetter && (<div className="p-4 md:p-6 mt-auto"><div className="flex justify-between items-center"><button onClick={() => setStepIndex(p => Math.max(0, p - 1))} className="p-4 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><ArrowLeft size={24} /></button>{currentStep.multiSelect && (<button onClick={handleContinue} disabled={tempSelections.length === 0} className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg shadow-lg transition-all ${tempSelections.length > 0 ? 'bg-[#E11D48] text-white' : 'bg-gray-200 text-gray-400 opacity-0'}`}>Continuar <ChevronRight size={20} /></button>)}</div></div>)}
+            <div className="w-full max-w-xl mx-auto flex flex-col flex-1 pb-10">
+                {isSuccess ? (
+                    <div className="text-center mt-10 p-8 animate-fade-in bg-white rounded-3xl shadow-sm border border-gray-100 mx-4">
+                        <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6"><Check size={48}/></div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">¡Su cita está confirmada!</h2>
+                        <p className="text-gray-500 text-lg leading-relaxed font-medium">Ha dado un hermoso paso para proteger a su familia. Un especialista certificado evaluará sus datos y se comunicará con usted puntualmente.</p>
+                        <button onClick={() => window.location.reload()} className="mt-8 text-rose-500 font-bold hover:underline transition-all">Volver al inicio</button>
+                    </div>
+                ) : (
+                    <SmartFunnel 
+                        onSubmit={saveData} 
+                        scheduleConfig={schedule} 
+                        generalSettings={generalSettings} 
+                        bookedSlots={bookedSlots} 
+                        availableStates={generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES}
+                    />
+                )}
             </div>
         </div>
     );
