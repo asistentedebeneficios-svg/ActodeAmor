@@ -1404,9 +1404,6 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     
                     {/* Mensaje Emocional de Cierre y Autoridad */}
                     <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-100 shadow-inner">
-                            <Star size={32} fill="currentColor" className="text-amber-400" />
-                        </div>
                         <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Lo más difícil ya pasó!</h2>
                         <p className="text-gray-600 text-sm font-medium leading-relaxed max-w-sm mx-auto text-balance">
                             Ha dado un gran paso de amor. Ya comprobó que <strong className="text-green-600">sí califica</strong> para esta cuota. Para hacer realidad esta protección, el último paso es conectarlo con su <strong className="text-gray-900">Especialista Licenciado</strong>. Él le revelará qué gran compañía le otorgará la cobertura, le explicará todos sus beneficios y le ayudará si desea proteger a más miembros de su familia. Estamos listos para servirle.
