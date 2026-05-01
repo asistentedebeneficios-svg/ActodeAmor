@@ -1206,11 +1206,46 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 2 de 4</p>
                      <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Sus Datos</h2>
                      
-                     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-center mb-6">
-                         <span className="text-5xl font-bold text-gray-900 block leading-none mb-1">{data.age}</span>
-                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Años de Edad</span>
-                     </div>
-                     <input type="range" min="18" max="85" value={data.age} onChange={e => updateData('age', Number(e.target.value))} className="w-full mb-8 accent-rose-500 cursor-pointer" />
+                     <div className="bg-gray-50 p-6 md:p-8 rounded-3xl border border-gray-200 text-center mb-8 shadow-inner">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">¿Cuántos años tiene?</label>
+                        <div className="flex items-center justify-center gap-4 md:gap-8">
+                            
+                            {/* Botón Menos */}
+                            <button 
+                                onClick={() => updateData('age', Math.max(18, data.age - 1))} 
+                                className="w-16 h-16 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-300 active:scale-95 transition-all outline-none shrink-0"
+                            >
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </button>
+                            
+                            {/* Input Numérico Gigante */}
+                            <div className="flex flex-col items-center w-28">
+                                <input 
+                                    type="number" 
+                                    min="18" max="85"
+                                    value={data.age} 
+                                    onChange={e => updateData('age', e.target.value ? Number(e.target.value) : '')} 
+                                    onBlur={e => {
+                                        let val = Number(e.target.value);
+                                        if (val < 18) val = 18;
+                                        if (val > 85) val = 85;
+                                        updateData('age', val);
+                                    }}
+                                    className="w-full text-center text-6xl font-black text-gray-900 bg-transparent outline-none p-0 m-0"
+                                    style={{ MozAppearance: 'textfield', WebkitAppearance: 'none' }}
+                                />
+                                <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mt-1">Años</span>
+                            </div>
+
+                            {/* Botón Más */}
+                            <button 
+                                onClick={() => updateData('age', Math.min(85, data.age + 1))} 
+                                className="w-16 h-16 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-300 active:scale-95 transition-all outline-none shrink-0"
+                            >
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </button>
+                        </div>
+                    </div>
 
                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Sexo Biológico</label>
                      <div className="grid grid-cols-2 gap-3 mb-6">
