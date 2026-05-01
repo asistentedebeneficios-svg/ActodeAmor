@@ -1402,28 +1402,19 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 5 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     
-                    {/* Mensaje Emocional de Cierre */}
+                    {/* Mensaje Emocional de Cierre y Autoridad */}
                     <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-100 shadow-inner">
                             <Star size={32} fill="currentColor" className="text-amber-400" />
                         </div>
                         <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Lo más difícil ya pasó!</h2>
-                        <p className="text-gray-500 text-sm font-medium leading-relaxed max-w-sm mx-auto">
-                            Ha dado un gran paso de amor. Ya comprobó que <strong className="text-green-600">sí califica</strong> y conoce sus opciones. Celebremos que su familia estará protegida. Ahora, solo necesitamos unos datos para que su especialista le asigne esta cobertura.
+                        <p className="text-gray-600 text-sm font-medium leading-relaxed max-w-sm mx-auto text-balance">
+                            Ha dado un gran paso de amor. Ya comprobó que <strong className="text-green-600">sí califica</strong> para esta cuota. Para hacer realidad esta protección, el último paso es conectarlo con su <strong className="text-gray-900">Especialista Licenciado</strong>. Él le revelará qué gran compañía le otorgará la cobertura, le explicará todos sus beneficios y le ayudará si desea proteger a más miembros de su familia. Estamos listos para servirle.
                         </p>
                     </div>
 
-                    {/* Escudo en color azul (Tranquilidad) */}
-                    <div className="flex items-center gap-3 mb-6 bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-md"><ShieldCheck size={24}/></div>
-                        <div>
-                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none mb-1">Último Paso</p>
-                            <h2 className="text-xl font-bold text-gray-900 leading-tight">Active su Protección</h2>
-                        </div>
-                    </div>
-
                     {/* Resumen de Selección con Decimales Pequeños */}
-                    <div className="flex justify-between items-center mb-4 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
+                    <div className="flex justify-between items-center mb-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
                         <div>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
                             <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
@@ -1441,25 +1432,21 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     </div>
 
-                    {/* Gatillos de Expectativa y Alivio (Cero Pagos) */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-4 md:p-5 rounded-2xl mb-8 shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">Incluido</span>
-                            <p className="text-xs md:text-sm font-bold text-blue-900">Cobertura Accidental</p>
+                    {/* Gatillo de Alivio Financiero (Trámite Seguro) */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-4 md:p-5 rounded-2xl mb-8 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck size={20} className="text-blue-600"/>
+                            <p className="text-sm font-bold text-blue-900">Trámite Seguro</p>
                         </div>
-                        <p className="text-[11px] md:text-xs text-blue-800/80 font-medium leading-relaxed mb-4 text-balance">
-                            Su plan pre-aprobado cuenta con grandes beneficios adicionales que su especialista le revelará en detalle durante la llamada.
+                        <p className="text-[11px] md:text-xs text-blue-800/90 font-medium leading-relaxed text-balance">
+                            Por su seguridad, <strong>no le pediremos ninguna tarjeta ni forma de pago en esta página web.</strong> La activación de su plan y el pago de su primera cuota se realizarán de forma directa y encriptada con la compañía aseguradora durante la llamada con su especialista.
                         </p>
-                        <div className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-white shadow-sm">
-                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center shrink-0 border border-green-100">
-                                <DollarSign size={16} className="text-green-600" strokeWidth={3}/>
-                            </div>
-                            <p className="text-xs font-bold text-gray-800 leading-tight">
-                                <span className="text-green-600">Cero pagos hoy.</span> No se le pedirá ningún pago para reservar esta asesoría.
-                            </p>
-                        </div>
                     </div>
 
+                    {/* Formulario (Datos del Titular) */}
+                    <div className="mb-2 pl-2 border-l-2 border-rose-500">
+                        <h3 className="text-sm font-bold text-gray-900">📋 Datos del Titular</h3>
+                    </div>
                     <div className="space-y-4 mb-8">
                         <div className="relative">
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
@@ -1469,9 +1456,25 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                             <input type="tel" placeholder="Teléfono" maxLength="14" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
                         </div>
-                        <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                            <input type="email" placeholder="Correo Electrónico" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
+                        <div className="relative flex flex-col">
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                                <input type="email" placeholder="Correo Electrónico (Opcional)" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
+                            </div>
+                            {/* Botones de Autocompletado de Email */}
+                            {data.email.length > 0 && !data.email.includes('@') && (
+                                <div className="flex gap-2 mt-2 animate-fade-in pl-2">
+                                    {['@gmail.com', '@hotmail.com', '@yahoo.com'].map(domain => (
+                                        <button 
+                                            key={domain} 
+                                            onClick={() => updateData('email', data.email + domain)} 
+                                            className="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                                        >
+                                            {domain}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="relative">
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
@@ -1483,7 +1486,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     </div>
 
                     <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
-                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><CalendarDays size={18} className="text-blue-600"/> ¿Cuándo prefiere su asesoría gratuita?</h3>
+                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><CalendarDays size={18} className="text-blue-600"/> 📞 ¿Cuándo realizamos su llamada de activación?</h3>
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
                             <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Programar luego</button>
@@ -1519,9 +1522,10 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     </div>
 
-                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.email || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex flex-col items-center leading-tight">
+                    {/* Botón Final con validación actualizada (Email NO requerido) */}
+                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex flex-col items-center leading-tight">
                         <span className="text-lg flex items-center gap-2"><Shield size={20}/> Sellar mi Protección</span>
-                        <span className="text-[10px] opacity-80 font-medium mt-1 uppercase tracking-widest">Reserva de Asesoría Gratuita</span>
+                        <span className="text-[10px] opacity-80 font-medium mt-1 uppercase tracking-widest">Reserva de Activación Oficial</span>
                     </button>
                     
                     <p className="text-[9px] text-center text-gray-400 font-medium px-6 mt-4 leading-relaxed italic">"Su información está protegida por encriptación de grado bancario. Un especialista se comunicará para validar su elegibilidad final."</p>
