@@ -1347,7 +1347,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
             {step === 4 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
-                    <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Check size={12}/> Pre-Calificado</p>
+                    <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Check size={14} strokeWidth={3}/> Pre-calificado</p>
                     <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Opciones de Cobertura</h2>
                     <p className="text-gray-500 mb-6 text-sm">Seleccione el monto que desea dejar a su familia.</p>
                     
@@ -1364,8 +1364,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     {data.monthly && (
                         <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-6 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
                             <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-rose-500/20 rounded-full blur-[40px]"></div>
-                            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad Estimada</p>
-                            <p className="text-6xl font-black text-white flex items-start justify-center gap-1"><span className="text-3xl text-rose-500 mt-2">$</span>{data.monthly}</p>
+                            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad</p>
+                            <p className="text-6xl font-black text-white flex items-end justify-center gap-1"><span className="text-3xl text-rose-500 mb-1">$</span>{data.monthly}<span className="text-2xl text-gray-400 mb-1 font-bold">/mes</span></p>
                             <p className="text-[10px] md:text-xs text-gray-300 mt-4 font-bold uppercase tracking-[0.1em] opacity-80 border-t border-white/10 pt-4 w-full">
                                 {data.sexo === 'M' ? 'Hombre' : 'Mujer'} • {data.age} años • {data.tabaco ? 'Fumador' : 'No fumador'}
                             </p>
