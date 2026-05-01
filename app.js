@@ -1026,8 +1026,22 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const [showNI, setShowNI] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [dateErrorMsg, setDateErrorMsg] = useState('');
+    const [reinforcement, setReinforcement] = useState(null);
 
     const pct = step === 1 ? 0 : step === 2 ? 25 : step === 3 ? 50 : step === 4 ? 75 : 100;
+
+    const handleStep1Next = () => {
+        if (data.para === 'me') {
+            setReinforcement({ title: "Un Acto de Responsabilidad", text: "Proteger a su familia de estos gastos finales es el regalo más desinteresado.", icon: User });
+        } else {
+            setReinforcement({ title: "Promesa de Amor", text: "Asegurar que su familia no tenga cargas financieras es la prueba máxima de cariño.", icon: Users });
+        }
+    };
+
+    const closeReinforcement = () => {
+        setReinforcement(null);
+        setStep(2);
+    };
     const updateData = (field, value) => setData(prev => ({ ...prev, [field]: value }));
 
     useEffect(() => {
@@ -1149,6 +1163,19 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     return (
         <div className="w-full max-w-md mx-auto pt-6 pb-12 animate-fade-in px-4 md:px-0">
             
+            {reinforcement && (
+                <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 bg-[#E11D48] text-white text-center animate-fade-in">
+                    <div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30 shadow-inner">
+                        <reinforcement.icon size={56} className="text-white" strokeWidth={1.5} />
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">{reinforcement.title}</h2>
+                    <p className="text-lg md:text-xl leading-relaxed opacity-90 mb-10 max-w-sm font-medium text-balance">"{reinforcement.text}"</p>
+                    <button onClick={closeReinforcement} className="bg-white text-[#E11D48] px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center gap-2">
+                        Continuar <ChevronRight size={20} />
+                    </button>
+                </div>
+            )}
+
             <HeartProgress percentage={pct} isBeating={pct === 100} />
 
             {step === 1 && (
@@ -1169,7 +1196,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             {data.para === 'family' && <Check className="ml-auto text-rose-500" size={20} strokeWidth={3}/>}
                         </button>
                     </div>
-                    <button onClick={() => setStep(2)} disabled={!data.para} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                    <button onClick={handleStep1Next} disabled={!data.para} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
                     <button onClick={() => { sessionStorage.removeItem('funnelStepIndex'); window.location.reload(); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar al inicio</button>
                 </div>
             )}
