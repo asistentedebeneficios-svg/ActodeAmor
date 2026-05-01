@@ -1027,6 +1027,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const [availableSlots, setAvailableSlots] = useState([]);
     const [dateErrorMsg, setDateErrorMsg] = useState('');
     const [reinforcement, setReinforcement] = useState(null);
+    const [isCelebrating, setIsCelebrating] = useState(false);
 
     const pct = step === 1 ? 0 : step === 2 ? 25 : step === 3 ? 50 : step === 4 ? 75 : 100;
 
@@ -1102,7 +1103,13 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         } else {
             const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
             updateData('plan', plan);
-            setStep(4);
+            
+            // Inicia celebración
+            setIsCelebrating(true);
+            setTimeout(() => {
+                setIsCelebrating(false);
+                setStep(4);
+            }, 2000); // 2 segundos de pura emoción
         }
     };
 
@@ -1163,6 +1170,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     return (
         <div className="w-full max-w-md mx-auto pt-6 pb-12 animate-fade-in px-4 md:px-0">
             
+            {/* 1. PANTALLA ROJA DE REAFIRMACIÓN (Paso 1) */}
             {reinforcement && (
                 <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 bg-[#E11D48] text-white text-center animate-fade-in">
                     <div className="mb-6 bg-white/20 p-6 rounded-full backdrop-blur-sm border border-white/30 shadow-inner">
@@ -1176,6 +1184,25 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                 </div>
             )}
 
+            {/* 2. PANTALLA BLANCA DE ÉXTASIS/CELEBRACIÓN (Paso 3 al 4) */}
+            {isCelebrating && (
+                <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 bg-white text-center animate-fade-in">
+                    <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-lg border-4 border-green-500">
+                        <Check size={64} className="text-green-600" strokeWidth={3} />
+                    </div>
+                    <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter animate-pulse">¡EXCELENTES NOTICIAS!</h2>
+                    <p className="text-xl text-gray-600 font-medium max-w-xs mx-auto leading-relaxed">
+                        Basado en sus respuestas, <span className="text-green-600 font-bold">Usted Califica</span> para los beneficios de protección familiar.
+                    </p>
+                    <div className="mt-10 flex gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
+                    </div>
+                </div>
+            )}
+
+            {/* 3. EL CORAZÓN DE PROGRESO */}
             <HeartProgress percentage={pct} isBeating={pct === 100} />
 
             {step === 1 && (
@@ -1288,7 +1315,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
 
                     <div className={`p-5 rounded-2xl border-2 transition-colors mb-8 ${data.healthC === 'no' ? 'border-green-500 bg-green-50' : data.healthC === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
-                        <p className={`text-sm font-bold mb-1 ${data.healthC ? 'text-gray-900' : 'text-gray-700'}`}>3. ¿Tiene algún examen médico pendiente de resultados para descartar o confirmar alguna de las condiciones anteriores?</p>
+                        <p className={`text-sm font-bold mb-1 ${data.healthC ? 'text-gray-900' : 'text-gray-700'}`}>3. ¿Tiene algún examen médico pendiente de resultados para descartar o confirmar alguna de las enfermedades anteriores?</p>
                         <div className="flex gap-2 mt-4">
                             <button onClick={() => updateData('healthC', 'no')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthC === 'no' ? 'border-green-500 bg-green-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>No</button>
                             <button onClick={() => updateData('healthC', 'yes')} className={`flex-1 py-3 border-2 rounded-xl font-bold outline-none transition-all ${data.healthC === 'yes' ? 'border-blue-500 bg-blue-500 text-white shadow-md' : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50'}`}>Sí</button>
@@ -1321,7 +1348,9 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-rose-500/20 rounded-full blur-[40px]"></div>
                             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad Estimada</p>
                             <p className="text-6xl font-black text-white flex items-start justify-center gap-1"><span className="text-3xl text-rose-500 mt-2">$</span>{data.monthly}</p>
-                            <p className="text-xs text-gray-400 mt-3 font-medium bg-white/10 inline-block px-3 py-1 rounded-full">Tarifa: {data.plan}</p>
+                            <p className="text-[10px] md:text-xs text-gray-300 mt-4 font-bold uppercase tracking-[0.1em] opacity-80 border-t border-white/10 pt-4 w-full">
+                                {data.sexo === 'M' ? 'Hombre' : 'Mujer'} • {data.age} años • {data.tabaco ? 'Fumador' : 'No fumador'}
+                            </p>
                         </div>
                     )}
 
