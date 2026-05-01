@@ -1037,7 +1037,15 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         }
     }, [isCelebrating, countdown]);
                                                                    
-    const pct = step === 1 ? 0 : step === 2 ? 25 : step === 3 ? 50 : step === 4 ? 75 : 100;
+    // Ajuste a 5 pasos: 0, 20, 40, 60, 80 y 100% al finalizar
+    const pct = step === 1 ? 0 : step === 2 ? 20 : step === 3 ? 40 : step === 4 ? 60 : step === 5 ? 85 : 100;
+
+    // Función para separar enteros de decimales
+    const formatPriceParts = (priceString) => {
+        if (!priceString) return { int: "0", dec: "00" };
+        const parts = priceString.split('.');
+        return { int: parts[0], dec: parts[1] || "00" };
+    };
 
     const handleStep1Next = () => {
         if (data.para === 'me') {
@@ -1362,73 +1370,120 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     </div>
 
                     {data.monthly && (
-                        <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-6 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
+                        <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-8 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
                             <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-rose-500/20 rounded-full blur-[40px]"></div>
                             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad</p>
-                            <p className="text-6xl font-black text-white flex items-end justify-center gap-1"><span className="text-3xl text-rose-500 mb-1">$</span>{data.monthly}<span className="text-2xl text-gray-400 mb-1 font-bold">/mes</span></p>
-                            <p className="text-[10px] md:text-xs text-gray-300 mt-4 font-bold uppercase tracking-[0.1em] opacity-80 border-t border-white/10 pt-4 w-full">
+                            
+                            <div className="flex items-start justify-center gap-0.5">
+                                <span className="text-3xl text-rose-500 font-bold mt-2">$</span>
+                                <span className="text-7xl font-black text-white tracking-tighter">{formatPriceParts(data.monthly).int}</span>
+                                <div className="flex flex-col items-start mt-2">
+                                    <span className="text-2xl font-bold text-white leading-none">.{formatPriceParts(data.monthly).dec}</span>
+                                    <span className="text-sm text-gray-400 font-bold uppercase tracking-tighter mt-1">/mes</span>
+                                </div>
+                            </div>
+
+                            <p className="text-[10px] md:text-xs text-gray-300 mt-6 font-bold uppercase tracking-[0.1em] opacity-80 border-t border-white/10 pt-4 w-full">
                                 {data.sexo === 'M' ? 'Hombre' : 'Mujer'} • {data.age} años • {data.tabaco ? 'Fumador' : 'No fumador'}
                             </p>
                         </div>
                     )}
 
-                    {data.monthly && (
-                        <div className="space-y-4 animate-fade-in pt-4 border-t border-gray-100">
-                            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-2"><User size={16} className="text-rose-500"/> Datos Finales</h3>
-                            <input type="text" placeholder="Su Nombre Completo" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.name} onChange={e => updateData('name', e.target.value)} />
-                            <input type="tel" placeholder="Teléfono" maxLength="14" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
-                            <input type="email" placeholder="Correo Electrónico" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
-                            
-                            <div className="relative">
-                                <select className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
-                                    <option value="">Seleccione su Estado</option>
-                                    {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
-                                </select>
-                                <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 rotate-90 pointer-events-none"/>
-                            </div>
-
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 mb-2 ml-1">¿Cuándo prefiere la asesoría gratuita?</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-sm outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-rose-500 bg-rose-50 text-rose-600 shadow-sm' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
-                                <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-sm outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Programar luego</button>
-                            </div>
-
-                            {data.contactType === 'schedule' && (
-                                <div className="pt-4 border-t border-gray-50 animate-fade-in space-y-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Seleccione el Día</label>
-                                        <input type="date" min={minDate} className={`w-full p-3.5 rounded-xl border ${dateErrorMsg ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-gray-200 bg-gray-50 text-gray-700'} text-sm font-medium outline-none focus:bg-white focus:border-blue-400 transition-all`} value={data.date} onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} />
-                                    </div>
-                                    {data.date && (
-                                        <div className="animate-fade-in">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1 mb-2 block tracking-wider">Horarios Disponibles</label>
-                                            {availableSlots.length > 0 ? (
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {availableSlots.map(slot => (
-                                                        <button key={slot} onClick={() => updateData('time', slot)} className={`py-2 px-1 text-xs rounded-lg border transition-all outline-none ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300"><p className="text-xs text-gray-500">No hay cupos disponibles.</p></div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {dateErrorMsg && (
-                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-bold animate-fade-in shadow-sm mt-2">
-                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" /> <p>{dateErrorMsg}</p>
-                                </div>
-                            )}
-
-                            <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.email || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-4 md:py-5 rounded-xl font-bold mt-6 disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-xl flex items-center justify-center gap-2">
-                                {isSubmitting ? 'Procesando...' : <><Shield size={20}/> Sellar y Proteger a mi Familia</>}
-                            </button>
-                            <p className="text-[10px] text-center text-gray-400 font-medium px-4 mt-2 leading-relaxed">Su información es confidencial. Al continuar acepta nuestra política de privacidad y ser contactado por un especialista licenciado.</p>
+                    <button onClick={() => setStep(5)} disabled={!data.monthly} className="w-full bg-[#E11D48] text-white py-5 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
+                        Asegurar esta Tarifa <ChevronRight size={20}/>
+                    </button>
+                    <button onClick={() => setStep(3)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                </div>
+            )}
+            {step === 5 && (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
+                    <div className="flex items-center gap-3 mb-6 bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                        <div className="w-12 h-12 bg-rose-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><ShieldCheck size={24}/></div>
+                        <div>
+                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none mb-1">Último Paso</p>
+                            <h2 className="text-xl font-bold text-gray-900 leading-tight">Active su Protección</h2>
                         </div>
-                    )}
-                    <button onClick={() => setStep(3)} className="w-full text-gray-400 font-bold mt-6 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                    </div>
+
+                    {/* Resumen de Selección (Refuerzo) */}
+                    <div className="flex justify-between items-center mb-8 px-2">
+                        <div>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Cobertura</p>
+                            <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Su Tarifa</p>
+                            <p className="text-2xl font-black text-rose-600">${data.monthly}<span className="text-xs">/mes</span></p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                            <input type="text" placeholder="Su Nombre Completo" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.name} onChange={e => updateData('name', e.target.value)} />
+                        </div>
+                        <div className="relative">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                            <input type="tel" placeholder="Teléfono" maxLength="14" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
+                        </div>
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                            <input type="email" placeholder="Correo Electrónico" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
+                        </div>
+                        <div className="relative">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                            <select className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
+                                <option value="">Seleccione su Estado</option>
+                                {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
+                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><CalendarDays size={18} className="text-blue-600"/> ¿Cuándo prefiere su asesoría gratuita?</h3>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
+                            <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Programar luego</button>
+                        </div>
+
+                        {data.contactType === 'schedule' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <input type="date" min={minDate} className="w-full p-3.5 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-400 transition-all" value={data.date} onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} />
+                                {data.date && (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {availableSlots.map(slot => (
+                                            <button key={slot} onClick={() => updateData('time', slot)} className={`py-2 px-1 text-[10px] rounded-lg border transition-all outline-none ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Escudos de Confianza */}
+                    <div className="grid grid-cols-3 gap-2 mb-8">
+                        <div className="flex flex-col items-center text-center p-2">
+                            <Lock size={16} className="text-gray-400 mb-1"/>
+                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">100% Seguro</p>
+                        </div>
+                        <div className="flex flex-col items-center text-center p-2 border-x border-gray-100">
+                            <Shield size={16} className="text-gray-400 mb-1"/>
+                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">Licencia Oficial</p>
+                        </div>
+                        <div className="flex flex-col items-center text-center p-2">
+                            <Zap size={16} className="text-gray-400 mb-1"/>
+                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">Sin Compromiso</p>
+                        </div>
+                    </div>
+
+                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.email || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex flex-col items-center leading-tight">
+                        <span className="text-lg flex items-center gap-2"><Shield size={20}/> Sellar mi Protección</span>
+                        <span className="text-[10px] opacity-80 font-medium mt-1 uppercase tracking-widest">Reserva de Asesoría Gratuita</span>
+                    </button>
+                    
+                    <p className="text-[9px] text-center text-gray-400 font-medium px-6 mt-4 leading-relaxed italic">"Su información está protegida por encriptación de grado bancario. Un especialista se comunicará para validar su elegibilidad final."</p>
+
+                    <button onClick={() => setStep(4)} className="w-full text-gray-400 font-bold mt-6 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar a coberturas</button>
                 </div>
             )}
         </div>
