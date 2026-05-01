@@ -1028,7 +1028,15 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const [dateErrorMsg, setDateErrorMsg] = useState('');
     const [reinforcement, setReinforcement] = useState(null);
     const [isCelebrating, setIsCelebrating] = useState(false);
+    const [countdown, setCountdown] = useState(null);
 
+    useEffect(() => {
+        if (isCelebrating && countdown > 0) {
+            const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [isCelebrating, countdown]);
+                                                                   
     const pct = step === 1 ? 0 : step === 2 ? 25 : step === 3 ? 50 : step === 4 ? 75 : 100;
 
     const handleStep1Next = () => {
@@ -1104,12 +1112,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
             updateData('plan', plan);
             
-            // Inicia celebración
-            setIsCelebrating(true);
-            setTimeout(() => {
-                setIsCelebrating(false);
-                setStep(4);
-            }, 8000); // 8 segundos de pura emoción
+            setCountdown(5); // Inicia el reloj en 5
+            setIsCelebrating(true); // Abre la pantalla
         }
     };
 
@@ -1184,21 +1188,33 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                 </div>
             )}
 
-            {/* 2. PANTALLA BLANCA DE ÉXTASIS/CELEBRACIÓN (Paso 3 al 4) */}
+            {/* 2. PANTALLA BLANCA DE BÚSQUEDA Y CELEBRACIÓN (Paso 3 al 4) */}
             {isCelebrating && (
                 <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 bg-white text-center animate-fade-in">
-                    <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-lg border-4 border-green-500">
-                        <Check size={64} className="text-green-600" strokeWidth={3} />
-                    </div>
-                    <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter animate-pulse">¡EXCELENTES NOTICIAS!</h2>
-                    <p className="text-xl text-gray-600 font-medium max-w-xs mx-auto leading-relaxed">
-                        Basado en sus respuestas, <span className="text-green-600 font-bold">Usted Califica</span> para los beneficios de protección familiar.
-                    </p>
-                    <div className="mt-10 flex gap-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
-                    </div>
+                    {countdown > 0 ? (
+                        <div className="flex flex-col items-center animate-fade-in">
+                            <div className="w-24 h-24 border-8 border-gray-100 border-t-rose-500 rounded-full animate-spin mb-8 shadow-sm"></div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Analizando su perfil...</h2>
+                            <p className="text-gray-500 mb-8 font-medium">Buscando las mejores opciones disponibles a nivel nacional.</p>
+                            <div className="text-6xl font-black text-rose-500 animate-pulse">{countdown}</div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center animate-fade-in w-full max-w-xs">
+                            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-lg border-4 border-green-500">
+                                <Check size={64} className="text-green-600" strokeWidth={3} />
+                            </div>
+                            <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter">¡EXCELENTES NOTICIAS!</h2>
+                            <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10">
+                                Basado en sus respuestas, <span className="text-green-600 font-bold">Usted ha sido Pre-Aprobado</span> para los beneficios de protección.
+                            </p>
+                            <button 
+                                onClick={() => { setIsCelebrating(false); setStep(4); }} 
+                                className="w-full bg-[#E11D48] text-white py-4 md:py-5 rounded-xl font-bold shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2 text-lg"
+                            >
+                                Ver mis opciones <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
