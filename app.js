@@ -993,6 +993,27 @@ const R = {
 };
 const FEE = 3;
 
+const HeartProgress = ({ percentage, isBeating }) => {
+    return (
+        <div className="relative w-24 h-24 mx-auto mb-6 transition-all duration-700 ease-out">
+            <div className={`absolute inset-0 bg-rose-500/20 blur-xl rounded-full transform scale-75 translate-y-2 ${isBeating ? 'animate-pulse' : ''}`}></div>
+            <svg viewBox="0 0 24 24" fill="none" className={`w-full h-full drop-shadow-md transition-transform duration-300 ${isBeating ? 'scale-110' : 'scale-100'}`}>
+                <defs>
+                    <linearGradient id="heartFill" x1="0" x2="0" y1="1" y2="0">
+                        <stop offset={`${percentage}%`} stopColor="#E11D48" style={{transition: 'offset 1s ease-in-out'}} />
+                        <stop offset={`${percentage}%`} stopColor="#FFE4E6" style={{transition: 'offset 1s ease-in-out'}} />
+                    </linearGradient>
+                </defs>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
+                      fill="url(#heartFill)" stroke="#E11D48" strokeWidth="1" strokeLinejoin="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1">
+                <span className={`text-sm font-bold ${percentage >= 50 ? 'text-white' : 'text-rose-600'}`}>{percentage}%</span>
+            </div>
+        </div>
+    );
+};
+
 // --- NUEVO COMPONENTE: EMBUDO INTELIGENTE REACT/TAILWIND ---
 const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, availableStates }) => {
     const [step, setStep] = useState(1);
@@ -1127,11 +1148,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
     return (
         <div className="w-full max-w-md mx-auto pt-6 pb-12 animate-fade-in px-4 md:px-0">
-            <div className="flex flex-col items-center mb-6">
-                <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-xl transition-all duration-700 shadow-sm ${pct === 100 ? 'bg-rose-500 text-white border-rose-600 animate-pulse' : 'bg-white border-rose-100 text-rose-500 font-bold'}`}>
-                    {pct}%
-                </div>
-            </div>
+            
+            <HeartProgress percentage={pct} isBeating={pct === 100} />
 
             {step === 1 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
