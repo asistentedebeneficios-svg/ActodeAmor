@@ -1422,15 +1422,41 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     </div>
 
-                    {/* Resumen de Selección (En caja para separar visualmente) */}
-                    <div className="flex justify-between items-center mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                    {/* Resumen de Selección con Decimales Pequeños */}
+                    <div className="flex justify-between items-center mb-4 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
                         <div>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
                             <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end">
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Su Cuota</p>
-                            <p className="text-2xl font-black text-green-600">${data.monthly}<span className="text-xs text-gray-500 font-bold">/mes</span></p>
+                            <div className="flex items-start text-green-600 leading-none">
+                                <span className="text-lg font-bold mt-1">$</span>
+                                <span className="text-3xl font-black tracking-tighter">{formatPriceParts(data.monthly).int}</span>
+                                <div className="flex flex-col items-start mt-0.5">
+                                    <span className="text-sm font-bold leading-none">.{formatPriceParts(data.monthly).dec}</span>
+                                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">/mes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Gatillos de Expectativa y Alivio (Cero Pagos) */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-4 md:p-5 rounded-2xl mb-8 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm">Incluido</span>
+                            <p className="text-xs md:text-sm font-bold text-blue-900">Cobertura Accidental</p>
+                        </div>
+                        <p className="text-[11px] md:text-xs text-blue-800/80 font-medium leading-relaxed mb-4 text-balance">
+                            Su plan pre-aprobado cuenta con grandes beneficios adicionales que su especialista le revelará en detalle durante la llamada.
+                        </p>
+                        <div className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-white shadow-sm">
+                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center shrink-0 border border-green-100">
+                                <DollarSign size={16} className="text-green-600" strokeWidth={3}/>
+                            </div>
+                            <p className="text-xs font-bold text-gray-800 leading-tight">
+                                <span className="text-green-600">Cero pagos hoy.</span> No se le pedirá ningún pago para reservar esta asesoría.
+                            </p>
                         </div>
                     </div>
 
