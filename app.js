@@ -1109,7 +1109,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             setTimeout(() => {
                 setIsCelebrating(false);
                 setStep(4);
-            }, 2000); // 2 segundos de pura emoción
+            }, 4500); // 4 segundos de pura emoción
         }
     };
 
