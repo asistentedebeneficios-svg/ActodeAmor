@@ -1389,31 +1389,48 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     )}
 
-                    <button onClick={() => setStep(5)} disabled={!data.monthly} className="w-full bg-[#E11D48] text-white py-5 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
-                        Asegurar esta Tarifa <ChevronRight size={20}/>
-                    </button>
-                    <button onClick={() => setStep(3)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
+                    {data.coverage && (
+                        <div className="animate-fade-in">
+                            <button onClick={() => setStep(5)} className="w-full bg-[#E11D48] text-white py-5 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
+                                Continuar <ChevronRight size={20}/>
+                            </button>
+                        </div>
+                    )}
+                    <button onClick={() => setStep(3)} className="w-full text-gray-400 font-bold mt-6 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar a preguntas médicas</button>
                 </div>
             )}
             {step === 5 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
-                    <div className="flex items-center gap-3 mb-6 bg-rose-50 p-4 rounded-2xl border border-rose-100">
-                        <div className="w-12 h-12 bg-rose-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><ShieldCheck size={24}/></div>
+                    
+                    {/* Mensaje Emocional de Cierre */}
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Star size={32} fill="currentColor" className="text-amber-400" />
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Lo más difícil ya pasó!</h2>
+                        <p className="text-gray-500 text-sm font-medium leading-relaxed max-w-sm mx-auto">
+                            Ha dado un gran paso de amor. Ya comprobó que <strong className="text-green-600">sí califica</strong> y conoce sus opciones. Celebremos que su familia estará protegida. Ahora, solo necesitamos unos datos para que su especialista le asigne esta cobertura.
+                        </p>
+                    </div>
+
+                    {/* Escudo en color azul (Tranquilidad) */}
+                    <div className="flex items-center gap-3 mb-6 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-md"><ShieldCheck size={24}/></div>
                         <div>
-                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none mb-1">Último Paso</p>
+                            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none mb-1">Último Paso</p>
                             <h2 className="text-xl font-bold text-gray-900 leading-tight">Active su Protección</h2>
                         </div>
                     </div>
 
-                    {/* Resumen de Selección (Refuerzo) */}
-                    <div className="flex justify-between items-center mb-8 px-2">
+                    {/* Resumen de Selección (En caja para separar visualmente) */}
+                    <div className="flex justify-between items-center mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-100">
                         <div>
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Cobertura</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
                             <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Su Tarifa</p>
-                            <p className="text-2xl font-black text-rose-600">${data.monthly}<span className="text-xs">/mes</span></p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Su Cuota</p>
+                            <p className="text-2xl font-black text-green-600">${data.monthly}<span className="text-xs text-gray-500 font-bold">/mes</span></p>
                         </div>
                     </div>
 
