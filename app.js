@@ -6802,8 +6802,6 @@ const App = () => {
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
     const { leads, agents, agentRequests, reviews, schedule, webhooks, generalSettings, user, bookedSlots, addLead, updateLead, bulkUpdateLeads, bulkDeleteLeads, deleteLead, deleteReview, saveAgent, deleteAgent, approveAgentRequest, rejectAgentRequest, updateAgentRequest, updateSchedule, updateWebhooks, updateGeneralSettings, adminLogin, adminLogout } = useFirebaseDatabase();
-    const currentStep = STEPS[stepIndex];
-
 
     // --- LIMPIEZA AUTOMÁTICA: ARCHIVADO Y OFERTAS EXPIRADAS ---
     useEffect(() => {
@@ -6868,34 +6866,16 @@ const App = () => {
 
     useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
 
-    useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
-
-    useEffect(() => {
-        if (isSuccess) setFillPercent(100);
-        else if (stepIndex === 0) setFillPercent(10);
-        else setFillPercent(Math.round((stepIndex / (STEPS.length - 1)) * 95));
-        setTempSelections([]);
-    }, [stepIndex, isSuccess]);
-
-    const proceed = (selections) => {
-        const msg = getReinforcementMessage(currentStep.id, selections);
-        setLeadData(p => ({ ...p, [currentStep.id]: selections }));
-        if (msg) { setReinforcement(msg); setFillPercent(p => Math.min(p + 15, 95)); } else next();
-    };
-    const next = () => { setReinforcement(null); if (stepIndex < STEPS.length - 1) setStepIndex(p => p + 1); };
-    const handleOptClick = (id) => currentStep.multiSelect ? setTempSelections(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]) : proceed([id]);
-    const handleContinue = () => tempSelections.length > 0 && proceed(tempSelections);
     const saveData = async (form) => { 
         const isAutoMarketplace = generalSettings?.marketplaceMode;
         const finalData = { 
-            ...leadData, 
             ...form,
             status: isAutoMarketplace ? 'marketplace' : 'new' 
         }; 
         const res = await addLead(finalData);
         if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
         
-        if (webhooks && webhooks.telegram) {
+        if (webhooks && (webhooks.telegram || webhooks.master)) {
             try {
                 let formattedDate = finalData.date;
                 if (finalData.date && finalData.date !== 'Inmediata') {
@@ -6917,7 +6897,6 @@ const App = () => {
                     urgencia: finalData.isAsap ? '⚡ Prioritaria' : 'Normal'
                 };
 
-                // Enviamos los datos al Webhook Maestro con su etiqueta
                 const url = webhooks?.master || webhooks?.telegram;
                 if (url) {
                     fetch(url, {
@@ -6925,7 +6904,7 @@ const App = () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             evento: 'nuevo_prospecto',
-                            datos: { lead: webhookPayload, agent: null } // Cajas estandarizadas
+                            datos: { lead: webhookPayload, agent: null }
                         })
                     }).catch(e => console.error("Fetch de prospecto fallido", e));
                 }
@@ -6934,23 +6913,22 @@ const App = () => {
             }
         }
     };
+
     const completeSuccess = () => { 
         setIsSuccess(true); 
         sessionStorage.removeItem('funnelStepIndex');
         sessionStorage.removeItem('funnelLeadData');
 
         // 🔥 SEÑAL PARA ANDROMEDA (META ADS)
-    if (typeof fbq !== 'undefined') {
-        fbq('track', 'Lead', {
-            content_name: 'Asesoría Gastos Finales',
-            content_category: 'Seguros',
-            // Enviamos el estado para que Andromeda aprenda en qué regiones conviertes mejor
-            address_state: leadData.state || 'Unknown', 
-            value: 0.00, // Puedes asignar un valor estimado si quieres
-            currency: 'USD'
-        });
-    }
-};
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Lead', {
+                content_name: 'Asesoría Gastos Finales',
+                content_category: 'Seguros',
+                value: 0.00,
+                currency: 'USD'
+            });
+        }
+    };
 
     // --- CAMBIO 2: Guardar el pase VIP al entrar ---
     const handleLogin = async (email, password) => {
