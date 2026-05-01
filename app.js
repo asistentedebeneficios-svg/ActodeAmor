@@ -1193,10 +1193,12 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                 <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 bg-white text-center animate-fade-in">
                     {countdown > 0 ? (
                         <div className="flex flex-col items-center animate-fade-in">
-                            <div className="w-24 h-24 border-8 border-gray-100 border-t-rose-500 rounded-full animate-spin mb-8 shadow-sm"></div>
+                            <div className="relative w-32 h-32 flex items-center justify-center mb-8">
+                                <div className="absolute inset-0 border-8 border-gray-100 border-t-rose-500 rounded-full animate-spin shadow-sm"></div>
+                                <span className="text-6xl font-black text-rose-500 animate-pulse">{countdown}</span>
+                            </div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Analizando su perfil...</h2>
-                            <p className="text-gray-500 mb-8 font-medium">Buscando las mejores opciones disponibles a nivel nacional.</p>
-                            <div className="text-6xl font-black text-rose-500 animate-pulse">{countdown}</div>
+                            <p className="text-gray-500 font-medium max-w-xs leading-relaxed">Buscando las mejores opciones disponibles a nivel nacional.</p>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center animate-fade-in w-full max-w-xs">
