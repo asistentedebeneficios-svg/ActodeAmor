@@ -7600,11 +7600,43 @@ const App = () => {
         
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1 pb-10">
                 {isSuccess ? (
-                    <div className="text-center mt-10 p-8 animate-fade-in bg-white rounded-3xl shadow-sm border border-gray-100 mx-4">
-                        <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6"><Check size={48}/></div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">¡Su cita está confirmada!</h2>
-                        <p className="text-gray-500 text-lg leading-relaxed font-medium">Ha dado un hermoso paso para proteger a su familia. Un especialista certificado evaluará sus datos y se comunicará con usted puntualmente.</p>
-                        <button onClick={() => window.location.reload()} className="mt-8 text-rose-500 font-bold hover:underline transition-all">Volver al inicio</button>
+                    <div className="text-center mt-12 md:mt-20 p-8 md:p-12 animate-fade-in bg-white rounded-[3rem] shadow-xl border border-gray-100 mx-4 max-w-lg mx-auto relative overflow-hidden">
+                        {/* Brillo suave de fondo */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-rose-500/5 rounded-full blur-[60px] pointer-events-none"></div>
+
+                        {/* Corazón al 100% (Rojo y lleno) */}
+                        <div className="relative w-24 h-24 mx-auto mb-8 drop-shadow-lg">
+                            <Heart size={96} className="text-rose-600 animate-pulse" fill="currentColor" />
+                        </div>
+
+                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
+                            ¡Qué Gran Acto de Amor!
+                        </h2>
+
+                        <div className="space-y-6 relative z-10">
+                            <p className="text-gray-600 text-lg md:text-xl font-medium leading-relaxed text-balance">
+                                Ha dado un paso invaluable para <strong className="text-gray-900">proteger a su familia</strong>. Su búsqueda ha finalizado.
+                            </p>
+                            
+                            <p className="text-gray-500 text-sm md:text-base leading-relaxed text-balance">
+                                Permítanos servirle asignándole a su especialista, quien le contactará según la preferencia que usted escogió para <strong className="text-gray-900">activar su cobertura</strong>.
+                            </p>
+
+                            {/* Aviso de Notificación */}
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-8">
+                                <p className="text-xs md:text-sm text-gray-600 font-bold flex items-center justify-center gap-2">
+                                    <Mail size={16} className="text-blue-500"/> 
+                                    En breve recibirá un mensaje (SMS) o e-mail con los datos de su asesor.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            className="mt-10 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-rose-600 transition-colors py-2 px-4"
+                        >
+                            Finalizar Trámite
+                        </button>
                     </div>
                 ) : (
                     <SmartFunnel 
