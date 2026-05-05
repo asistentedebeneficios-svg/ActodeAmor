@@ -1543,9 +1543,15 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                     />
                                 </div>
                                 {data.date && (
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                                         {availableSlots.map(slot => (
-                                            <button key={slot} onClick={() => updateData('time', slot)} className={`py-2 px-1 text-[10px] rounded-lg border transition-all outline-none ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-md' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}>{slot}</button>
+                                            <button 
+                                                key={slot} 
+                                                onClick={() => updateData('time', slot)} 
+                                                className={`py-3.5 px-2 text-xs md:text-sm rounded-xl border transition-all outline-none font-bold ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'}`}
+                                            >
+                                                {slot}
+                                            </button>
                                         ))}
                                     </div>
                                 )}
