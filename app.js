@@ -7616,10 +7616,19 @@ const App = () => {
                         {/* Brillo suave de fondo */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-rose-500/5 rounded-full blur-[60px] pointer-events-none"></div>
 
-                        {/* Corazón con el 100% dentro */}
-                        <div className="relative w-24 h-24 mx-auto mb-8 drop-shadow-lg flex items-center justify-center">
+                        {/* Corazón Calado con el 100% IDÉNTICO */}
+                        <div className="relative w-24 h-24 mx-auto mb-8 drop-shadow-lg flex items-center justify-center overflow-hidden rounded-full">
+                            
+                            {/* Fondo del Corazón Sólido */}
                             <Heart size={96} className="text-rose-600 animate-pulse absolute" fill="currentColor" />
-                            <span className="relative z-10 text-white font-black text-2xl tracking-tighter">100%</span>
+
+                            {/* Número Calado con la estética de precios */}
+                            <div className="relative z-10 flex items-start justify-center gap-0.5 text-emerald-100 font-bold tracking-tighter">
+                                <span className="text-5xl font-black">100</span>
+                                <div className="flex flex-col items-start mt-1">
+                                    <span className="text-xl font-bold leading-none">%</span>
+                                </div>
+                            </div>
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
@@ -7632,7 +7641,7 @@ const App = () => {
                             </p>
                             
                             <p className="text-gray-500 text-sm md:text-base leading-relaxed text-balance">
-                                Permítanos servirle asignándole a su especialista, quien le contactará según la preferencia que usted escogió para <strong className="text-gray-900">activar su cobertura</strong>.
+                                Permítanos servirle asignándole a su especialista, quien le contactará según la preferencia que usted escogió.
                             </p>
 
                             {/* Aviso de Notificación */}
