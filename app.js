@@ -1372,7 +1372,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Check size={14} strokeWidth={3}/> Pre-calificado</p>
                     <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Opciones de Cobertura</h2>
-                    <p className="text-gray-500 mb-6 text-sm">Seleccione el monto que desea dejar a su familia.</p>
+                    <p className="text-gray-500 mb-6 text-sm">Seleccione el monto de su protección.</p>
                     
                     {/* 1. Tarjetas de Cobertura (Ahora con verde elegante) */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
@@ -1525,7 +1525,23 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
                         {data.contactType === 'schedule' && (
                             <div className="space-y-4 animate-fade-in">
-                                <input type="date" min={minDate} className="w-full p-3.5 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none focus:border-blue-400 transition-all" value={data.date} onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} />
+                                <div className="relative bg-white border border-gray-200 rounded-xl focus-within:border-blue-400 transition-colors overflow-hidden">
+                                    {/* Capa de texto falso (Se oculta al elegir fecha) */}
+                                    {!data.date && (
+                                        <div className="absolute inset-0 flex items-center pl-4 pointer-events-none z-0">
+                                            <CalendarDays className="text-blue-500 mr-2" size={18}/>
+                                            <span className="text-gray-400 text-sm font-medium">Seleccione una fecha...</span>
+                                        </div>
+                                    )}
+                                    {/* El Input original transparente */}
+                                    <input 
+                                        type="date" 
+                                        min={minDate} 
+                                        className={`w-full p-4 bg-transparent outline-none cursor-pointer relative z-10 ${!data.date ? 'text-transparent' : 'text-gray-700 font-medium text-sm'}`} 
+                                        value={data.date} 
+                                        onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} 
+                                    />
+                                </div>
                                 {data.date && (
                                     <div className="grid grid-cols-3 gap-2">
                                         {availableSlots.map(slot => (
