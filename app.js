@@ -7623,7 +7623,7 @@ const App = () => {
                         </div>
 
                         <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
-                            ¡Felicidades, en breve su familia estará protegida!
+                            ¡Felicidades!
                         </h2>
 
                         <p className="text-gray-500 text-base md:text-lg font-medium leading-snug max-w-md mx-auto text-balance mb-8">
@@ -7635,7 +7635,9 @@ const App = () => {
                             {/* Cobertura */}
                             <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100 flex flex-col items-center justify-center">
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cobertura</span>
-                                <p className="text-xl font-black text-gray-900">{leadData.cobertura || '$0'}</p>
+                                <p className="text-xl font-black text-gray-900">
+                                    {leadData.cobertura ? leadData.cobertura.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '$0'}
+                                </p>
                             </div>
                             {/* Pago Mensual */}
                             <div className="bg-gray-900 p-4 rounded-3xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
@@ -7683,7 +7685,7 @@ const App = () => {
                                 <div className="p-3 bg-white rounded-2xl border border-gray-100 flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                     <p className="text-[11px] font-medium text-gray-600 leading-tight">
-                                        Un especialista certificado le contactará para validar sus beneficios.
+                                        Un especialista certificado le contactará para validar sus beneficios. Antes de la llamada, usted recibirá un SMS o email con la información del agente para que se sienta en confianza.
                                     </p>
                                 </div>
                             </div>
