@@ -1465,7 +1465,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
                             </div>
                             <div className="text-right flex flex-col items-end">
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Su Cuota</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Por tan sólo</p>
                                 <div className="flex items-start text-green-600 leading-none">
                                     <span className="text-lg font-bold mt-1">$</span>
                                     <span className="text-3xl font-black tracking-tighter">{formatPriceParts(data.monthly).int}</span>
@@ -6832,8 +6832,8 @@ const ProcessFlow = () => {
     const steps = [
         { title: "Usted elige sus preferencias", icon: Check },
         { title: "Programa una breve llamada", icon: CalendarDays },
-        { title: "Nuestro agente le ofrece las mejores opciones", icon: User },
-        { title: "Califica nuestro servicio", icon: Star }
+        { title: "Nuestro agente activa su cobertura", icon: User },
+        { title: "Puede califica nuestro servicio", icon: Star }
     ];
 
     return (
@@ -7642,7 +7642,7 @@ const App = () => {
                             {/* Pago Mensual */}
                             <div className="bg-gray-900 p-4 rounded-3xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/20 rounded-full blur-xl"></div>
-                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 relative z-10">Cuota Mensual</span>
+                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 relative z-10">Por tan sólo</span>
                                 <p className="text-xl font-black text-white relative z-10">{leadData.budget || '$0'}</p>
                             </div>
                         </div>
