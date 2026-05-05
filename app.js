@@ -1854,19 +1854,17 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
 
     // FUNCIÓN INTERCEPTORA DE SALIDA
     const handleAttemptClose = () => {
-        // Si eres Admin, O si el agente ya cerró la venta definitivamente, sales directo
         if (!isAgentView || lead.agentStatus === 'vendido') {
             onClose(); 
             return;
         }
-        setShowExitPolice(true); // Si eres Agente y la venta sigue abierta, alto ahí policía
+        setShowExitPolice(true);
     };
 
     const handleConfirmExit = async () => {
         if (tempStatus !== lead.agentStatus) {
             await onUpdate(lead.id, { agentStatus: tempStatus });
             
-            // 🔥 DISPARADOR SILENCIOSO PARA MAKE (SOLO SI SE VA COMO VENDIDO) 🔥
             if (tempStatus === 'vendido' && lead.email && lead.email !== 'No proporcionado') {
                 try {
                     const whDoc = await getDoc(doc(db, 'settings', 'webhooks'));
@@ -1958,45 +1956,42 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             });
             
             if (hasConflict) {
-                setDialog({ title: 'Alerta de Colisión', message: `Ya tienes una cita activa programada a las ${previewLocalTime || editTime} (Tu hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`, type: 'warning', onConfirm: () => setDialog(null) });
-                return; 
-            }
-        }
-        
-        // NUEVO: Lógica de liberación y reasignación de espacios globales
-        const tz = STATE_TZ[lead.state];
-        let newUtcSlotId = null;
-        if (tz) {
-            const newUtcMs = zonedDateTimeToUtcMs(editDate, editTime, tz);
-            if (newUtcMs) newUtcSlotId = String(newUtcMs);
-        }
+                setDialog({ title: 'Alerta de Colisión', message: `Ya tienes una cita activa programada a las ${previewLocalTime || editTime} (Tu hora local) en ese día.\n\nPor favor, selecciona un horario distinto.`, type: 'warning', onConfirm: () => setDialog(null) });
+                return; 
+            }
+        }
+        
+        const tz = STATE_TZ[lead.state];
+        let newUtcSlotId = null;
+        if (tz) {
+            const newUtcMs = zonedDateTimeToUtcMs(editDate, editTime, tz);
+            if (newUtcMs) newUtcSlotId = String(newUtcMs);
+        }
 
-        const updateData = { date: editDate, time: editTime };
-        if (newUtcSlotId) updateData.utcSlotId = newUtcSlotId;
+        const updateData = { date: editDate, time: editTime };
+        if (newUtcSlotId) updateData.utcSlotId = newUtcSlotId;
 
-        await onUpdate(lead.id, updateData);
-        
-        // Si tenía un espacio anterior y acaba de cambiar, lo borramos de la bóveda pública para liberarlo
-        if (lead.utcSlotId && lead.utcSlotId !== newUtcSlotId) {
-            try {
-                await deleteDoc(doc(db, 'booked_slots', lead.utcSlotId));
-            } catch (e) {
-                console.error("Error liberando el espacio anterior:", e);
-            }
-        }
+        await onUpdate(lead.id, updateData);
+        
+        if (lead.utcSlotId && lead.utcSlotId !== newUtcSlotId) {
+            try {
+                await deleteDoc(doc(db, 'booked_slots', lead.utcSlotId));
+            } catch (e) {
+                console.error("Error liberando el espacio anterior:", e);
+            }
+        }
 
-        // Si estamos en modo estricto, ocupamos el NUEVO espacio en la bóveda pública
-        if (newUtcSlotId) {
-            try {
-                await setDoc(doc(db, 'booked_slots', newUtcSlotId), { takenAt: Date.now() });
-            } catch (e) {
-                console.error("Error reservando el nuevo espacio:", e);
-            }
-        }
+        if (newUtcSlotId) {
+            try {
+                await setDoc(doc(db, 'booked_slots', newUtcSlotId), { takenAt: Date.now() });
+            } catch (e) {
+                console.error("Error reservando el nuevo espacio:", e);
+            }
+        }
 
-        setIsEditingDateTime(false);
-        setDialog({ title: '¡Éxito!', message: 'La cita ha sido reagendada correctamente.', type: 'success', onConfirm: () => setDialog(null) });
-    };
+        setIsEditingDateTime(false);
+        setDialog({ title: '¡Éxito!', message: 'La cita ha sido reagendada correctamente.', type: 'success', onConfirm: () => setDialog(null) });
+    };
     
     const currentAgent = agents.find(a => a.id === lead.assignedTo);
     const handleDelete = () => { 
@@ -2007,7 +2002,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         <div className="fixed inset-0 bg-[#F5F5F7] z-[60] flex flex-col animate-slide-up">
             <CustomDialog isOpen={!!dialog} {...dialog} />
 
-            {/* --- MODAL DEL POLICÍA DE ESTATUS (Solo para Agentes) --- */}
             {showExitPolice && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-3xl w-full max-w-sm flex flex-col shadow-2xl animate-slide-up border border-gray-100 overflow-hidden">
@@ -2035,12 +2029,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 <option value="descartado" className="bg-white text-gray-800">Descartado</option>
                             </select>
                             
-                            {/* TEXTO DE AYUDA DINÁMICO Y ADVERTENCIA */}
                             <div className="min-h-[20px] text-center mt-2">
                                 {tempStatus === 'activo' && <p className="text-[11px] font-medium text-blue-600/80 italic animate-fade-in px-2">Todavía no ha atendido al Prospecto.</p>}
                                 {tempStatus === 'seguimiento' && <p className="text-[11px] font-medium text-amber-600/80 italic animate-fade-in px-2">Hay interés, pero el cliente necesita pensarlo o reagendar.</p>}
                                 
-                                {/* ADVERTENCIA INTEGRADA AL SELECCIONAR VENTA CERRADA */}
                                 {tempStatus === 'vendido' && (
                                     <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-left animate-fade-in shadow-sm mx-1">
                                         <p className="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1.5 mb-1 uppercase tracking-widest"><AlertTriangle size={14}/> Acción Definitiva</p>
@@ -2098,7 +2090,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                     </span>
                                     <div className="relative">
                                         {lead.agentStatus === 'vendido' && isAgentView ? (
-                                            /* --- ESTADO BLOQUEADO: VENTA CERRADA DEFINITIVA (SOLO AGENTES) --- */
                                             <div className="bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-bold text-sm md:text-base px-4 py-3.5 rounded-xl shadow-sm flex items-center justify-between cursor-not-allowed">
                                                 <span className="flex items-center gap-2">
                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -2107,7 +2098,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                                             </div>
                                         ) : (
-                                            /* --- SELECT NORMAL PARA DEMÁS ESTATUS (Y PARA EL ADMIN SIEMPRE) --- */
                                             <>
                                                 <select
                                                     value={lead.agentStatus || 'activo'}
@@ -2115,7 +2105,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                         const newStatus = e.target.value;
                                                         
                                                         if (newStatus === 'vendido' && isAgentView) {
-                                                            // 1. INTERCEPTOR: LANZAR ADVERTENCIA (Solo al Agente)
                                                             setDialog({
                                                                 title: 'Sellar Venta Cerrada',
                                                                 message: '¿Estás seguro de marcar a este cliente como Venta Cerrada?\n\nEsta acción es DEFINITIVA. Ya no podrás modificar el estatus de este cliente, pero seguirás teniendo acceso a su ficha técnica. El sistema le pedirá tu calificación.',
@@ -2124,7 +2113,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                                     setTempStatus('vendido');
                                                                     await onUpdate(lead.id, { agentStatus: 'vendido' });
                                                                     
-                                                                    // 🔥 DISPARADOR SILENCIOSO PARA MAKE 🔥
                                                                     if (lead.email && lead.email !== 'No proporcionado') {
                                                                         try {
                                                                             const whDoc = await getDoc(doc(db, 'settings', 'webhooks'));
@@ -2152,7 +2140,6 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                                                 }
                                                             });
                                                         } else {
-                                                            // 2. ACTUALIZACIÓN NORMAL (O si el Admin está haciendo el cambio)
                                                             setTempStatus(newStatus);
                                                             onUpdate(lead.id, { agentStatus: newStatus });
                                                         }
@@ -2279,6 +2266,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             </div>
                         </div>
                         
+                        {/* --- PERFIL DE INTERÉS (BENTO REPARADO) --- */}
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
                             <div className="space-y-4">
@@ -2326,7 +2314,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </div>
                             </div>
                         </div>
-                        </div>
+
                     </div>
                     
                     <div className="lg:col-span-7 space-y-6 flex flex-col">
