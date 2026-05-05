@@ -1254,7 +1254,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 1 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 1 de 4</p>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Un Acto de Amor</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Proteger es Un Acto de Amor</h2>
                     <p className="text-gray-500 mb-6 text-sm">¿Para quién es esta protección?</p>
                     
                     <div className="space-y-3 mb-8">
@@ -1277,7 +1277,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 2 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 2 de 4</p>
-                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Permítanos conocerle</h2>
+                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Cotización</h2>
                      
                      <div className="bg-gray-50 p-6 md:p-8 rounded-3xl border border-gray-200 text-center mb-8 shadow-inner">
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">¿Cuántos años tiene?</label>
@@ -1340,7 +1340,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 3 && (
                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 3 de 4</p>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">3 Simples Preguntas de Salud</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">3 Preguntas de Salud</h2>
                     <p className="text-gray-500 mb-6 text-sm">Por favor responda con honestidad. Todo es confidencial.</p>
 
                     <div className={`p-5 rounded-2xl border-2 transition-colors mb-4 ${data.healthA === 'no' ? 'border-green-500 bg-green-50' : data.healthA === 'yes' ? 'border-blue-500 bg-blue-50' : 'border-gray-100 bg-white'}`}>
@@ -7622,7 +7622,7 @@ const App = () => {
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight text-center">
-                            ¡Qué Gran Acto de Amor!
+                            ¡Felicidade por proteger a su familia!
                         </h2>
 
                         <div className="space-y-6 relative z-10">
