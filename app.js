@@ -7621,21 +7621,32 @@ const App = () => {
                             <HeartProgress percentage={100} isBeating={true} />
                         </div>
 
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
+                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight text-center">
                             ¡Qué Gran Acto de Amor!
                         </h2>
 
                         <div className="space-y-6 relative z-10">
-                            <p className="text-gray-600 text-lg md:text-xl font-medium leading-relaxed text-balance">
+                            <p className="text-gray-600 text-lg md:text-xl font-medium leading-relaxed text-balance text-center">
                                 Ha dado un paso invaluable para <strong className="text-gray-900">proteger a su familia</strong>. Su búsqueda ha finalizado.
                             </p>
+
+                            {/* Imagen Estilo Bento Elegante - Integrada aquí */}
+                            <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-gray-100 group my-8 aspect-video md:aspect-auto">
+                                <img 
+                                    src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_j5ui6tj5ui6tj5ui-scaled.png" 
+                                    alt="Familia Protegida" 
+                                    className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105"
+                                />
+                                {/* Overlay sutil para realzar la elegancia */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            </div>
                             
-                            <p className="text-gray-500 text-sm md:text-base leading-relaxed text-balance">
+                            <p className="text-gray-500 text-sm md:text-base leading-relaxed text-balance text-center">
                                 Permítanos servirle asignándole a su especialista, quien le contactará según la preferencia que usted escogió.
                             </p>
 
                             {/* Aviso de Notificación */}
-                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-8">
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-4">
                                 <p className="text-xs md:text-sm text-gray-600 font-bold flex items-center justify-center gap-2">
                                     <Mail size={16} className="text-blue-500"/> 
                                     En breve recibirá un mensaje (SMS) o e-mail con los datos de su asesor.
