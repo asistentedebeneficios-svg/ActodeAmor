@@ -2269,6 +2269,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         </div>
                         
                         {/* --- PERFIL DE INTERÉS (BENTO REPARADO) --- */}
+                        {/* --- PERFIL DE INTERÉS ACTUALIZADO --- */}
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
                             <div className="space-y-4">
@@ -2286,6 +2287,14 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                         <span className="font-bold text-gray-900 text-sm text-right">{lead.age} años</span>
                                     </div>
                                 )}
+
+                                {/* --- NUEVO CAMPO: FUMADOR --- */}
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                    <span className="text-sm text-gray-500 font-medium">¿Es Fumador?</span>
+                                    <span className={`font-bold text-sm text-right ${lead.fumador === 'Sí' ? 'text-rose-600' : 'text-gray-900'}`}>
+                                        {lead.fumador || 'No especificado'}
+                                    </span>
+                                </div>
 
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Plan Calificado</span>
@@ -2311,7 +2320,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 <div className="flex justify-between items-center pt-2 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Preferencia</span>
                                     <span className={`font-bold text-xs px-2.5 py-1 rounded-lg shadow-sm ${lead.isAsap ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
-                                        {lead.isAsap ? '⚡ Llamada Inmediata' : '📅 Cita Programada'}
+                                        {lead.isAsap ? '⚡ Llamada Inmediata' : 'Cita Programada'}
                                     </span>
                                 </div>
                             </div>
