@@ -7616,9 +7616,10 @@ const App = () => {
                         {/* Brillo suave de fondo */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-rose-500/5 rounded-full blur-[60px] pointer-events-none"></div>
 
-                        {/* Corazón al 100% (Rojo y lleno) */}
-                        <div className="relative w-24 h-24 mx-auto mb-8 drop-shadow-lg">
-                            <Heart size={96} className="text-rose-600 animate-pulse" fill="currentColor" />
+                        {/* Corazón con el 100% dentro */}
+                        <div className="relative w-24 h-24 mx-auto mb-8 drop-shadow-lg flex items-center justify-center">
+                            <Heart size={96} className="text-rose-600 animate-pulse absolute" fill="currentColor" />
+                            <span className="relative z-10 text-white font-black text-2xl tracking-tighter">100%</span>
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
