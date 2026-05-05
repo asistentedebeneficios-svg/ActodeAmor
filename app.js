@@ -1189,7 +1189,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     <Shield size={36}/>
                 </div>
                 
-                <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Evaluación Finalizada</h2>
+                <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Mensaje Importante</h2>
                 
                 <p className="text-gray-500 mb-6 text-base leading-relaxed text-balance">
                     Le agradecemos profundamente su tiempo y sinceridad. Basado en sus respuestas, el perfil médico indicado entra en la categoría de <strong className="text-gray-700">condiciones no asegurables</strong> en el mercado actual.
