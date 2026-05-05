@@ -2282,27 +2282,50 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                         <div className="bg-white p-5 md:p-6 rounded-3xl shadow-soft border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2 text-sm uppercase tracking-widest"><ShieldCheck size={16} className="text-rose-500"/> Perfil de Interés</h3>
                             <div className="space-y-4">
+                                
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                    <span className="text-sm text-gray-500 font-medium">Protección para</span>
+                                    <span className="font-bold text-gray-900 text-sm text-right">
+                                        {lead.policy_for && lead.policy_for[0] === 'me' ? 'Sí mismo' : lead.policy_for && lead.policy_for[0] === 'family' ? 'Un familiar' : 'No especificado'}
+                                    </span>
+                                </div>
+
                                 {lead.age && (
                                     <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                         <span className="text-sm text-gray-500 font-medium">Edad del solicitante</span>
                                         <span className="font-bold text-gray-900 text-sm text-right">{lead.age} años</span>
                                     </div>
                                 )}
+
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
-                                    <span className="text-sm text-gray-500 font-medium">Cobertura para</span>
-                                    <span className="font-bold text-gray-900 text-sm text-right">{getLabelsForArray('policy_for', lead.policy_for)}</span>
+                                    <span className="text-sm text-gray-500 font-medium">Plan Calificado</span>
+                                    <span className="font-bold text-gray-900 text-sm text-right">
+                                        {lead.planRecomendado || 'Pendiente'}
+                                    </span>
                                 </div>
+
+                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
+                                    <span className="text-sm text-gray-500 font-medium">Cobertura Solicitada</span>
+                                    <span className="font-bold text-emerald-700 text-sm bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 shadow-sm">
+                                        {lead.cobertura ? lead.cobertura.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No definida'}
+                                    </span>
+                                </div>
+
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
                                     <span className="text-sm text-gray-500 font-medium">Presupuesto Mensual</span>
-                                    <span className="font-bold text-blue-600 text-sm bg-blue-50 px-2 py-0.5 rounded">{getLabelForValue('budget', lead.budget) || 'Pendiente'}</span>
+                                    <span className="font-bold text-blue-700 text-sm bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">
+                                        {lead.budget || 'Pendiente'}
+                                    </span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1 pt-3">
-                                    <span className="text-sm text-gray-500 font-medium">Preferencia de Contacto</span>
-                                    <span className={`font-bold text-sm px-2 py-0.5 rounded ${lead.isAsap ? 'bg-rose-50 text-rose-600' : 'bg-gray-50 text-gray-600'}`}>
-                                        {lead.isAsap ? '⚡ Atender Inmediatamente' : '📅 Cita Programada'}
+
+                                <div className="flex justify-between items-center pt-2 px-1">
+                                    <span className="text-sm text-gray-500 font-medium">Preferencia</span>
+                                    <span className={`font-bold text-xs px-2.5 py-1 rounded-lg shadow-sm ${lead.isAsap ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
+                                        {lead.isAsap ? '⚡ Llamada Inmediata' : '📅 Cita Programada'}
                                     </span>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                     
