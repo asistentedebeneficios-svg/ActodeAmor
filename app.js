@@ -1037,6 +1037,11 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         sessionStorage.setItem('smartFunnelStep', step.toString());
         sessionStorage.setItem('smartFunnelData', JSON.stringify(data));
     }, [step, data]);
+
+    // 4. Auto-Scroll inteligente (Fuerza la vista hacia arriba en cada cambio de pantalla)
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [step]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showNI, setShowNI] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -1230,7 +1235,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             </div>
                             <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter">¡EXCELENTES NOTICIAS!</h2>
                             <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10">
-                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para los mejores beneficios de protección familiar.
+                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para grandes beneficios de protección familiar.
                             </p>
                             <button 
                                 onClick={() => { setIsCelebrating(false); setStep(4); }} 
@@ -1447,20 +1452,27 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </p>
                     </div>
 
-                    {/* Resumen de Selección */}
-                    <div className="flex justify-between items-center mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
-                        <div>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
-                            <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
+                    {/* Resumen de Selección con Etiqueta Mi Plan */}
+                    <div className="relative mb-8 bg-gray-50 p-5 pt-9 rounded-2xl border border-gray-100 shadow-inner overflow-hidden">
+                        {/* Etiqueta Elegante Mi Plan */}
+                        <div className="absolute top-0 left-0 bg-gray-900 text-white text-[9px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-br-xl shadow-sm z-10">
+                            Mi Plan
                         </div>
-                        <div className="text-right flex flex-col items-end">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Su Cuota</p>
-                            <div className="flex items-start text-green-600 leading-none">
-                                <span className="text-lg font-bold mt-1">$</span>
-                                <span className="text-3xl font-black tracking-tighter">{formatPriceParts(data.monthly).int}</span>
-                                <div className="flex flex-col items-start mt-0.5">
-                                    <span className="text-sm font-bold leading-none">.{formatPriceParts(data.monthly).dec}</span>
-                                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">/mes</span>
+                        
+                        <div className="flex justify-between items-center relative z-0">
+                            <div>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
+                                <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right flex flex-col items-end">
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Su Cuota</p>
+                                <div className="flex items-start text-green-600 leading-none">
+                                    <span className="text-lg font-bold mt-1">$</span>
+                                    <span className="text-3xl font-black tracking-tighter">{formatPriceParts(data.monthly).int}</span>
+                                    <div className="flex flex-col items-start mt-0.5">
+                                        <span className="text-sm font-bold leading-none">.{formatPriceParts(data.monthly).dec}</span>
+                                        <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">/mes</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
