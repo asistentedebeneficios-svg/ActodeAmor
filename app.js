@@ -7626,8 +7626,8 @@ const App = () => {
                         </h2>
 
                         <div className="space-y-6 relative z-10">
-                            <p className="text-gray-600 text-lg md:text-xl font-medium leading-relaxed text-balance text-center">
-                                Ha dado un paso invaluable para <strong className="text-gray-900">proteger a su familia</strong>. Su búsqueda ha finalizado.
+                            <p className="text-gray-500 text-base md:text-lg font-medium leading-snug max-w-md mx-auto text-balance text-center">
+                                Ha dado un paso invaluable para <strong className="text-gray-800">proteger a su familia</strong>. Su búsqueda ha finalizado.
                             </p>
 
                             {/* Imagen Estilo Bento Elegante - Integrada aquí */}
