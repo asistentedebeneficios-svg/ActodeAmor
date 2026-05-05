@@ -1183,18 +1183,31 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
     if (showNI) {
         return (
-            <div className="w-full max-w-md mx-auto p-8 bg-white rounded-3xl shadow-xl text-center mt-10 animate-fade-in border border-gray-100">
-                <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner"><AlertTriangle size={32}/></div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Evaluación Personalizada</h2>
-                <p className="text-gray-500 mb-6 text-sm">Basado en sus respuestas, un especialista certificado revisará su caso para encontrarle la mejor opción disponible. Sin costo.</p>
-                <div className="space-y-4 mb-6">
-                    <input type="text" placeholder="Su nombre" className="w-full p-4 bg-gray-50 rounded-xl outline-none font-medium border border-gray-200 focus:border-rose-400 focus:bg-white transition-colors" value={data.name} onChange={e => updateData('name', e.target.value)} />
-                    <input type="tel" placeholder="Su teléfono" maxLength="14" className="w-full p-4 bg-gray-50 rounded-xl outline-none font-medium border border-gray-200 focus:border-rose-400 focus:bg-white transition-colors" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
+            <div className="w-full max-w-md mx-auto p-8 md:p-10 bg-white rounded-[2.5rem] shadow-2xl text-center mt-10 animate-fade-in border border-gray-100 relative overflow-hidden">
+                {/* Ícono neutral/informativo */}
+                <div className="w-20 h-20 bg-gray-50 text-gray-400 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner border border-gray-100">
+                    <Shield size={36}/>
                 </div>
-                <button onClick={() => { updateData('contactType', 'asap'); handleFinalSubmit(); }} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || isSubmitting} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">
-                    {isSubmitting ? 'Enviando...' : <><Phone size={18}/> Hablar con un especialista</>}
+                
+                <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Evaluación Finalizada</h2>
+                
+                <p className="text-gray-500 mb-6 text-base leading-relaxed text-balance">
+                    Le agradecemos profundamente su tiempo y sinceridad. Basado en sus respuestas, el perfil médico indicado entra en la categoría de <strong className="text-gray-700">condiciones no asegurables</strong> en el mercado actual.
+                </p>
+                
+                <div className="bg-rose-50/50 p-5 rounded-2xl border border-rose-100 mb-8">
+                    <p className="text-sm text-rose-700 font-medium leading-relaxed">
+                        Lamentablemente no podemos avanzar con el proceso ni ofrecerle cobertura en este momento. Le damos las gracias por su interés y le deseamos un excelente día.
+                    </p>
+                </div>
+                
+                {/* Botón de volver por si se equivocaron al marcar "Sí" */}
+                <button 
+                    onClick={() => { setShowNI(false); setStep(3); }} 
+                    className="w-full text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600 transition-colors"
+                >
+                    Volver atrás
                 </button>
-                <button onClick={() => { setShowNI(false); setStep(3); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors">Volver</button>
             </div>
         );
     }
