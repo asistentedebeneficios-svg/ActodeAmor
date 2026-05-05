@@ -1215,7 +1215,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             </div>
                             <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter">¡EXCELENTES NOTICIAS!</h2>
                             <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10">
-                                Basado en sus respuestas, <span className="text-green-600 font-bold">Usted ha sido Pre-Aprobado</span> para los mejores beneficios de protección familiar.
+                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para excelentes beneficios de protección familiar.
                             </p>
                             <button 
                                 onClick={() => { setIsCelebrating(false); setStep(4); }} 
@@ -1359,23 +1359,25 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Opciones de Cobertura</h2>
                     <p className="text-gray-500 mb-6 text-sm">Seleccione el monto que desea dejar a su familia.</p>
                     
+                    {/* 1. Tarjetas de Cobertura (Ahora con verde elegante) */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                         {[5000, 8000, 10000, 12000].map((cov, i) => (
-                            <button key={cov} onClick={() => calcPrice(cov)} className={`p-4 border-2 rounded-xl transition-all outline-none relative ${data.coverage === cov ? 'border-rose-500 bg-rose-50 shadow-md transform scale-[1.02]' : 'border-gray-200 text-gray-600 hover:border-rose-300'}`}>
+                            <button key={cov} onClick={() => calcPrice(cov)} className={`p-4 border-2 rounded-xl transition-all outline-none relative ${data.coverage === cov ? 'border-emerald-500 bg-emerald-50 shadow-md transform scale-[1.02]' : 'border-gray-200 text-gray-600 hover:border-emerald-300'}`}>
                                 {cov === 10000 && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">Popular</span>}
-                                <span className={`block font-bold text-xl ${data.coverage === cov ? 'text-rose-600' : 'text-gray-800'}`}>${cov.toLocaleString()}</span>
-                                <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 block ${data.coverage === cov ? 'text-rose-400' : 'text-gray-400'}`}>{i===0?'Básico':i===1?'Estándar':i===2?'Completo':'Premium'}</span>
+                                <span className={`block font-bold text-xl ${data.coverage === cov ? 'text-emerald-700' : 'text-gray-800'}`}>${cov.toLocaleString()}</span>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 block ${data.coverage === cov ? 'text-emerald-600' : 'text-gray-400'}`}>{i===0?'Básico':i===1?'Estándar':i===2?'Completo':'Premium'}</span>
                             </button>
                         ))}
                     </div>
 
+                    {/* 2. Cuadro Negro de Mensualidad (Dólar y brillo en verde) */}
                     {data.monthly && (
                         <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-8 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
-                            <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-rose-500/20 rounded-full blur-[40px]"></div>
+                            <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-emerald-500/20 rounded-full blur-[40px]"></div>
                             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad</p>
                             
                             <div className="flex items-start justify-center gap-0.5">
-                                <span className="text-3xl text-rose-500 font-bold mt-2">$</span>
+                                <span className="text-3xl text-emerald-400 font-bold mt-2">$</span>
                                 <span className="text-7xl font-black text-white tracking-tighter">{formatPriceParts(data.monthly).int}</span>
                                 <div className="flex flex-col items-start mt-2">
                                     <span className="text-2xl font-bold text-white leading-none">.{formatPriceParts(data.monthly).dec}</span>
@@ -1389,8 +1391,28 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     )}
 
+                    {/* 3. Lista de Beneficios y Botón de Continuar */}
                     {data.coverage && (
                         <div className="animate-fade-in">
+                            
+                            <div className="mb-8 space-y-4 bg-gray-50 p-5 md:p-6 rounded-2xl border border-gray-100">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 pb-2 mb-4">Beneficios Incluidos</p>
+                                {[
+                                    "La tarifa mensual nunca aumentará.",
+                                    "Cobertura en cualquier parte del mundo.",
+                                    "Beneficio en efectivo a su familia en 24 horas.",
+                                    "Asesor funerario personal 24/7 para apoyar a su familia sin costo adicional.",
+                                    "Cobertura accidental (más detalles con su asesor)."
+                                ].map((bene, index) => (
+                                    <div key={index} className="flex items-start gap-3">
+                                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-200">
+                                            <Check size={12} className="text-emerald-600" strokeWidth={3} />
+                                        </div>
+                                        <p className="text-sm text-gray-700 font-medium leading-snug">{bene}</p>
+                                    </div>
+                                ))}
+                            </div>
+
                             <button onClick={() => setStep(5)} className="w-full bg-[#E11D48] text-white py-5 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
                                 Continuar <ChevronRight size={20}/>
                             </button>
