@@ -1424,16 +1424,16 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 5 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     
-                    {/* Mensaje Emocional de Cierre y Autoridad */}
+                    {/* Encabezado Limpio y Directo */}
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">¡Lo más difícil ya pasó!</h2>
-                        <p className="text-gray-600 text-sm font-medium leading-relaxed max-w-sm mx-auto text-balance">
-                            Ha dado un gran paso de amor. Ya comprobó que <strong className="text-green-600">sí califica</strong> para esta cuota. Para hacer realidad esta protección, el último paso es conectarlo con su <strong className="text-gray-900">Especialista Licenciado</strong>. Él le revelará qué gran compañía le otorgará la cobertura, le explicará todos sus beneficios y le ayudará si desea proteger a más miembros de su familia. Estamos listos para servirle.
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight">¡Último paso!</h2>
+                        <p className="text-gray-500 text-sm md:text-base font-medium">
+                            Active su protección hoy mismo con un asesor calificado.
                         </p>
                     </div>
 
-                    {/* Resumen de Selección con Decimales Pequeños */}
-                    <div className="flex justify-between items-center mb-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
+                    {/* Resumen de Selección */}
+                    <div className="flex justify-between items-center mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
                         <div>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Cobertura</p>
                             <p className="text-2xl font-black text-gray-900">${data.coverage.toLocaleString()}</p>
@@ -1451,22 +1451,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     </div>
 
-                    {/* Gatillo de Alivio Financiero (Trámite Seguro) */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-4 md:p-5 rounded-2xl mb-8 shadow-sm flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck size={20} className="text-blue-600"/>
-                            <p className="text-sm font-bold text-blue-900">Trámite Seguro</p>
-                        </div>
-                        <p className="text-[11px] md:text-xs text-blue-800/90 font-medium leading-relaxed text-balance">
-                            Por su seguridad, <strong>no le pediremos ninguna tarjeta ni forma de pago en esta página web.</strong> La activación de su plan y el pago de su primera cuota se realizarán de forma directa y encriptada con la compañía aseguradora durante la llamada con su especialista.
-                        </p>
-                    </div>
-
-                    {/* Formulario (Datos del Titular) */}
-                    <div className="mb-4 pl-3 border-l-2 border-rose-500 flex items-center gap-2">
-                        <FileText size={16} className="text-gray-400"/>
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Datos del Titular</h3>
-                    </div>
+                    {/* Campos del Formulario (Sin títulos extra) */}
                     <div className="space-y-4 mb-8">
                         <div className="relative">
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
@@ -1476,19 +1461,27 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                             <input type="tel" placeholder="Teléfono" maxLength="14" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.phone} onChange={e => updateData('phone', formatPhoneNumber(e.target.value))} />
                         </div>
+                        
+                        {/* --- CAMPO DE CORREO CON AUTOCOMPLETADO INTELIGENTE --- */}
                         <div className="relative flex flex-col">
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                                <input type="email" placeholder="Correo Electrónico (Opcional)" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.email} onChange={e => updateData('email', e.target.value)} />
+                                <input 
+                                    type="email" 
+                                    placeholder="Correo Electrónico (Opcional)" 
+                                    className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" 
+                                    value={data.email} 
+                                    onChange={e => updateData('email', e.target.value.toLowerCase())} 
+                                />
                             </div>
-                            {/* Botones de Autocompletado de Email */}
+                            
                             {data.email.length > 0 && !data.email.includes('@') && (
-                                <div className="flex gap-2 mt-2 animate-fade-in pl-2">
+                                <div className="flex gap-2 mt-2 animate-fade-in px-1">
                                     {['@gmail.com', '@hotmail.com', '@yahoo.com'].map(domain => (
                                         <button 
                                             key={domain} 
                                             onClick={() => updateData('email', data.email + domain)} 
-                                            className="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                                            className="flex-1 text-[10px] bg-blue-50 text-blue-600 border border-blue-100 py-2 rounded-lg font-bold hover:bg-blue-100 transition-colors shadow-sm"
                                         >
                                             {domain}
                                         </button>
@@ -1496,6 +1489,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 </div>
                             )}
                         </div>
+                        {/* --- FIN CAMPO DE CORREO --- */}
+
                         <div className="relative">
                             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                             <select className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
@@ -1505,6 +1500,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                     </div>
 
+                    {/* Agendamiento */}
                     <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
                         <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><Phone size={18} className="text-blue-600"/> ¿Cuándo realizamos su llamada de activación?</h3>
                         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -1526,7 +1522,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         )}
                     </div>
 
-                    {/* Escudos de Confianza */}
+                    {/* Escudos de Confianza Limpios */}
                     <div className="grid grid-cols-3 gap-2 mb-8">
                         <div className="flex flex-col items-center text-center p-2">
                             <Lock size={16} className="text-gray-400 mb-1"/>
@@ -1538,14 +1534,13 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                         <div className="flex flex-col items-center text-center p-2">
                             <Zap size={16} className="text-gray-400 mb-1"/>
-                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">Sin Compromiso</p>
+                            <p className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter">Sin obligaciones</p>
                         </div>
                     </div>
 
-                    {/* Botón Final con validación actualizada (Email NO requerido) */}
-                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex flex-col items-center leading-tight">
-                        <span className="text-lg flex items-center gap-2"><Shield size={20}/> Sellar mi Protección</span>
-                        <span className="text-[10px] opacity-80 font-medium mt-1 uppercase tracking-widest">Reserva de Activación Oficial</span>
+                    {/* Botón Final Rediseñado */}
+                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
+                        <Phone size={20}/> {isSubmitting ? 'Programando...' : 'Programar llamada'}
                     </button>
                     
                     <p className="text-[9px] text-center text-gray-400 font-medium px-6 mt-4 leading-relaxed italic">"Su información está protegida por encriptación de grado bancario. Un especialista se comunicará para validar su elegibilidad final."</p>
