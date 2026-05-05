@@ -1272,7 +1272,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 2 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                      <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 2 de 4</p>
-                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Sus Datos</h2>
+                     <h2 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Permítanos conocerle</h2>
                      
                      <div className="bg-gray-50 p-6 md:p-8 rounded-3xl border border-gray-200 text-center mb-8 shadow-inner">
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">¿Cuántos años tiene?</label>
