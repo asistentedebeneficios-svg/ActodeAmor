@@ -7656,7 +7656,7 @@ const App = () => {
                             <div className="bg-gray-900 p-4 rounded-3xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/20 rounded-full blur-xl"></div>
                                 <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 relative z-10">Por tan sólo</span>
-                                <p className="text-xl font-black text-white relative z-10">{leadData.budget || '$0'}</p>
+                                <p className="text-xl font-black text-white relative z-10">{leadData.budget || '$0'}/mes</p>
                             </div>
                         </div>
 
