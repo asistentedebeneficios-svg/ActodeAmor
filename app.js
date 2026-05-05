@@ -1161,6 +1161,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         const finalPayload = {
             name: data.name, phone: data.phone, email: data.email, state: data.state,
             age: data.age.toString(),
+            sexo: data.sexo === 'M' ? 'Hombre' : 'Mujer',
+            fumador: data.tabaco ? 'Sí' : 'No',
             policy_for: [data.para],
             isAsap: data.contactType === 'asap',
             date: data.contactType === 'asap' ? 'Inmediata' : data.date,
@@ -1168,7 +1170,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             callType: 'call',
             budget: `$${data.monthly}`,
             planRecomendado: data.plan,
-            cobertura: `$${data.coverage}`,
+            cobertura: `$${data.coverage ? data.coverage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0'}`,
             utcSlotId
         };
         
@@ -7221,7 +7223,12 @@ const App = () => {
                     time: finalData.isAsap ? 'A la brevedad posible' : finalData.time,
                     callType: callTypeMap[finalData.callType] || finalData.callType,
                     policy_for: translatedPolicy,
-                    urgencia: finalData.isAsap ? '⚡ Prioritaria' : 'Normal'
+                    urgencia: finalData.isAsap ? '⚡ Prioritaria' : 'Normal',
+                    sexo: finalData.sexo || 'No especificado',
+                    fumador: finalData.fumador || 'No especificado',
+                    cobertura: finalData.cobertura || 'No especificada',
+                    presupuesto: finalData.budget || 'No especificado',
+                    planRecomendado: finalData.planRecomendado || 'No especificado'
                 };
 
                 const url = webhooks?.master || webhooks?.telegram;
