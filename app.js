@@ -7169,6 +7169,7 @@ const App = () => {
     useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
 
     const saveData = async (form) => { 
+        setLeadData(form); // <-- Esta línea es nueva, guarda los datos para el resumen
         const isAutoMarketplace = generalSettings?.marketplaceMode;
         const finalData = { 
             ...form,
@@ -7210,7 +7211,7 @@ const App = () => {
                         })
                     }).catch(e => console.error("Fetch de prospecto fallido", e));
                 }
-                        } catch (err) { 
+            } catch (err) { 
                 console.error("Error procesando los datos para el Webhook:", err); 
             }
         }
@@ -7612,51 +7613,95 @@ const App = () => {
         
             <div className="w-full max-w-xl mx-auto flex flex-col flex-1 pb-10">
                 {isSuccess ? (
-                    <div className="text-center mt-12 md:mt-20 p-8 md:p-12 animate-fade-in bg-white rounded-[3rem] shadow-xl border border-gray-100 mx-4 max-w-lg mx-auto relative overflow-hidden">
-                        {/* Brillo suave de fondo */}
+                    <div className="text-center mt-8 md:mt-12 p-6 md:p-10 animate-fade-in bg-white rounded-[3rem] shadow-2xl border border-gray-100 mx-4 max-w-xl mx-auto relative overflow-hidden">
+                        {/* Brillo de fondo */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-rose-500/5 rounded-full blur-[60px] pointer-events-none"></div>
 
-                        {/* Corazón 100% idéntico a los pasos anteriores */}
-                        <div className="mb-8">
+                        {/* Corazón 100% idéntico */}
+                        <div className="mb-6">
                             <HeartProgress percentage={100} isBeating={true} />
                         </div>
 
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 tracking-tight leading-tight text-center">
-                            ¡Felicidade por proteger a su familia!
+                        <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                            ¡Felicidades, en breve su familia estará protegida!
                         </h2>
 
-                        <div className="space-y-6 relative z-10">
-                            <p className="text-gray-500 text-base md:text-lg font-medium leading-snug max-w-md mx-auto text-balance text-center">
-                                Ha dado un paso invaluable para <strong className="text-gray-800">proteger a su familia</strong>. Su búsqueda ha finalizado.
-                            </p>
+                        <p className="text-gray-500 text-base md:text-lg font-medium leading-snug max-w-md mx-auto text-balance mb-8">
+                            Ha dado un paso invaluable para <strong className="text-gray-800">proteger a su familia</strong>. Su búsqueda ha finalizado.
+                        </p>
 
-                            {/* Imagen Estilo Bento Elegante - Integrada aquí */}
-                            <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-gray-100 group my-8 aspect-video md:aspect-auto">
-                                <img 
-                                    src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_j5ui6tj5ui6tj5ui-scaled.png" 
-                                    alt="Familia Protegida" 
-                                    className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-105"
-                                />
-                                {/* Overlay sutil para realzar la elegancia */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                        {/* --- RESUMEN BENTO PREMIUM --- */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            {/* Cobertura */}
+                            <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100 flex flex-col items-center justify-center">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cobertura</span>
+                                <p className="text-xl font-black text-gray-900">{leadData.cobertura || '$0'}</p>
                             </div>
-                            
-                            <p className="text-gray-500 text-sm md:text-base leading-relaxed text-balance text-center">
-                                Permítanos servirle asignándole a su especialista, quien le contactará según la preferencia que usted escogió.
-                            </p>
+                            {/* Pago Mensual */}
+                            <div className="bg-gray-900 p-4 rounded-3xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/20 rounded-full blur-xl"></div>
+                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 relative z-10">Cuota Mensual</span>
+                                <p className="text-xl font-black text-white relative z-10">{leadData.budget || '$0'}</p>
+                            </div>
+                        </div>
 
-                            {/* Aviso de Notificación */}
-                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-4">
-                                <p className="text-xs md:text-sm text-gray-600 font-bold flex items-center justify-center gap-2">
-                                    <Mail size={16} className="text-blue-500"/> 
-                                    En breve recibirá un mensaje (SMS) o e-mail con los datos de su asesor.
-                                </p>
+                        {/* Detalles de la Llamada */}
+                        <div className="bg-gray-50 p-5 rounded-[2rem] border border-gray-100 mb-8 text-left">
+                            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200/50">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                        <Phone size={16}/>
+                                    </div>
+                                    <span className="text-xs font-bold text-gray-800 uppercase tracking-wide">Confirmación de Cita</span>
+                                </div>
+                                <span className="text-[10px] bg-white px-2 py-1 rounded-full border border-gray-200 font-bold text-gray-500">{leadData.state}</span>
                             </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Fecha y Hora</p>
+                                        <p className="text-sm font-bold text-gray-900 capitalize">
+                                            {leadData.date === 'Inmediata' ? '⚡ Lo antes posible' : 
+                                             new Date(leadData.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}
+                                        </p>
+                                        <p className="text-xs font-medium text-blue-600">{leadData.time === 'ASAP' ? 'Llamada Inmediata' : leadData.time}</p>
+                                    </div>
+                                    
+                                    {/* Botón de Calendario: Solo aparece si NO es Inmediata */}
+                                    {leadData.date !== 'Inmediata' && (
+                                        <a 
+                                            href={`https://www.google.com/calendar/render?action=TEMPLATE&text=Asesoría+Gastos+Finales&details=Llamada+confirmada+con+especialista.&dates=${leadData.date?.replace(/-/g, '')}T140000Z/${leadData.date?.replace(/-/g, '')}T143000Z`}
+                                            target="_blank"
+                                            className="bg-white border border-gray-200 p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors shadow-sm flex items-center gap-2 text-[10px] font-bold"
+                                        >
+                                            <Calendar size={14} className="text-rose-500"/> + Calendario
+                                        </a>
+                                    )}
+                                </div>
+                                
+                                <div className="p-3 bg-white rounded-2xl border border-gray-100 flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                    <p className="text-[11px] font-medium text-gray-600 leading-tight">
+                                        Un especialista certificado le contactará para validar sus beneficios.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Imagen Estilo Bento */}
+                        <div className="relative w-full rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100 group mb-8">
+                            <img 
+                                src="https://imnufit.com/wp-content/uploads/2026/02/Gemini_Generated_Image_j5ui6tj5ui6tj5ui-scaled.png" 
+                                alt="Familia Protegida" 
+                                className="w-full h-48 object-cover transform transition-transform duration-1000 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                         </div>
 
                         <button 
                             onClick={() => window.location.reload()} 
-                            className="mt-10 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-rose-600 transition-colors py-2 px-4"
+                            className="w-full py-4 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-rose-600 transition-colors"
                         >
                             Cerrar
                         </button>
