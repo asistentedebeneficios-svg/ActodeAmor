@@ -1468,7 +1468,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                                 <input 
                                     type="email" 
-                                    placeholder="Correo Electrónico (Opcional)" 
+                                    placeholder="Correo Electrónico" 
                                     className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" 
                                     value={data.email} 
                                     onChange={e => updateData('email', e.target.value.toLowerCase())} 
