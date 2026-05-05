@@ -1448,7 +1448,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     <div className="text-center mb-8">
                         <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tight">¡Último paso!</h2>
                         <p className="text-gray-500 text-sm md:text-base font-medium">
-                            Active su protección hoy mismo con un asesor calificado.
+                            Activemos su protección hoy mismo. Agende una llamada con uno de nuestros asesores calificados.
                         </p>
                     </div>
 
