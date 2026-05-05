@@ -7647,7 +7647,7 @@ const App = () => {
                             onClick={() => window.location.reload()} 
                             className="mt-10 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-rose-600 transition-colors py-2 px-4"
                         >
-                            Finalizar Trámite
+                            Cerrar
                         </button>
                     </div>
                 ) : (
