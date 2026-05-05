@@ -1394,7 +1394,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     {data.monthly && (
                         <div className="bg-black text-white rounded-[2rem] p-8 text-center mb-8 relative overflow-hidden shadow-2xl animate-fade-in border border-gray-800">
                             <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-emerald-500/20 rounded-full blur-[40px]"></div>
-                            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Mensualidad</p>
+                            <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Por tan sólo</p>
                             
                             <div className="flex items-start justify-center gap-0.5">
                                 <span className="text-3xl text-emerald-400 font-bold mt-2">$</span>
