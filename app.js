@@ -1016,12 +1016,27 @@ const HeartProgress = ({ percentage, isBeating }) => {
 
 // --- NUEVO COMPONENTE: EMBUDO INTELIGENTE REACT/TAILWIND ---
 const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, availableStates }) => {
-    const [step, setStep] = useState(1);
-    const [data, setData] = useState({
-        para: null, age: 50, sexo: null, tabaco: null,
-        healthA: null, healthB: null, healthC: null, coverage: null, contactType: null,
-        plan: null, monthly: null, name: '', phone: '', email: '', state: '', date: '', time: ''
+    // 1. Cargamos el paso desde la memoria (si existe)
+    const [step, setStep] = useState(() => {
+        const saved = sessionStorage.getItem('smartFunnelStep');
+        return saved ? parseInt(saved, 10) : 1;
     });
+    
+    // 2. Cargamos los datos desde la memoria (si existen)
+    const [data, setData] = useState(() => {
+        const saved = sessionStorage.getItem('smartFunnelData');
+        return saved ? JSON.parse(saved) : {
+            para: null, age: 50, sexo: null, tabaco: null,
+            healthA: null, healthB: null, healthC: null, coverage: null, contactType: null,
+            plan: null, monthly: null, name: '', phone: '', email: '', state: '', date: '', time: ''
+        };
+    });
+
+    // 3. Motor de auto-guardado en tiempo real
+    useEffect(() => {
+        sessionStorage.setItem('smartFunnelStep', step.toString());
+        sessionStorage.setItem('smartFunnelData', JSON.stringify(data));
+    }, [step, data]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showNI, setShowNI] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -1250,7 +1265,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </button>
                     </div>
                     <button onClick={handleStep1Next} disabled={!data.para} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
-                    <button onClick={() => { sessionStorage.removeItem('funnelStepIndex'); window.location.reload(); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar al inicio</button>
+                    <button onClick={() => { sessionStorage.removeItem('funnelStepIndex'); sessionStorage.removeItem('smartFunnelStep'); sessionStorage.removeItem('smartFunnelData'); window.location.reload(); }} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar al inicio</button>
                 </div>
             )}
 
@@ -7172,6 +7187,8 @@ const App = () => {
         setIsSuccess(true); 
         sessionStorage.removeItem('funnelStepIndex');
         sessionStorage.removeItem('funnelLeadData');
+        sessionStorage.removeItem('smartFunnelStep');
+        sessionStorage.removeItem('smartFunnelData');
 
         // 🔥 SEÑAL PARA ANDROMEDA (META ADS)
         if (typeof fbq !== 'undefined') {
