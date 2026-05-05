@@ -1215,7 +1215,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                             </div>
                             <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter">¡EXCELENTES NOTICIAS!</h2>
                             <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10">
-                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para excelentes beneficios de protección familiar.
+                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para los mejores beneficios de protección familiar.
                             </p>
                             <button 
                                 onClick={() => { setIsCelebrating(false); setStep(4); }} 
