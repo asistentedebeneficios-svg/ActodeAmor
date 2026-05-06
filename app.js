@@ -1127,7 +1127,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const calcPrice = (cov) => {
         const rate = R[data.sexo]?.[data.age] || R[data.sexo]?.[50]; 
         const thou = cov / 1000;
-        let base = data.plan === 'Modificado' ? rate.mod : (data.plan === 'Regular-Tabaco' ? rate.rt : rate.rnt);
+        // La calculadora ahora lee data.tabaco de forma independiente
+        let base = data.plan === 'Modificado' ? rate.mod : (data.tabaco ? rate.rt : rate.rnt);
         const monthly = ((base * thou) + rate.add + FEE);
         updateData('coverage', cov);
         updateData('monthly', monthly.toFixed(2));
@@ -1137,7 +1138,8 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         if (data.healthA === 'yes') {
             setShowNI(true);
         } else {
-            const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : (data.tabaco ? 'Regular-Tabaco' : 'Regular-No Tabaco');
+            // Guardamos el string limpio como lo necesitas
+            const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : 'Regular';
             updateData('plan', plan);
             
             setCountdown(5); // Inicia el reloj en 5
