@@ -7206,7 +7206,7 @@ const App = () => {
     useEffect(() => { window.scrollTo(0, 0); }, [stepIndex]);
 
     const saveData = async (form) => { 
-        setLeadData(form); // <-- Esta línea es nueva, guarda los datos para el resumen
+        setLeadData(form); 
         const isAutoMarketplace = generalSettings?.marketplaceMode;
         const finalData = { 
             ...form,
@@ -7215,6 +7215,9 @@ const App = () => {
         const res = await addLead(finalData);
         if (res === "SLOT_TAKEN") return "SLOT_TAKEN";
         
+        // --- Generamos un ID único para la deduplicación en Meta Ads ---
+        const metaEventId = 'evt_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
         if (webhooks && (webhooks.telegram || webhooks.master)) {
             try {
                 let formattedDate = finalData.date;
@@ -7239,7 +7242,8 @@ const App = () => {
                     fumador: finalData.fumador || 'No especificado',
                     cobertura: finalData.cobertura || 'No especificada',
                     presupuesto: finalData.budget || 'No especificado',
-                    planRecomendado: finalData.planRecomendado || 'No especificado'
+                    planRecomendado: finalData.planRecomendado || 'No especificado',
+                    event_id: metaEventId // <-- Se envía a Make para el API de Conversiones
                 };
 
                 const url = webhooks?.master || webhooks?.telegram;
@@ -7257,24 +7261,24 @@ const App = () => {
                 console.error("Error procesando los datos para el Webhook:", err); 
             }
         }
-        completeSuccess();
+        completeSuccess(metaEventId);
     };
 
-    const completeSuccess = () => { 
+    const completeSuccess = (metaEventId) => { 
         setIsSuccess(true); 
         sessionStorage.removeItem('funnelStepIndex');
         sessionStorage.removeItem('funnelLeadData');
         sessionStorage.removeItem('smartFunnelStep');
         sessionStorage.removeItem('smartFunnelData');
 
-        // 🔥 SEÑAL PARA ANDROMEDA (META ADS)
+        // 🔥 SEÑAL PARA ANDROMEDA (META ADS) CON DEDUPLICACIÓN
         if (typeof fbq !== 'undefined') {
             fbq('track', 'Lead', {
                 content_name: 'Asesoría Gastos Finales',
                 content_category: 'Seguros',
                 value: 0.00,
                 currency: 'USD'
-            });
+            }, { eventID: metaEventId }); // <-- Píxel del navegador recibe el mismo ID
         }
     };
 
