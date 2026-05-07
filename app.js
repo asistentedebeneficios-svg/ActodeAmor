@@ -2313,7 +2313,7 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </div>
 
                                 <div className="flex justify-between items-center border-b border-gray-50 pb-3 px-1">
-                                    <span className="text-sm text-gray-500 font-medium">Presupuesto Mensual</span>
+                                    <span className="text-sm text-gray-500 font-medium">Prima Mensual</span>
                                     <span className="font-bold text-blue-700 text-sm bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 shadow-sm">
                                         {lead.budget || 'Pendiente'}
                                     </span>
