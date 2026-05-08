@@ -7702,8 +7702,11 @@ const App = () => {
                                 <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/20 rounded-full blur-xl"></div>
                                 <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 relative z-10">Por tan sólo</span>
                                 <p className="text-xl font-black text-white relative z-10">{leadData.budget || '$0'}/mes</p>
+                                {/* --- NUEVO: DISCLAIMER LEGAL CORTO --- */}
+                                <p className="text-[8px] text-gray-400 mt-1.5 italic relative z-10 text-center leading-tight">
+                                    * Prima estimada. Sujeta a verificación.
+                                </p>
                             </div>
-                        </div>
 
                         {/* Detalles de la Llamada */}
                         <div className="bg-gray-50 p-5 rounded-[2rem] border border-gray-100 mb-8 text-left">
