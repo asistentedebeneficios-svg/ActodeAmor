@@ -1422,6 +1422,11 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 </div>
                             </div>
 
+                            {/* --- NUEVO: DISCLAIMER LEGAL --- */}
+                            <p className="text-[10px] text-gray-400 mt-3 italic font-medium tracking-wide">
+                                * Prima estimada. Sujeta a verificación por su agente licenciado.
+                            </p>
+
                             <p className="text-[10px] md:text-xs text-gray-300 mt-6 font-bold uppercase tracking-[0.1em] opacity-80 border-t border-white/10 pt-4 w-full">
                                 {data.sexo === 'M' ? 'Hombre' : 'Mujer'} • {data.age} años • {data.tabaco ? 'Fumador' : 'No fumador'}
                             </p>
@@ -1492,6 +1497,13 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        {/* --- NUEVO: DISCLAIMER LEGAL --- */}
+                        <div className="mt-4 pt-3 border-t border-gray-200/60 text-center w-full">
+                            <p className="text-[9px] text-gray-500 italic font-medium">
+                                * Prima estimada. Sujeta a verificación por su agente licenciado.
+                            </p>
                         </div>
                     </div>
 
