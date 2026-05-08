@@ -7707,6 +7707,7 @@ const App = () => {
                                     * Prima estimada. Sujeta a verificación.
                                 </p>
                             </div>
+                        </div>
 
                         {/* Detalles de la Llamada */}
                         <div className="bg-gray-50 p-5 rounded-[2rem] border border-gray-100 mb-8 text-left">
