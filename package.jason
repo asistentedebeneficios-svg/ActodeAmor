@@ -1,0 +1,9 @@
+{
+  "name": "acto-de-amor",
+  "scripts": {
+    "build": "esbuild app.js --loader=jsx --outfile=app.built.js --format=esm"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5"
+  }
+}
