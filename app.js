@@ -1328,7 +1328,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 4 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Check size={14} strokeWidth={3}/> Pre-calificado</p>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Opciones de Cobertura</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Elija su Cobertura</h2>
                     <p className="text-gray-500 mb-6 text-sm">Seleccione el monto de su protección.</p>
                     
                     {/* 1. Tarjetas de Cobertura (Ahora con verde elegante) */}
