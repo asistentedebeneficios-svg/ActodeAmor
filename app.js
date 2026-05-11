@@ -1273,7 +1273,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             {step === 1 && (
                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-slide-up">
                     <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-2">Paso 1 de 4</p>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Proteger es Un Acto de Amor</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Conozca sus opciones en menos de 2 minutos</h2>
                     <p className="text-gray-500 mb-6 text-sm">¿Para quién es esta protección?</p>
                     
                     <div className="space-y-3 mb-8">
