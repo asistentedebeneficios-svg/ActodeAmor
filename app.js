@@ -1042,7 +1042,20 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [step]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showNI, setShowNI] = useState(false);
+    const [showNI, setShowNI] = useState(false);
+
+    const reqEmail = generalSettings?.requireEmail ?? true;
+    const reqState = generalSettings?.requireState ?? true;
+    const reqSchedule = generalSettings?.requireSchedule ?? true;
+
+    useEffect(() => {
+        if (!reqSchedule) {
+            updateData('contactType', 'asap');
+            updateData('date', 'Inmediata');
+            updateData('time', 'ASAP');
+            setDateErrorMsg('');
+        }
+    }, [reqSchedule]);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [dateErrorMsg, setDateErrorMsg] = useState('');
                                                                    
@@ -1454,86 +1467,92 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                         </div>
                         
                         {/* --- CAMPO DE CORREO CON AUTOCOMPLETADO INTELIGENTE --- */}
-                        <div className="relative flex flex-col">
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                                <input 
-                                    type="email" 
-                                    placeholder="Correo Electrónico" 
-                                    className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" 
-                                    value={data.email} 
-                                    onChange={e => updateData('email', e.target.value.toLowerCase())} 
-                                />
-                            </div>
-                            
-                            {data.email.length > 0 && !data.email.includes('@') && (
-                                <div className="flex gap-2 mt-2 animate-fade-in px-1">
-                                    {['@gmail.com', '@hotmail.com', '@yahoo.com'].map(domain => (
-                                        <button 
-                                            key={domain} 
-                                            onClick={() => updateData('email', data.email + domain)} 
-                                            className="flex-1 text-[10px] bg-blue-50 text-blue-600 border border-blue-100 py-2 rounded-lg font-bold hover:bg-blue-100 transition-colors shadow-sm"
-                                        >
-                                            {domain}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        {/* --- FIN CAMPO DE CORREO --- */}
+                        {reqEmail && (
+                            <div className="relative flex flex-col">
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                                    <input 
+                                        type="email" 
+                                        placeholder="Correo Electrónico" 
+                                        className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" 
+                                        value={data.email} 
+                                        onChange={e => updateData('email', e.target.value.toLowerCase())} 
+                                    />
+                                </div>
+                                
+                                {data.email.length > 0 && !data.email.includes('@') && (
+                                    <div className="flex gap-2 mt-2 animate-fade-in px-1">
+                                        {['@gmail.com', '@hotmail.com', '@yahoo.com'].map(domain => (
+                                            <button 
+                                                key={domain} 
+                                                onClick={() => updateData('email', data.email + domain)} 
+                                                className="flex-1 text-[10px] bg-blue-50 text-blue-600 border border-blue-100 py-2 rounded-lg font-bold hover:bg-blue-100 transition-colors shadow-sm"
+                                            >
+                                                {domain}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {/* --- FIN CAMPO DE CORREO --- */}
 
-                        <div className="relative">
-                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                            <select className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
-                                <option value="">Seleccione su Estado</option>
-                                {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
-                            </select>
-                        </div>
+                        {reqState && (
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                                <select className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm appearance-none text-gray-700" value={data.state} onChange={e => updateData('state', e.target.value)}>
+                                    <option value="">Seleccione su Estado</option>
+                                    {availableStates.map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     {/* Agendamiento */}
-                    <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
-                        <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><Phone size={18} className="text-blue-600"/> ¿Cuándo desea ser contactado?</h3>
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
-                            <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Elegir fecha</button>
-                        </div>
+                    {reqSchedule && (
+                        <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-8">
+                            <h3 className="font-bold text-blue-900 text-sm flex items-center gap-2 mb-4"><Phone size={18} className="text-blue-600"/> ¿Cuándo desea ser contactado?</h3>
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <button onClick={() => { updateData('contactType', 'asap'); updateData('date', ''); updateData('time', ''); setDateErrorMsg(''); }} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'asap' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><Activity size={18}/> Lo antes posible</button>
+                                <button onClick={() => updateData('contactType', 'schedule')} className={`p-3 border-2 rounded-xl font-bold text-xs outline-none transition-all flex flex-col items-center gap-1 ${data.contactType === 'schedule' ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-sm' : 'border-gray-100 bg-white text-gray-500 hover:bg-gray-50'}`}><CalendarDays size={18}/> Elegir fecha</button>
+                            </div>
 
-                        {data.contactType === 'schedule' && (
-                            <div className="space-y-4 animate-fade-in">
-                                <div className="relative bg-white border border-gray-200 rounded-xl focus-within:border-blue-400 transition-colors overflow-hidden">
-                                    {/* Capa de texto falso (Se oculta al elegir fecha) */}
-                                    {!data.date && (
-                                        <div className="absolute inset-0 flex items-center pl-4 pointer-events-none z-0">
-                                            <CalendarDays className="text-blue-500 mr-2" size={18}/>
-                                            <span className="text-gray-400 text-sm font-medium">Seleccione una fecha...</span>
-                                        </div>
-                                    )}
-                                    {/* El Input original transparente */}
-                                    <input 
-                                        type="date" 
-                                        min={minDate} 
-                                        className={`w-full p-4 bg-transparent outline-none cursor-pointer relative z-10 ${!data.date ? 'text-transparent' : 'text-gray-700 font-medium text-sm'}`} 
-                                        value={data.date} 
-                                        onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} 
-                                    />
-                                </div>
-                                {data.date && (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                                        {availableSlots.map(slot => (
-                                            <button 
-                                                key={slot} 
-                                                onClick={() => updateData('time', slot)} 
-                                                className={`py-3.5 px-2 text-xs md:text-sm rounded-xl border transition-all outline-none font-bold ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'}`}
-                                            >
-                                                {slot}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                            {data.contactType === 'schedule' && (
+                                <div className="space-y-4 animate-fade-in">
+                                    <div className="relative bg-white border border-gray-200 rounded-xl focus-within:border-blue-400 transition-colors overflow-hidden">
+                                        {/* Capa de texto falso (Se oculta al elegir fecha) */}
+                                        {!data.date && (
+                                            <div className="absolute inset-0 flex items-center pl-4 pointer-events-none z-0">
+                                                <CalendarDays className="text-blue-500 mr-2" size={18}/>
+                                                <span className="text-gray-400 text-sm font-medium">Seleccione una fecha...</span>
+                                            </div>
+                                        )}
+                                        {/* El Input original transparente */}
+                                        <input 
+                                            type="date" 
+                                            min={minDate} 
+                                            className={`w-full p-4 bg-transparent outline-none cursor-pointer relative z-10 ${!data.date ? 'text-transparent' : 'text-gray-700 font-medium text-sm'}`} 
+                                            value={data.date} 
+                                            onChange={e => { updateData('date', e.target.value); setDateErrorMsg(''); }} 
+                                        />
+                                    </div>
+                                    {data.date && (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                                            {availableSlots.map(slot => (
+                                                <button 
+                                                    key={slot} 
+                                                    onClick={() => updateData('time', slot)} 
+                                                    className={`py-3.5 px-2 text-xs md:text-sm rounded-xl border transition-all outline-none font-bold ${data.time === slot ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]' : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'}`}
+                                                >
+                                                    {slot}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Escudos de Confianza Limpios */}
                     <div className="grid grid-cols-3 gap-2 mb-8">
@@ -1552,7 +1571,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     </div>
 
                     {/* Botón Final Rediseñado */}
-                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || !data.state || !data.contactType || (data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
+                    <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || (reqState && !data.state) || (reqSchedule && !data.contactType) || (reqSchedule && data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
                         <Phone size={20}/> {isSubmitting ? 'Programando...' : 'Programar llamada'}
                     </button>
                     
@@ -2953,8 +2972,11 @@ const AdminCalendar = ({ leads, agents = [], onLeadClick }) => {
 const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebhooks, onSaveGeneral, onUpdateSchedule, onClose }) => {
     const [localHooks, setLocalHooks] = useState(webhooks || { telegram: '', assignment: '' });
     const [acceptingAgents, setAcceptingAgents] = useState(generalSettings?.acceptingAgents !== false);
-    const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
-    const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
+    const [regPrice, setRegPrice] = useState(generalSettings?.regularPrice ?? 45);
+    const [offPrice, setOffPrice] = useState(generalSettings?.offerPrice ?? 35);
+    const [reqEmail, setReqEmail] = useState(generalSettings?.requireEmail ?? true);
+    const [reqState, setReqState] = useState(generalSettings?.requireState ?? true);
+    const [reqSchedule, setReqSchedule] = useState(generalSettings?.requireSchedule ?? true);
     // --- NUEVO ESTADO: ESTADOS OPERATIVOS ---
     const [activeStates, setActiveStates] = useState(generalSettings?.activeStates || ALL_US_STATES);
     const [waitlistUrl, setWaitlistUrl] = useState(generalSettings?.waitlistUrl || '');
@@ -2984,14 +3006,17 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
         setIsSaved(false); // Reiniciamos por si acaso
         
         await onSaveWebhooks(localHooks);
-        await onSaveGeneral({ 
-            ...generalSettings, 
-            acceptingAgents, 
-            regularPrice: Number(regPrice), 
-            offerPrice: Number(offPrice),
-            activeStates: activeStates,
-            waitlistUrl: waitlistUrl
-        });
+        await onSaveGeneral({ 
+            ...generalSettings, 
+            acceptingAgents, 
+            regularPrice: Number(regPrice), 
+            offerPrice: Number(offPrice),
+            activeStates: activeStates,
+            waitlistUrl: waitlistUrl,
+            requireEmail: reqEmail,
+            requireState: reqState,
+            requireSchedule: reqSchedule
+        });
         
         setIsSaving(false);
         setIsSaved(true); // ¡Activamos el color verde!
@@ -3141,7 +3166,41 @@ const SystemSettingsScreen = ({ webhooks, generalSettings, schedule, onSaveWebho
                         </div>
                     </div>
 
-                    {/* SECCIÓN 3: WEBHOOKS Y AUTOMATIZACIÓN (Bento Card Ancha) */}
+                    <div className="md:col-span-12 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mb-2">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center border border-purple-100 shadow-sm">
+                                <Settings size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Campos del Formulario</h3>
+                                <p className="text-gray-500 text-sm mt-1">Activa o desactiva campos en el embudo para reducir la fricción del prospecto.</p>
+                            </div>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <label className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${reqEmail ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
+                                <div>
+                                    <span className="font-bold text-gray-900 block text-sm">Pedir Correo (Email)</span>
+                                    <span className="text-xs text-gray-500">{reqEmail ? 'Activado' : 'Oculto'}</span>
+                                </div>
+                                <input type="checkbox" checked={reqEmail} onChange={e => setReqEmail(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
+                            </label>
+                            <label className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${reqState ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
+                                <div>
+                                    <span className="font-bold text-gray-900 block text-sm">Pedir Estado</span>
+                                    <span className="text-xs text-gray-500">{reqState ? 'Activado' : 'Oculto'}</span>
+                                </div>
+                                <input type="checkbox" checked={reqState} onChange={e => setReqState(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
+                            </label>
+                            <label className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${reqSchedule ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
+                                <div>
+                                    <span className="font-bold text-gray-900 block text-sm">Permitir Agendar</span>
+                                    <span className="text-xs text-gray-500">{reqSchedule ? 'Muestra calendario' : 'Lo antes posible'}</span>
+                                </div>
+                                <input type="checkbox" checked={reqSchedule} onChange={e => setReqSchedule(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
+                            </label>
+                        </div>
+                    </div>
+                    {/* SECCIÓN 3: WEBHOOKS Y AUTOMATIZACIÓN (Bento Card Ancha) */}
                     <div className="md:col-span-12 bg-gray-900 rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden text-white">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px]"></div>
                         <div className="relative z-10">
