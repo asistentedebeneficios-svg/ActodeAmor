@@ -1077,6 +1077,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
     const closeReinforcement = () => {
         setReinforcement(null);
+        if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPaso1');
         setStep(2);
     };
     const updateData = (field, value) => setData(prev => ({ ...prev, [field]: value }));
@@ -1143,6 +1144,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
             updateData('plan', plan);
             
             setCountdown(5); // Inicia el reloj en 5
+            if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPaso3');
             setIsCelebrating(true); // Abre la pantalla
         }
     };
@@ -1255,7 +1257,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para grandes beneficios de protección familiar.
                             </p>
                             <button 
-                                onClick={() => { setIsCelebrating(false); setStep(4); }} 
+                                onClick={() => { if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPreAprobado'); setIsCelebrating(false); setStep(4); }}
                                 className="w-full bg-[#E11D48] text-white py-4 md:py-5 rounded-xl font-bold shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2 text-lg"
                             >
                                 Ver mis opciones <ChevronRight size={20} />
@@ -1349,7 +1351,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                          <button onClick={() => updateData('tabaco', true)} className={`p-4 border-2 rounded-xl font-bold transition-all outline-none ${data.tabaco === true ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-100 text-gray-500 hover:bg-gray-50'}`}>Sí</button>
                      </div>
 
-                     <button onClick={() => setStep(3)} disabled={data.sexo === null || data.tabaco === null} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
+                     <button onClick={() => { if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPaso2'); setStep(3); }} disabled={data.sexo === null || data.tabaco === null} className="w-full bg-[#E11D48] text-white py-4 rounded-xl font-bold disabled:opacity-50 hover:scale-[1.02] transition-transform shadow-lg flex items-center justify-center gap-2">Continuar <ChevronRight size={20}/></button>
                      <button onClick={() => setStep(1)} className="w-full text-gray-400 font-bold mt-4 text-sm hover:text-gray-600 transition-colors flex items-center justify-center gap-1"><ArrowLeft size={14}/> Regresar</button>
                 </div>
             )}
