@@ -1045,15 +1045,6 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     const [showNI, setShowNI] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [dateErrorMsg, setDateErrorMsg] = useState('');
-    const [isCelebrating, setIsCelebrating] = useState(false);
-    const [countdown, setCountdown] = useState(null);
-
-    useEffect(() => {
-        if (isCelebrating && countdown > 0) {
-            const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [isCelebrating, countdown]);
                                                                    
     // Ajuste a 5 pasos: 0, 20, 40, 60, 80 y 100% al finalizar
     const pct = step === 1 ? 0 : step === 2 ? 20 : step === 3 ? 40 : step === 4 ? 60 : step === 5 ? 85 : 100;
@@ -1125,18 +1116,15 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
     };
 
     const handleHealthNext = () => {
-        if (data.healthA === 'yes') {
-            setShowNI(true);
-        } else {
-            // Guardamos el string limpio como lo necesitas
-            const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : 'Regular';
-            updateData('plan', plan);
-            
-            setCountdown(5); // Inicia el reloj en 5
-            if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPaso3');
-            setIsCelebrating(true); // Abre la pantalla
-        }
-    };
+        if (data.healthA === 'yes') {
+            setShowNI(true);
+        } else {
+            const plan = (data.healthB === 'yes' || data.healthC === 'yes') ? 'Modificado' : 'Regular';
+            updateData('plan', plan);
+            if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPaso3');
+            setStep(4); // Pasamos directo a las coberturas
+        }
+    };
 
     const handleFinalSubmit = async () => {
         setDateErrorMsg('');
@@ -1209,38 +1197,6 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
     return (
         <div className="w-full max-w-md mx-auto pt-6 pb-12 animate-fade-in px-4 md:px-0">
-
-            {/* 2. PANTALLA BLANCA DE BÚSQUEDA Y CELEBRACIÓN (Paso 3 al 4) */}
-            {isCelebrating && (
-                <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 bg-white text-center animate-fade-in">
-                    {countdown > 0 ? (
-                        <div className="flex flex-col items-center animate-fade-in">
-                            <div className="relative w-32 h-32 flex items-center justify-center mb-8">
-                                <div className="absolute inset-0 border-8 border-gray-100 border-t-rose-500 rounded-full animate-spin shadow-sm"></div>
-                                <span className="text-6xl font-black text-rose-500 animate-pulse">{countdown}</span>
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">Analizando su perfil...</h2>
-                            <p className="text-gray-500 font-medium max-w-xs leading-relaxed">Buscando las mejores opciones disponibles a nivel nacional.</p>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center animate-fade-in w-full max-w-xs">
-                            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-lg border-4 border-green-500">
-                                <Check size={64} className="text-green-600" strokeWidth={3} />
-                            </div>
-                            <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter">¡EXCELENTES NOTICIAS!</h2>
-                            <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10">
-                                Basado en sus respuestas, <span className="text-green-600 font-bold">usted ha sido Pre-Aprobado</span> para grandes beneficios de protección familiar.
-                            </p>
-                            <button 
-                                onClick={() => { if (typeof fbq !== 'undefined') fbq('trackCustom', 'FunnelPreAprobado'); setIsCelebrating(false); setStep(4); }}
-                                className="w-full bg-[#E11D48] text-white py-4 md:py-5 rounded-xl font-bold shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2 text-lg"
-                            >
-                                Ver mis opciones <ChevronRight size={20} />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
 
             {/* 3. EL CORAZÓN DE PROGRESO */}
             <HeartProgress percentage={pct} isBeating={pct === 100} />
