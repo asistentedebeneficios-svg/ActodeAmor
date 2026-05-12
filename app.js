@@ -1809,9 +1809,22 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
 };
 
 const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [] }) => {
-    const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
-    const [isSaving, setIsSaving] = useState(false);
-    const [showAgentSelector, setShowAgentSelector] = useState(false);
+    const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
+    const [isSaving, setIsSaving] = useState(false);
+    const [showAgentSelector, setShowAgentSelector] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [leadFormData, setLeadFormData] = useState({
+        name: lead.name || '',
+        phone: lead.phone || '',
+        email: lead.email || '',
+        state: lead.state || '',
+        age: lead.age || '',
+        sexo: lead.sexo || '',
+        fumador: lead.fumador || '',
+        cobertura: lead.cobertura || '',
+        budget: lead.budget || '',
+        planRecomendado: lead.planRecomendado || ''
+    });
     
     // --- ESTADO Y POLICÍA ---
     const [tempStatus, setTempStatus] = useState(lead.agentStatus || 'activo');
@@ -2027,20 +2040,25 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
             )}
 
             <div className="bg-white/80 backdrop-blur-md px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm border-b border-gray-200">
-                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
-                    <button onClick={handleAttemptClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
-                    <div className="truncate">
-                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
-                            {lead.name}
-                        </h2>
-                        <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-2">
-                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
-                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
-                </div>
-            </div>
+                <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 pr-2">
+                    <button onClick={handleAttemptClose} className="p-2 md:p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shrink-0 shadow-sm"><ArrowLeft size={20} className="text-gray-700"/></button>
+                    <div className="truncate">
+                        <h2 className="font-bold text-lg md:text-xl text-gray-900 truncate tracking-tight">
+                            {lead.name}
+                        </h2>
+                        <span className="text-xs md:text-sm text-gray-500 font-medium tracking-wide truncate block">{lead.phone}</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                     {!isAgentView && (
+                         <button onClick={() => setShowEditModal(true)} className="p-2.5 md:p-3 text-blue-600 hover:text-blue-800 bg-blue-50 shadow-sm hover:shadow-md rounded-xl transition-all border border-blue-100" title="Editar Prospecto">
+                             <Edit2 size={18}/>
+                         </button>
+                     )}
+                     <a href={`https://wa.me/1${lead.phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="p-2.5 md:p-3 text-gray-500 hover:text-[#25D366] bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+                     <a href={`tel:${lead.phone}`} className="p-2.5 md:p-3 text-gray-500 hover:text-blue-600 bg-white shadow-sm hover:shadow-md rounded-xl transition-all border border-gray-100" title="Llamar"><Phone size={18}/></a>
+                </div>
+            </div>
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto h-full">
@@ -2353,11 +2371,93 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             return;
                         }
                         setDialog({ title: 'Asignar Agente', message: `¿Estás seguro de asignar este prospecto a ${selectedAgent.name}? Esto enviará los correos automáticamente.`, type: 'info', onConfirm: () => { onAssignAgent(lead.id, agentId); setShowAgentSelector(false); setDialog(null); }, onCancel: () => setDialog(null)});
-                    }}
-                />
-            )}
-        </div>
-    );
+                    }}
+                />
+            )}
+
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl w-full max-w-lg flex flex-col shadow-2xl animate-slide-up border border-gray-100 max-h-[90vh] overflow-hidden">
+                        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2"><Edit2 size={18} className="text-blue-500"/> Editar Prospecto</h3>
+                            <button onClick={() => setShowEditModal(false)} className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-full text-gray-500 transition-colors shadow-sm"><X size={16}/></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label>
+                                <input value={leadFormData.name} onChange={e=>setLeadFormData({...leadFormData, name: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
+                                    <input value={leadFormData.phone} onChange={e=>setLeadFormData({...leadFormData, phone: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email</label>
+                                    <input value={leadFormData.email} onChange={e=>setLeadFormData({...leadFormData, email: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estado</label>
+                                    <input value={leadFormData.state} onChange={e=>setLeadFormData({...leadFormData, state: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Edad</label>
+                                    <input type="number" value={leadFormData.age} onChange={e=>setLeadFormData({...leadFormData, age: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Sexo</label>
+                                    <select value={leadFormData.sexo} onChange={e=>setLeadFormData({...leadFormData, sexo: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium">
+                                        <option value="Hombre">Hombre</option>
+                                        <option value="Mujer">Mujer</option>
+                                        <option value="No especificado">No especificado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fumador</label>
+                                    <select value={leadFormData.fumador} onChange={e=>setLeadFormData({...leadFormData, fumador: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium">
+                                        <option value="Sí">Sí</option>
+                                        <option value="No">No</option>
+                                        <option value="No especificado">No especificado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Cobertura</label>
+                                    <input value={leadFormData.cobertura} onChange={e=>setLeadFormData({...leadFormData, cobertura: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Presupuesto / Prima</label>
+                                    <input value={leadFormData.budget} onChange={e=>setLeadFormData({...leadFormData, budget: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Plan Recomendado</label>
+                                <select value={leadFormData.planRecomendado} onChange={e=>setLeadFormData({...leadFormData, planRecomendado: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium">
+                                    <option value="Regular">Regular</option>
+                                    <option value="Modificado">Modificado</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="p-5 border-t border-gray-100 shrink-0">
+                            <button onClick={async () => {
+                                await onUpdate(lead.id, leadFormData);
+                                setShowEditModal(false);
+                                setDialog({ title: 'Actualizado', message: 'Datos guardados correctamente', type: 'success', onConfirm: ()=>setDialog(null)});
+                            }} className="w-full bg-black text-white py-4 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                                <Save size={16}/> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 const AgentDetailView = ({ agent, leads, reviews = [], onClose, onLeadClick, onSaveAgent, onDeleteAgent, onDeleteReview }) => {
