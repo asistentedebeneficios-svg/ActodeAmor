@@ -1823,7 +1823,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
         fumador: lead.fumador || '',
         cobertura: lead.cobertura || '',
         budget: lead.budget || '',
-        planRecomendado: lead.planRecomendado || ''
+        planRecomendado: lead.planRecomendado || '',
+        isAsap: lead.isAsap || false,
+        date: lead.date || '',
+        time: lead.time || ''
     });
     
     // --- ESTADO Y POLICÍA ---
@@ -2444,6 +2447,28 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                                 </select>
                             </div>
                         </div>
+
+                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 mx-6 mb-4">
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Preferencia de Contacto</label>
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <button type="button" onClick={() => setLeadFormData({...leadFormData, isAsap: true, date: 'Inmediata', time: 'ASAP'})} className={`p-2 rounded-xl text-xs font-bold transition-all border ${leadFormData.isAsap ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-gray-200 text-gray-500'}`}>Lo antes posible</button>
+                                <button type="button" onClick={() => setLeadFormData({...leadFormData, isAsap: false, date: leadFormData.date === 'Inmediata' ? '' : leadFormData.date, time: leadFormData.time === 'ASAP' ? '' : leadFormData.time})} className={`p-2 rounded-xl text-xs font-bold transition-all border ${!leadFormData.isAsap ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 text-gray-500'}`}>Programar Cita</button>
+                            </div>
+                            {!leadFormData.isAsap && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <input type="date" value={leadFormData.date} onChange={e=>setLeadFormData({...leadFormData, date: e.target.value})} className="w-full p-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-400 text-xs font-medium text-gray-700"/>
+                                    </div>
+                                    <div>
+                                        <select value={leadFormData.time} onChange={e=>setLeadFormData({...leadFormData, time: e.target.value})} className="w-full p-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-400 text-xs font-medium text-gray-700">
+                                            <option value="">Seleccionar Hora</option>
+                                            {["12:00 a.m.", "01:00 a.m.", "02:00 a.m.", "03:00 a.m.", "04:00 a.m.", "05:00 a.m.", "06:00 a.m.", "07:00 a.m.", "08:00 a.m.", "09:00 a.m.", "10:00 a.m.", "11:00 a.m.", "12:00 p.m.", "01:00 p.m.", "02:00 p.m.", "03:00 p.m.", "04:00 p.m.", "05:00 p.m.", "06:00 p.m.", "07:00 p.m.", "08:00 p.m.", "09:00 p.m.", "10:00 p.m.", "11:00 p.m."].map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="p-5 border-t border-gray-100 shrink-0">
                             <button onClick={async () => {
                                 await onUpdate(lead.id, leadFormData);
