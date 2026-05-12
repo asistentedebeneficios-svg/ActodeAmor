@@ -1808,7 +1808,7 @@ const getLocalTimeInfo = (dateString, timeString, stateName) => {
     }
 };
 
-const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [] }) => {
+const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, isAgentView = false, allLeads = [], generalSettings }) => {
     const [currentNotes, setCurrentNotes] = useState(lead.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [showAgentSelector, setShowAgentSelector] = useState(false);
@@ -2403,7 +2403,10 @@ const LeadDetail = ({ lead, onClose, onUpdate, agents, onDelete, onAssignAgent, 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Estado</label>
-                                    <input value={leadFormData.state} onChange={e=>setLeadFormData({...leadFormData, state: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium"/>
+                                    <select value={leadFormData.state} onChange={e=>setLeadFormData({...leadFormData, state: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-blue-400 text-sm font-medium appearance-none">
+                                        <option value="">Seleccione Estado</option>
+                                        {(generalSettings?.activeStates ? FULL_US_STATES.filter(s => generalSettings.activeStates.includes(s.abbr)) : FULL_US_STATES).map(s => <option key={s.abbr} value={s.name}>{s.name}</option>)}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Edad</label>
@@ -4603,14 +4606,15 @@ const AdminDashboard = ({ leads, agents, agentRequests = [], reviews = [], onApp
                 />
             )}
             {viewingLead && (
-                <LeadDetail 
-                    lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} 
-                    onClose={() => setViewingLead(null)} 
-                    onUpdate={onUpdateLead} 
-                    onDelete={onDeleteLead} 
-                    agents={agents} 
-                    allLeads={leads}
-                    onAssignAgent={(leadId, agentId) => { 
+                <LeadDetail 
+                    lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead} 
+                    onClose={() => setViewingLead(null)} 
+                    onUpdate={onUpdateLead} 
+                    onDelete={onDeleteLead} 
+                    agents={agents} 
+                    allLeads={leads}
+                    generalSettings={generalSettings}
+                    onAssignAgent={(leadId, agentId) => {
                     const now = Date.now();
                     const assignedLead = processedLeads.find(l => l.id === leadId);
                     
@@ -6067,15 +6071,16 @@ const AgentPortal = ({ leads, agent, reviews = [], onUpdateLead, onLogout, gener
             )}
             
             {viewingLead && (
-              <LeadDetail
-                lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead}
-                onClose={() => setViewingLead(null)}
-                onUpdate={onUpdateLead}
-                isAgentView={true}
-                agents={[agent]}
-                allLeads={processedLeads}
-              />
-            )}
+              <LeadDetail
+                lead={processedLeads.find(l => l.id === viewingLead.id) || viewingLead}
+                onClose={() => setViewingLead(null)}
+                onUpdate={onUpdateLead}
+                isAgentView={true}
+                agents={[agent]}
+                allLeads={processedLeads}
+                generalSettings={generalSettings}
+              />
+            )}
             {/* BARRA FLOTANTE DE PAGO OPTIMIZADA (Ahora con Precio Dinámico) */}
             {activeTab === 'marketplace' && cart.length > 0 && (
                 <div className="fixed bottom-6 left-0 right-0 px-4 md:px-0 flex justify-center z-50 animate-slide-up pointer-events-none">
