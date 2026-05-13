@@ -1459,7 +1459,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                     <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-1"><User size={18} className="text-rose-600"/> Datos de contacto</h3>
                     <p className="text-[10px] md:text-xs text-gray-500 font-medium mb-4 flex items-start gap-1.5 leading-relaxed">
                         <Lock size={12} className="text-gray-400 shrink-0 mt-0.5"/>
-                        No venderemos sus datos. Únicamente un especialista autorizado le contactará.
+                        100% confidencial. Un especialista autorizado le contactará para asistirle.
                     </p>
                     <div className="space-y-4 mb-8">
                         <div className="relative">
