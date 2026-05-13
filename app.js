@@ -1572,7 +1572,7 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
 
                     {/* Botón Final Rediseñado */}
                     <button onClick={handleFinalSubmit} disabled={!data.name || data.phone.replace(/\D/g, '').length < 10 || (reqState && !data.state) || (reqSchedule && !data.contactType) || (reqSchedule && data.contactType === 'schedule' && (!data.date || !data.time)) || isSubmitting} className="w-full bg-[#E11D48] text-white py-5 rounded-2xl font-bold shadow-2xl disabled:opacity-50 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 text-lg">
-                        <Phone size={20}/> {isSubmitting ? 'Programando...' : 'Solicitar un asesor'}
+                        <Phone size={20}/> {isSubmitting ? 'Programando...' : 'Activar mi cobertura'}
                     </button>
                     
                     <p className="text-[9px] text-center text-gray-400 font-medium px-6 mt-4 leading-relaxed italic">"Su información está protegida por encriptación de grado bancario. Un especialista se comunicará para validar su elegibilidad final."</p>
