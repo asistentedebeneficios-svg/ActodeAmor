@@ -1453,12 +1453,13 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                 * Prima estimada. Sujeta a verificación por su agente licenciado.
                             </p>
                         </div>
-                    </div>
+                    </div>
 
-                    {/* Campos del Formulario (Sin títulos extra) */}
-                    <div className="space-y-4 mb-8">
-                        <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                    {/* Campos del Formulario */}
+                    <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-4"><User size={18} className="text-rose-600"/> Datos de contacto</h3>
+                    <div className="space-y-4 mb-8">
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                             <input type="text" placeholder="Su Nombre Completo" className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:bg-white focus:border-rose-400 transition-colors font-medium text-sm" value={data.name} onChange={e => updateData('name', e.target.value)} />
                         </div>
                         <div className="relative">
