@@ -1261,17 +1261,17 @@ const SmartFunnel = ({ onSubmit, scheduleConfig, generalSettings, bookedSlots, a
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                     min="18" max="85"
-                                    value={data.age} 
-                                    onChange={e => updateData('age', e.target.value ? Number(e.target.value) : '')} 
-                                    onBlur={e => {
-                                        let val = Number(e.target.value);
-                                        if (val < 18) val = 18;
-                                        if (val > 85) val = 85;
-                                        updateData('age', val);
-                                    }}
-                                    className="w-full text-center text-6xl font-black text-gray-900 bg-transparent outline-none p-0 m-0"
-                                    style={{ MozAppearance: 'textfield', WebkitAppearance: 'none' }}
-                                />
+                                    value={data.age} 
+                                    onChange={e => updateData('age', e.target.value ? Number(e.target.value) : '')} 
+                                    onBlur={e => {
+                                        let val = Number(e.target.value);
+                                        if (val < 18) val = 18;
+                                        if (val > 85) val = 85;
+                                        updateData('age', val);
+                                    }}
+                                    className="w-full text-center text-6xl font-black text-gray-900 bg-transparent outline-none p-0 m-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    style={{ MozAppearance: 'textfield', WebkitAppearance: 'none' }}
+                                />
                                 <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mt-1">Años</span>
                             </div>
 
